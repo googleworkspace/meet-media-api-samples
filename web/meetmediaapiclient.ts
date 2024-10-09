@@ -42,6 +42,7 @@ export interface MeetMediaApiClient {
   readonly presenter: Subscribable<MediaEntry | undefined>;
   readonly screenshare: Subscribable<MediaEntry[] | undefined>;
 
+  // Testing!
   joinMeeting(
     communicationProtocol?: MediaApiCommunicationProtocol,
   ): Promise<void>;
