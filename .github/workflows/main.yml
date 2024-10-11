@@ -30,8 +30,65 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 📦 Prepare dependencies
-        uses: ./.github/actions/prepare-deps
+      # https://github.com/actions/runner-images/issues/709
+      - name: ♻️ Free up disk space
+        run: |
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        shell: bash
+
+      - name: 🔧 Install tools
+        run: |
+          sudo apt-get update && sudo apt-get install -y curl gpg
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get update && sudo apt-get install -y git curl wget python3 xz-utils lsb-release pkg-config bazel libicu-dev apt-transport-https gnupg
+        shell: bash
+
+      # Caches are TTL'd to 7 days.
+      # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy
+      - name: 📦 Cache WebRTC build
+        id: cache-webrtc
+        uses: actions/cache@v3
+        with:
+          path: webrtc-checkout
+          key: ${{ runner.os }}-webrtc-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-webrtc-
+
+      - name: 🔨 Install depot_tools
+        if: steps.cache-webrtc.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
+          echo "$(pwd)/depot_tools" >> $GITHUB_PATH
+        shell: bash
+
+      - name: 📡 Fetch and build WebRTC
+        if: steps.cache-webrtc.outputs.cache-hit != 'true'
+        run: |
+          mkdir webrtc-checkout
+          pushd webrtc-checkout
+          fetch --nohooks webrtc
+          pushd src
+          git checkout a61a25a0b1b6a6009d3a18d676d8069b338b0187
+          popd
+          sed -i -e "s|'src/resources'],|'src/resources'],'condition':'rtc_include_tests==true',|" src/DEPS
+          gclient sync
+          pushd src
+          gn gen out/Default --args='is_debug=false use_custom_libcxx=false rtc_include_tests=false rtc_build_examples=false dcheck_always_on=true rtc_use_x11=false use_rtti=true'
+          ninja -C out/Default
+          popd
+          mv src webrtc
+          pushd webrtc
+          # Delete all unnecessary files, maintaining directory structure. Required to conserve Github
+          # runner disk space.
+          find . -type f ! -name "libwebrtc.a" ! -name "*.h" ! -path "*/boringssl/src/*" -delete
+          # Housekeeping: delete empty directories.
+          find . -type d -empty -delete
+          popd
+          popd
+        shell: bash
 
       - name: 🚧 Build
         run: |

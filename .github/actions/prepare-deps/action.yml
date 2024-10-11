@@ -62,10 +62,17 @@ runs:
         popd
         sed -i -e "s|'src/resources'],|'src/resources'],'condition':'rtc_include_tests==true',|" src/DEPS
         gclient sync
-        mv src webrtc
-        pushd webrtc
+        pushd src
         gn gen out/Default --args='is_debug=false use_custom_libcxx=false rtc_include_tests=false rtc_build_examples=false dcheck_always_on=true rtc_use_x11=false use_rtti=true'
         ninja -C out/Default
+        popd
+        mv src webrtc
+        pushd webrtc
+        # Delete all unnecessary files, maintaining directory structure. Required to conserve Github
+        # runner disk space.
+        find . -type f ! -name "libwebrtc.a" ! -name "*.h" ! -path "*/boringssl/src/*" -delete
+        # Housekeeping: delete empty directories.
+        find . -type d -empty -delete
         popd
         popd
       shell: bash
