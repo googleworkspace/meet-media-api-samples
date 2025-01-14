@@ -13,7 +13,7 @@
 # limitations under the License.
 
 load(
-    "//javascript/typescript:build_defs.bzl",
+    "//:build_defs.bzl",
     "ts_library",
 )
 
