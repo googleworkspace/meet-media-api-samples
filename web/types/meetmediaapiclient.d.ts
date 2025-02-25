@@ -20,7 +20,7 @@
 
 import {MediaApiCommunicationProtocol} from './communication_protocol';
 import {MediaApiResponseStatus} from './datachannels';
-import {MeetSessionStatus} from './enums';
+import {MeetConnectionState, MeetDisconnectReason} from './enums';
 import {
   CanvasDimensions,
   MediaEntry,
@@ -30,6 +30,14 @@ import {
   Participant,
 } from './mediatypes';
 import {Subscribable} from './subscribable';
+
+/**
+ * The status of the Meet Media API session.
+ */
+export interface MeetSessionStatus {
+  connectionState: MeetConnectionState;
+  disconnectReason?: MeetDisconnectReason;
+}
 
 /**
  * Interface for the MeetMediaApiClient. Takes a required configuration

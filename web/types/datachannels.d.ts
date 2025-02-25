@@ -146,6 +146,24 @@ export declare interface SessionStatus {
    * - `STATE_DISCONNECTED`: Session is not connected to the meeting.
    */
   connectionState: 'STATE_WAITING' | 'STATE_JOINED' | 'STATE_DISCONNECTED';
+
+  /**
+   * The reason for the disconnection from the meeting. Only set if the
+   * `connectionState` is `STATE_DISCONNECTED`.
+   *
+   * - `REASON_CLIENT_LEFT`: The Media API client sent a leave request.
+   *
+   * - `REASON_USER_STOPPED`: A user explicitly stopped the Media API session.
+   *
+   * - `REASON_CONFERENCE_ENDED`: The conference ended.
+   *
+   * - `REASON_SESSION_UNHEALTHY`: Something else went wrong with the session.
+   */
+  disconnectReason?:
+    | 'REASON_CLIENT_LEFT'
+    | 'REASON_USER_STOPPED'
+    | 'REASON_CONFERENCE_ENDED'
+    | 'REASON_SESSION_UNHEALTHY';
 }
 
 // PARTICIPANTS

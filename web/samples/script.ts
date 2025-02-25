@@ -15,18 +15,19 @@
  */
 
 import {MeetMediaApiClientImpl} from '../internal/meetmediaapiclient_impl';
-import {MeetSessionStatus} from '../types/enums';
+import {MeetConnectionState} from '../types/enums';
 import {MeetStreamTrack} from '../types/mediatypes';
+import {MeetSessionStatus} from '../types/meetmediaapiclient';
 
 // Function maps session status to strings. If the session is joined, we go
 // ahead and request a layout.
 async function handleSessionChange(status: MeetSessionStatus) {
   let statusString;
-  switch (status) {
-    case MeetSessionStatus.WAITING:
+  switch (status.connectionState) {
+    case MeetConnectionState.WAITING:
       statusString = 'WAITING';
       break;
-    case MeetSessionStatus.JOINED:
+    case MeetConnectionState.JOINED:
       statusString = 'JOINED';
       // tslint:disable-next-line:no-any
       const client = (window as any).client;
@@ -34,17 +35,11 @@ async function handleSessionChange(status: MeetSessionStatus) {
       const response = await client.applyLayout([{mediaLayout}]);
       console.log(response);
       break;
-    case MeetSessionStatus.DISCONNECTED:
+    case MeetConnectionState.DISCONNECTED:
       statusString = 'DISCONNECTED';
       break;
-    case MeetSessionStatus.KICKED:
-      statusString = 'KICKED';
-      break;
-    case MeetSessionStatus.REJECTED:
-      statusString = 'REJECT';
-      break;
     default:
-      statusString = 'NEW';
+      statusString = 'UNKNOWN';
       break;
   }
   // Update page with session status.

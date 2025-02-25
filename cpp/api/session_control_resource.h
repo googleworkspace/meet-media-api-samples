@@ -64,6 +64,21 @@ struct SessionStatus {
 
   ConferenceConnectionState connection_state =
       ConferenceConnectionState::kUnknown;
+
+  enum MeetingDisconnectReason {
+    /// The Media API client sent a leave request.
+    kClientLeft,
+    /// A conference participant explicitly stopped the Media API session.
+    kUserStopped,
+    /// The conference ended.
+    kConferenceEnded,
+    /// Something else went wrong with the session.
+    kSessionUnhealthy
+  };
+
+  // Indicates the reason for the disconnection from the meeting.
+  // Only set if the `connection_state` is `kDisconnected`.
+  std::optional<MeetingDisconnectReason> disconnect_reason = std::nullopt;
 };
 
 struct SessionControlResourceSnapshot {
