@@ -4,6 +4,6 @@
   "description": "Meet Media API Samples",
   "devDependencies": {
     "@bazel/typescript": "^5.4.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.2"
   }
 }
