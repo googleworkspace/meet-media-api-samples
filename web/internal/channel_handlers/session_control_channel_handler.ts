@@ -23,9 +23,21 @@ import {
   SessionControlChannelFromClient,
   SessionControlChannelToClient,
 } from '../../types/datachannels';
-import {LogLevel, MeetSessionStatus} from '../../types/enums';
+import {
+  LogLevel,
+  MeetConnectionState,
+  MeetDisconnectReason,
+} from '../../types/enums';
+import {MeetSessionStatus} from '../../types/meetmediaapiclient';
 import {SubscribableDelegate} from '../subscribable_impl';
 import {ChannelLogger} from './channel_logger';
+
+const DISCONNECT_REASON_MAP = new Map<string, MeetDisconnectReason>([
+  ['REASON_CLIENT_LEFT', MeetDisconnectReason.CLIENT_LEFT],
+  ['REASON_USER_STOPPED', MeetDisconnectReason.USER_STOPPED],
+  ['REASON_CONFERENCE_ENDED', MeetDisconnectReason.CONFERENCE_ENDED],
+  ['REASON_SESSION_UNHEALTHY', MeetDisconnectReason.SESSION_UNHEALTHY],
+]);
 
 /**
  * Helper class to handles the session control channel.
@@ -55,7 +67,9 @@ export class SessionControlChannelHandler {
       LogLevel.MESSAGES,
       'Session control channel: opened',
     );
-    this.sessionStatusDelegate.set(MeetSessionStatus.WAITING);
+    this.sessionStatusDelegate.set({
+      connectionState: MeetConnectionState.WAITING,
+    });
   }
 
   private onSessionControlMessage(event: MessageEvent) {
@@ -77,15 +91,23 @@ export class SessionControlChannelHandler {
         json.resources[0],
       );
       if (sessionStatus.connectionState === 'STATE_WAITING') {
-        this.sessionStatusDelegate.set(MeetSessionStatus.WAITING);
+        this.sessionStatusDelegate.set({
+          connectionState: MeetConnectionState.WAITING,
+        });
       } else if (sessionStatus.connectionState === 'STATE_JOINED') {
-        this.sessionStatusDelegate.set(MeetSessionStatus.JOINED);
+        this.sessionStatusDelegate.set({
+          connectionState: MeetConnectionState.JOINED,
+        });
       } else if (sessionStatus.connectionState === 'STATE_DISCONNECTED') {
-        this.sessionStatusDelegate.set(MeetSessionStatus.DISCONNECTED);
+        this.sessionStatusDelegate.set({
+          connectionState: MeetConnectionState.DISCONNECTED,
+          disconnectReason:
+            DISCONNECT_REASON_MAP.get(sessionStatus.disconnectReason || '') ??
+            MeetDisconnectReason.SESSION_UNHEALTHY,
+        });
       }
     }
   }
-
   private onSessionControlClosed() {
     // If the channel is closed, we should resolve the leave session promise.
     this.channelLogger?.log(
@@ -93,7 +115,15 @@ export class SessionControlChannelHandler {
       'Session control channel: closed',
     );
     this.leaveSessionPromise?.();
-    this.sessionStatusDelegate.set(MeetSessionStatus.DISCONNECTED);
+    if (
+      this.sessionStatusDelegate.get().connectionState !==
+      MeetConnectionState.DISCONNECTED
+    ) {
+      this.sessionStatusDelegate.set({
+        connectionState: MeetConnectionState.DISCONNECTED,
+        disconnectReason: MeetDisconnectReason.UNKNOWN,
+      });
+    }
   }
 
   leaveSession(): Promise<void> {

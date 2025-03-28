@@ -17,6 +17,7 @@
 #include "cpp/internal/session_control_resource_handler.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -53,6 +54,21 @@ SessionStatus::ConferenceConnectionState StringToMeetingConnectionState(
     return SessionStatus::ConferenceConnectionState::kDisconnected;
   } else {
     return SessionStatus::ConferenceConnectionState::kUnknown;
+  }
+}
+
+std::optional<SessionStatus::MeetingDisconnectReason>
+StringToMeetingDisconnectReason(absl::string_view reason) {
+  if (reason == "REASON_CLIENT_LEFT") {
+    return SessionStatus::MeetingDisconnectReason::kClientLeft;
+  } else if (reason == "REASON_USER_STOPPED") {
+    return SessionStatus::MeetingDisconnectReason::kUserStopped;
+  } else if (reason == "REASON_CONFERENCE_ENDED") {
+    return SessionStatus::MeetingDisconnectReason::kConferenceEnded;
+  } else if (reason == "REASON_SESSION_UNHEALTHY") {
+    return SessionStatus::MeetingDisconnectReason::kSessionUnhealthy;
+  } else {
+    return std::nullopt;
   }
 }
 
@@ -141,6 +157,17 @@ absl::StatusOr<ResourceUpdate> SessionControlResourceHandler::ParseUpdate(
           snapshot.session_status = {
               .connection_state =
                   SessionStatus::ConferenceConnectionState::kUnknown};
+        }
+
+        // Resources.resourceSnapshot.sessionStatus.disconnectReason
+        if (const Json* disconnect_reason_field =
+                FindOrNull(*session_status_field, "disconnectReason");
+            disconnect_reason_field != nullptr) {
+          snapshot.session_status.disconnect_reason =
+              StringToMeetingDisconnectReason(
+                  disconnect_reason_field->get<std::string>());
+        } else {
+          snapshot.session_status.disconnect_reason = std::nullopt;
         }
       }
       resources.push_back(snapshot);

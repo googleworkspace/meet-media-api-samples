@@ -81,6 +81,51 @@ TEST(SessionControlResourceHandlerTest, ParsesMultipleResourceSnapshots) {
             SessionStatus::ConferenceConnectionState::kUnknown);
 }
 
+TEST(SessionControlResourceHandlerTest, ParsesDisconnectReasons) {
+  SessionControlResourceHandler handler;
+  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+      handler.ParseUpdate(R"json({
+        "resources": [
+          {
+            "sessionStatus": { "disconnectReason": "REASON_UNKNOWN" }
+          },
+          {
+            "sessionStatus": { "disconnectReason": "REASON_CLIENT_LEFT" }
+          },
+          {
+            "sessionStatus": { "disconnectReason": "REASON_USER_STOPPED" }
+          },
+          {
+            "sessionStatus": { "disconnectReason": "REASON_CONFERENCE_ENDED" }
+          },
+          {
+            "sessionStatus": { "disconnectReason": "REASON_SESSION_UNHEALTHY" }
+          }
+        ]
+    })json");
+
+  ASSERT_TRUE(status_or_parsed_update.ok());
+  auto session_control_update = std::get<SessionControlChannelToClient>(
+      std::move(status_or_parsed_update).value());
+
+  ASSERT_THAT(session_control_update.resources, SizeIs(5));
+  EXPECT_EQ(
+      session_control_update.resources[0].session_status.disconnect_reason,
+      std::nullopt);
+  EXPECT_EQ(
+      session_control_update.resources[1].session_status.disconnect_reason,
+      SessionStatus::MeetingDisconnectReason::kClientLeft);
+  EXPECT_EQ(
+      session_control_update.resources[2].session_status.disconnect_reason,
+      SessionStatus::MeetingDisconnectReason::kUserStopped);
+  EXPECT_EQ(
+      session_control_update.resources[3].session_status.disconnect_reason,
+      SessionStatus::MeetingDisconnectReason::kConferenceEnded);
+  EXPECT_EQ(
+      session_control_update.resources[4].session_status.disconnect_reason,
+      SessionStatus::MeetingDisconnectReason::kSessionUnhealthy);
+}
+
 TEST(SessionControlResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
   SessionControlResourceHandler handler;
 
@@ -167,6 +212,27 @@ TEST(SessionControlResourceHandlerTest,
   ASSERT_THAT(session_control_update.resources, SizeIs(1));
   EXPECT_EQ(session_control_update.resources[0].session_status.connection_state,
             SessionStatus::ConferenceConnectionState::kUnknown);
+}
+
+TEST(SessionControlResourceHandlerTest,
+     NoDisconnectReasonIsUnknownDisconnectReason) {
+  SessionControlResourceHandler handler;
+
+  auto status_or_parsed_update = handler.ParseUpdate(R"json({
+        "resources": [
+          {
+            "sessionStatus": {}
+          }
+        ]
+    })json");
+  ASSERT_TRUE(status_or_parsed_update.ok());
+  auto session_control_update = std::get<SessionControlChannelToClient>(
+      std::move(status_or_parsed_update).value());
+
+  ASSERT_THAT(session_control_update.resources, SizeIs(1));
+  EXPECT_EQ(
+      session_control_update.resources[0].session_status.disconnect_reason,
+      std::nullopt);
 }
 
 TEST(SessionControlResourceHandlerTest, ParsesClientRequestId) {

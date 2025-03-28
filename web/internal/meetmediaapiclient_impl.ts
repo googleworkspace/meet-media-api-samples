@@ -19,7 +19,7 @@ import {
   MediaApiCommunicationResponse,
 } from '../types/communication_protocol';
 import {MediaApiResponseStatus} from '../types/datachannels';
-import {MeetSessionStatus} from '../types/enums';
+import {MeetConnectionState} from '../types/enums';
 import {
   CanvasDimensions,
   MediaEntry,
@@ -29,7 +29,10 @@ import {
   MeetStreamTrack,
   Participant,
 } from '../types/mediatypes';
-import {MeetMediaApiClient} from '../types/meetmediaapiclient';
+import {
+  MeetMediaApiClient,
+  MeetSessionStatus,
+} from '../types/meetmediaapiclient';
 import {Subscribable} from '../types/subscribable';
 import {ChannelLogger} from './channel_handlers/channel_logger';
 import {MediaEntriesChannelHandler} from './channel_handlers/media_entries_channel_handler';
@@ -149,9 +152,9 @@ export class MeetMediaApiClientImpl implements MeetMediaApiClient {
   ) {
     this.validateConfiguration();
 
-    this.sessionStatusDelegate = new SubscribableDelegate<MeetSessionStatus>(
-      MeetSessionStatus.NEW,
-    );
+    this.sessionStatusDelegate = new SubscribableDelegate<MeetSessionStatus>({
+      connectionState: MeetConnectionState.UNKNOWN,
+    });
     this.sessionStatus = this.sessionStatusDelegate.getSubscribable();
     this.meetStreamTracksDelegate = new SubscribableDelegate<MeetStreamTrack[]>(
       [],
@@ -363,7 +366,7 @@ export class MeetMediaApiClientImpl implements MeetMediaApiClient {
     }
 
     this.sessionStatusDelegate.subscribe((status) => {
-      if (status === MeetSessionStatus.DISCONNECTED) {
+      if (status.connectionState === MeetConnectionState.DISCONNECTED) {
         this.mediaStatsChannel?.close();
         this.videoAssignmentChannel?.close();
         this.mediaEntriesChannel?.close();
