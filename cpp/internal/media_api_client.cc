@@ -192,7 +192,7 @@ void MediaApiClient::HandleTrackSignaled(
   }
 
   switch (media_type) {
-    case cricket::MEDIA_TYPE_AUDIO: {
+    case webrtc::MediaType::AUDIO: {
       auto conference_audio_track = std::make_unique<ConferenceAudioTrack>(
           mid, std::move(receiver),
           std::bind_front(&MediaApiClientObserverInterface::OnAudioFrame,
@@ -203,7 +203,7 @@ void MediaApiClient::HandleTrackSignaled(
       media_tracks_.push_back(std::move(conference_audio_track));
     }
       return;
-    case cricket::MEDIA_TYPE_VIDEO: {
+    case webrtc::MediaType::VIDEO: {
       auto conference_video_track = std::make_unique<ConferenceVideoTrack>(
           mid, std::bind_front(&MediaApiClientObserverInterface::OnVideoFrame,
                                observer_));
