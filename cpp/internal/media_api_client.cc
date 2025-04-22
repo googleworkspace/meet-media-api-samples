@@ -58,13 +58,14 @@ namespace {
 class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
  public:
   using Callback = absl::AnyInvocable<void(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report)>;
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)>;
 
   explicit OnRTCStatsCollected(Callback callback)
       : callback_(std::move(callback)) {}
 
   void OnStatsDelivered(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) override {
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)
+      override {
     callback_(report);
   }
 
@@ -173,14 +174,14 @@ absl::Status MediaApiClient::SendRequest(const ResourceRequest &request) {
 };
 
 void MediaApiClient::HandleTrackSignaled(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   // Tracks should only be signaled by the conference peer connection during its
   // connection flow. Therefore, no state check is needed.
 
-  rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver =
+  webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver =
       transceiver->receiver();
-  cricket::MediaType media_type = receiver->media_type();
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> receiver_track =
+  webrtc::MediaType media_type = receiver->media_type();
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> receiver_track =
       receiver->track();
   // MID should always exist since Meet only supports BUNDLE srtp streams.
   std::string mid;
@@ -210,7 +211,7 @@ void MediaApiClient::HandleTrackSignaled(
       auto video_track =
           static_cast<webrtc::VideoTrackInterface *>(receiver_track.get());
       video_track->AddOrUpdateSink(conference_video_track.get(),
-                                   rtc::VideoSinkWants());
+                                   webrtc::VideoSinkWants());
       media_tracks_.push_back(std::move(conference_video_track));
     }
       return;
@@ -336,7 +337,8 @@ void MediaApiClient::CollectStats() {
   }
 
   auto callback = webrtc::make_ref_counted<OnRTCStatsCollected>(
-      [this](const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
+      [this](
+          const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
         MediaStatsChannelFromClient request = StatsRequestFromReport(
             report, stats_config_.stats_request_id, stats_config_.allowlist);
         stats_config_.stats_request_id++;

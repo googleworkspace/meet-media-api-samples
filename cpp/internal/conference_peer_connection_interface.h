@@ -31,7 +31,7 @@ class ConferencePeerConnectionInterface {
  public:
   using DisconnectCallback = absl::AnyInvocable<void(absl::Status)>;
   using TrackSignaledCallback = absl::AnyInvocable<void(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
+      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
 
   virtual ~ConferencePeerConnectionInterface() = default;
 

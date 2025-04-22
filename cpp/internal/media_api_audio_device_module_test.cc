@@ -32,16 +32,17 @@ namespace meet {
 namespace {
 using ::testing::_;
 
-std::unique_ptr<rtc::Thread> CreateWorkerThread() {
-  std::unique_ptr<rtc::Thread> thread = rtc::Thread::Create();
+std::unique_ptr<webrtc::Thread> CreateWorkerThread() {
+  std::unique_ptr<webrtc::Thread> thread = webrtc::Thread::Create();
   thread->SetName("worker_thread", nullptr);
   EXPECT_TRUE(thread->Start());
   return thread;
 }
 
 TEST(MediaApiAudioDeviceModuleTest, SuccessfullyInvokeStartPlayout) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm =
+      webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
 
   worker_thread->BlockingCall([&]() {
     EXPECT_EQ(adm->StartPlayout(), 0);
@@ -51,8 +52,9 @@ TEST(MediaApiAudioDeviceModuleTest, SuccessfullyInvokeStartPlayout) {
 }
 
 TEST(MediaApiAudioDeviceModuleTest, StartingPlayoutTwiceIsNoOp) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm =
+      webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
   webrtc::test::MockAudioTransport audio_transport;
   EXPECT_CALL(audio_transport, NeedMorePlayData(_, _, _, _, _, _, _, _))
       // Expect that only one processing task is enqueued if playout is
@@ -71,8 +73,9 @@ TEST(MediaApiAudioDeviceModuleTest, StartingPlayoutTwiceIsNoOp) {
 }
 
 TEST(MediaApiAudioDeviceModuleTest, SuccessfullyInvokeStopPlayout) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm =
+      webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
 
   worker_thread->BlockingCall([&]() {
     EXPECT_EQ(adm->StartPlayout(), 0);
@@ -83,8 +86,9 @@ TEST(MediaApiAudioDeviceModuleTest, SuccessfullyInvokeStopPlayout) {
 }
 
 TEST(MediaApiAudioDeviceModuleTest, StartPlayoutAfterStopPlayoutIsSuccessful) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm =
+      webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread);
 
   worker_thread->BlockingCall([&]() {
     EXPECT_EQ(adm->StartPlayout(), 0);
@@ -101,8 +105,8 @@ TEST(MediaApiAudioDeviceModuleTest, StartPlayoutAfterStopPlayoutIsSuccessful) {
 // This test simulates processing that finishes immediately.
 TEST(MediaApiAudioDeviceModuleTest,
      StartPlayoutWithCallbackRegisteredInvokesCallback) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm = webrtc::make_ref_counted<MediaApiAudioDeviceModule>(
       *worker_thread, /*sampling_interval=*/webrtc::TimeDelta::Seconds(1));
   webrtc::test::MockAudioTransport audio_transport;
   const size_t number_of_samples =
@@ -135,8 +139,8 @@ TEST(MediaApiAudioDeviceModuleTest,
 // sampling interval of 1 second.
 TEST(MediaApiAudioDeviceModuleTest,
      StartPlayoutImmediatelyCallsCallbackWhenCallbackTakesNonTrivialTime) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm = webrtc::make_ref_counted<MediaApiAudioDeviceModule>(
       *worker_thread, /*sampling_interval=*/webrtc::TimeDelta::Seconds(1));
   webrtc::test::MockAudioTransport audio_transport;
   EXPECT_CALL(audio_transport, NeedMorePlayData(_, _, _, _, _, _, _, _))
@@ -165,8 +169,8 @@ TEST(MediaApiAudioDeviceModuleTest,
 
 TEST(MediaApiAudioDeviceModuleTest,
      StopPlayoutStopsInvokingCallbackForEnqueuedTasks) {
-  std::unique_ptr<rtc::Thread> worker_thread = CreateWorkerThread();
-  auto adm = rtc::make_ref_counted<MediaApiAudioDeviceModule>(
+  std::unique_ptr<webrtc::Thread> worker_thread = CreateWorkerThread();
+  auto adm = webrtc::make_ref_counted<MediaApiAudioDeviceModule>(
       *worker_thread, /*sampling_interval=*/webrtc::TimeDelta::Seconds(1));
   webrtc::test::MockAudioTransport audio_transport;
   EXPECT_CALL(audio_transport, NeedMorePlayData(_, _, _, _, _, _, _, _))

@@ -94,9 +94,9 @@ absl::Status ConfigureTransceivers(
       // receiver tracks of the transceivers will be exposed in the `OnTrack`
       // callback of the `webrtc::PeerConnectionObserver` when connecting
       // starts.
-      webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+      webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
           audio_result = peer_connection.AddTransceiver(
-              cricket::MediaType::MEDIA_TYPE_AUDIO, audio_init);
+              webrtc::MediaType::MEDIA_TYPE_AUDIO, audio_init);
 
       if (!audio_result.ok()) {
         return absl::InternalError(
@@ -111,9 +111,9 @@ absl::Status ConfigureTransceivers(
     video_init.direction = webrtc::RtpTransceiverDirection::kRecvOnly;
     video_init.stream_ids = {absl::StrCat("video_stream_", i)};
 
-    webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
+    webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
         video_result = peer_connection.AddTransceiver(
-            cricket::MediaType::MEDIA_TYPE_VIDEO, video_init);
+            webrtc::MediaType::MEDIA_TYPE_VIDEO, video_init);
 
     if (!video_result.ok()) {
       return absl::InternalError(absl::StrCat(
@@ -129,7 +129,7 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
   const webrtc::DataChannelInit kDataChannelConfig = {.reliable = true,
                                                       .ordered = true};
 
-  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       media_entries_data_channel_status =
           peer_connection.CreateDataChannelOrError("media-entries",
                                                    &kDataChannelConfig);
@@ -139,7 +139,7 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
                      media_entries_data_channel_status.error().message()));
   }
 
-  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       media_stats_data_channel_status =
           peer_connection.CreateDataChannelOrError("media-stats",
                                                    &kDataChannelConfig);
@@ -149,7 +149,7 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
                      media_stats_data_channel_status.error().message()));
   }
 
-  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       participants_data_channel_status =
           peer_connection.CreateDataChannelOrError("participants",
                                                    &kDataChannelConfig);
@@ -159,7 +159,7 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
                      participants_data_channel_status.error().message()));
   }
 
-  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       session_control_data_channel_status =
           peer_connection.CreateDataChannelOrError("session-control",
                                                    &kDataChannelConfig);
@@ -169,7 +169,7 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
                      session_control_data_channel_status.error().message()));
   }
 
-  webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::DataChannelInterface>>
+  webrtc::RTCErrorOr<webrtc::scoped_refptr<webrtc::DataChannelInterface>>
       video_assignment_data_channel_status =
           peer_connection.CreateDataChannelOrError("video-assignment",
                                                    &kDataChannelConfig);
@@ -200,12 +200,12 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
 }  // namespace
 
 MediaApiClientFactory::MediaApiClientFactory() {
-  peer_connection_factory_provider_ = [](rtc::Thread* signaling_thread,
-                                         rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+  peer_connection_factory_provider_ = [](webrtc::Thread* signaling_thread,
+                                         webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return webrtc::CreatePeerConnectionFactory(
         /*network_thread=*/nullptr, worker_thread, signaling_thread,
-        rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread),
+        webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread),
         webrtc::CreateBuiltinAudioEncoderFactory(),
         webrtc::CreateOpusAudioDecoderFactory(),
         std::make_unique<webrtc::VideoEncoderFactoryTemplate<
@@ -224,30 +224,30 @@ MediaApiClientFactory::MediaApiClientFactory() {
 absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
 MediaApiClientFactory::CreateMediaApiClient(
     const MediaApiClientConfiguration& api_config,
-    rtc::scoped_refptr<MediaApiClientObserverInterface> observer) {
+    webrtc::scoped_refptr<MediaApiClientObserverInterface> observer) {
   if (api_config.receiving_video_stream_count > kMaxReceivingVideoStreamCount) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Receiving video stream count must be less than or equal to ",
         kMaxReceivingVideoStreamCount, "; got ",
         api_config.receiving_video_stream_count));
   }
-  std::unique_ptr<rtc::Thread> client_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> client_thread = webrtc::Thread::Create();
   client_thread->SetName("media_api_client_internal_thread", nullptr);
   if (!client_thread->Start()) {
     return absl::InternalError("Failed to start client thread");
   }
-  std::unique_ptr<rtc::Thread> signaling_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> signaling_thread = webrtc::Thread::Create();
   signaling_thread->SetName("media_api_client_signaling_thread", nullptr);
   if (!signaling_thread->Start()) {
     return absl::InternalError("Failed to start signaling thread");
   }
-  std::unique_ptr<rtc::Thread> worker_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> worker_thread = webrtc::Thread::Create();
   worker_thread->SetName("media_api_client_worker_thread", nullptr);
   if (!worker_thread->Start()) {
     return absl::InternalError("Failed to start worker thread");
   }
 
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
       peer_connection_factory = peer_connection_factory_provider_(
           signaling_thread.get(), worker_thread.get());
 
@@ -265,7 +265,7 @@ MediaApiClientFactory::CreateMediaApiClient(
                      peer_connection_status.error().message()));
   }
 
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection =
+  webrtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection =
       std::move(peer_connection_status).value();
 
   absl::Status configure_transceivers_status =

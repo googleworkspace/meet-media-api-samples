@@ -36,7 +36,7 @@ namespace meet {
 // Sections and attributes that are not in the allowlist are not included in the
 // request.
 MediaStatsChannelFromClient StatsRequestFromReport(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
     int64_t request_id,
     const absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>&
         allowlist);

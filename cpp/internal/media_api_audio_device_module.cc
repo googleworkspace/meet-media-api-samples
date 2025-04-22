@@ -72,7 +72,7 @@ void MediaApiAudioDeviceModule::ProcessPlayData() {
     return;
   }
 
-  int64_t process_start_time = rtc::TimeMillis();
+  int64_t process_start_time = webrtc::TimeMillis();
   const size_t number_of_samples = kAudioSampleRatePerMillisecond *
                                    sampling_interval_.ms() *
                                    kNumberOfAudioChannels;
@@ -88,7 +88,7 @@ void MediaApiAudioDeviceModule::ProcessPlayData() {
         kAudioSampleRatePerMillisecond * 1000, sample_buffer.data(),
         samples_out, &elapsed_time_ms, &ntp_time_ms);
   }
-  int64_t process_end_time = rtc::TimeMillis();
+  int64_t process_end_time = webrtc::TimeMillis();
 
   // Delay the next sampling for either:
   // 1. (sampling interval) - (time to process current sample)

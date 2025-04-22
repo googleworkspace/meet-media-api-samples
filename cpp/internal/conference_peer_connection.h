@@ -50,7 +50,7 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
                                  public webrtc::PeerConnectionObserver {
  public:
   ConferencePeerConnection(
-      std::unique_ptr<rtc::Thread> signaling_thread,
+      std::unique_ptr<webrtc::Thread> signaling_thread,
       std::unique_ptr<HttpConnectorInterface> http_connector)
       : signaling_thread_(std::move(signaling_thread)),
         http_connector_(std::move(http_connector)) {};
@@ -67,17 +67,19 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   };
 
   void OnAddStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {
+      webrtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */)
+      override {
     VLOG(1) << "OnAddStream called.";
   }
 
   void OnRemoveStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {
+      webrtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */)
+      override {
     VLOG(1) << "OnRemoveStream called.";
   }
 
-  void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(webrtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     LOG(ERROR) << "OnDataChannel opened from server: " << data_channel->label();
     // The Meet servers should never open a data channel; all data channels are
     // opened by the client.
@@ -120,7 +122,7 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   }
 
   void OnIceCandidatesRemoved(
-      const std::vector<cricket::Candidate>& candidates) override {
+      const std::vector<webrtc::Candidate>& candidates) override {
     VLOG(1) << "OnIceCandidatesRemoved: " << candidates.size();
   }
 
@@ -129,20 +131,20 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   }
 
   void OnIceSelectedCandidatePairChanged(
-      const cricket::CandidatePairChangeEvent& /* event */) override {
+      const webrtc::CandidatePairChangeEvent& /* event */) override {
     VLOG(1) << "OnIceSelectedCandidatePairChanged called.";
   }
 
   void OnAddTrack(
-      rtc::scoped_refptr<webrtc::RtpReceiverInterface> /* receiver */,
+      webrtc::scoped_refptr<webrtc::RtpReceiverInterface> /* receiver */,
       const std::vector<
-          rtc::scoped_refptr<webrtc::MediaStreamInterface>>& /* streams */)
+          webrtc::scoped_refptr<webrtc::MediaStreamInterface>>& /* streams */)
       override {
     VLOG(1) << "OnAddTrack called.";
   }
 
   void OnRemoveTrack(
-      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override {
+      webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver) override {
     VLOG(1) << "OnRemoveTrack called.";
   };
 
@@ -153,8 +155,8 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   void OnConnectionChange(
       webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
 
-  void OnTrack(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+  void OnTrack(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                   transceiver) override;
 
   // Sets the disconnect callback for the conference peer connection. Conference
   // peer connections can only have one disconnect callback at a time, and the
@@ -218,7 +220,7 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   // Calling this is not thread-safe, so it should only be called before the
   // conference peer connection is used.
   void SetPeerConnection(
-      rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection) {
+      webrtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection) {
     peer_connection_ = std::move(peer_connection);
   }
 
@@ -229,9 +231,9 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
 
   DisconnectCallback disconnect_callback_;
   TrackSignaledCallback track_signaled_callback_;
-  std::unique_ptr<rtc::Thread> signaling_thread_;
+  std::unique_ptr<webrtc::Thread> signaling_thread_;
   std::unique_ptr<HttpConnectorInterface> http_connector_;
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
+  webrtc::scoped_refptr<webrtc::PeerConnectionInterface> peer_connection_;
 };
 
 }  // namespace meet

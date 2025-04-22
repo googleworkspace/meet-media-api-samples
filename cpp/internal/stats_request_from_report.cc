@@ -32,7 +32,7 @@
 namespace meet {
 
 MediaStatsChannelFromClient StatsRequestFromReport(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
     int64_t stats_request_id,
     const absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>&
         allowlist) {

@@ -121,7 +121,7 @@ void ConferencePeerConnection::OnConnectionChange(
 }
 
 void ConferencePeerConnection::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   if (track_signaled_callback_ == nullptr) {
     LOG(WARNING)
         << "ConferencePeerConnection::OnTrack called without callback.";

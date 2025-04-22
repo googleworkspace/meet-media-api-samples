@@ -52,12 +52,13 @@ class MediaApiClient : public MediaApiClientInterface {
     std::unique_ptr<ConferenceDataChannelInterface> video_assignment;
   };
 
-  MediaApiClient(std::unique_ptr<rtc::Thread> client_thread,
-                 std::unique_ptr<rtc::Thread> worker_thread,
-                 rtc::scoped_refptr<MediaApiClientObserverInterface> observer,
-                 std::unique_ptr<ConferencePeerConnectionInterface>
-                     conference_peer_connection,
-                 ConferenceDataChannels data_channels)
+  MediaApiClient(
+      std::unique_ptr<webrtc::Thread> client_thread,
+      std::unique_ptr<webrtc::Thread> worker_thread,
+      webrtc::scoped_refptr<MediaApiClientObserverInterface> observer,
+      std::unique_ptr<ConferencePeerConnectionInterface>
+          conference_peer_connection,
+      ConferenceDataChannels data_channels)
       : client_thread_(std::move(client_thread)),
         worker_thread_(std::move(worker_thread)),
         observer_(std::move(observer)),
@@ -147,7 +148,7 @@ class MediaApiClient : public MediaApiClientInterface {
   // Resources may be received while in the joining and joined states.
   void HandleResourceUpdate(ResourceUpdate update);
   void HandleTrackSignaled(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver);
+      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver);
   // Collects stats from the peer connection, sends them to Meet servers, and
   // schedules the next stats collection.
   void CollectStats();
@@ -159,16 +160,16 @@ class MediaApiClient : public MediaApiClientInterface {
   StatsConfig stats_config_;
 
   // Internal thread for client initiated asynchronous behavior.
-  std::unique_ptr<rtc::Thread> client_thread_;
+  std::unique_ptr<webrtc::Thread> client_thread_;
   // The worker thread used by WebRTC objects and the MediaApiAudioDeviceModule.
   //
   // Since the thread must outlive all of these objects, the client owns the
   // thread.
-  std::unique_ptr<rtc::Thread> worker_thread_;
+  std::unique_ptr<webrtc::Thread> worker_thread_;
   // Safety flag for ensuring that tasks posted to the client thread are
   // cancelled when the client is destroyed.
-  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_flag_;
-  rtc::scoped_refptr<MediaApiClientObserverInterface> observer_;
+  webrtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> alive_flag_;
+  webrtc::scoped_refptr<MediaApiClientObserverInterface> observer_;
   std::unique_ptr<ConferencePeerConnectionInterface>
       conference_peer_connection_;
   ConferenceDataChannels data_channels_;

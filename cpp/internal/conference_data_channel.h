@@ -40,7 +40,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
  public:
   ConferenceDataChannel(
       std::unique_ptr<ResourceHandlerInterface> resource_handler,
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
       : resource_handler_(std::move(resource_handler)),
         data_channel_(std::move(data_channel)) {
     data_channel_->RegisterObserver(this);
@@ -88,7 +88,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
 
   ResourceUpdateCallback callback_;
   std::unique_ptr<ResourceHandlerInterface> resource_handler_;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 };
 
 }  // namespace meet

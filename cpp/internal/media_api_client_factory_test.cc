@@ -58,55 +58,57 @@ class MockHttpConnector : public HttpConnectorInterface {
 
 TEST(MediaApiClientFactoryTest,
      SuccessfullyCreatesMediaApiClientWithAudioAndVideoStreams) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-stats", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("participants", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("session-control", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("video-assignment", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -120,7 +122,7 @@ TEST(MediaApiClientFactoryTest,
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_TRUE(media_api_client_status.ok());
 }
@@ -134,7 +136,7 @@ TEST(MediaApiClientFactoryTest, FailsIfReceivingVideoStreamCountIsTooHigh) {
               .receiving_video_stream_count = 4,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -143,7 +145,7 @@ TEST(MediaApiClientFactoryTest, FailsIfReceivingVideoStreamCountIsTooHigh) {
 }
 
 TEST(MediaApiClientFactoryTest, FailsIfPeerConnectionFactoryFailsToCreate) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
@@ -151,8 +153,8 @@ TEST(MediaApiClientFactoryTest, FailsIfPeerConnectionFactoryFailsToCreate) {
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -167,7 +169,7 @@ TEST(MediaApiClientFactoryTest, FailsIfPeerConnectionFactoryFailsToCreate) {
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -175,26 +177,26 @@ TEST(MediaApiClientFactoryTest, FailsIfPeerConnectionFactoryFailsToCreate) {
 }
 
 TEST(MediaApiClientFactoryTest, FailsIfAudioTransceiverFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
-      .WillOnce([](cricket::MediaType media_type,
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
+      .WillOnce([](webrtc::MediaType media_type,
                    const webrtc::RtpTransceiverInit& init) {
         return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                 "test error");
       });
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -209,7 +211,7 @@ TEST(MediaApiClientFactoryTest, FailsIfAudioTransceiverFailsToBeCreated) {
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -217,39 +219,40 @@ TEST(MediaApiClientFactoryTest, FailsIfAudioTransceiverFailsToBeCreated) {
 }
 
 TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
-      .WillOnce([](cricket::MediaType media_type,
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
+      .WillOnce([](webrtc::MediaType media_type,
                    const webrtc::RtpTransceiverInit& init) {
         return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                 "test error");
       });
   ON_CALL(*peer_connection, CreateDataChannelOrError)
       .WillByDefault([](const std::string&, const webrtc::DataChannelInit*) {
-        return static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+        return static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
             webrtc::MockDataChannelInterface::Create());
       });
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -264,7 +267,7 @@ TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -273,29 +276,31 @@ TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
 
 TEST(MediaApiClientFactoryTest,
      FailsIfMediaEntriesDataChannelFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
@@ -303,8 +308,8 @@ TEST(MediaApiClientFactoryTest,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -319,7 +324,7 @@ TEST(MediaApiClientFactoryTest,
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -328,42 +333,44 @@ TEST(MediaApiClientFactoryTest,
 }
 
 TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-stats", _))
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
 
@@ -379,7 +386,7 @@ TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -389,46 +396,48 @@ TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
 
 TEST(MediaApiClientFactoryTest,
      FailsIfParticipantsDataChannelFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-stats", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("participants", _))
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -443,7 +452,7 @@ TEST(MediaApiClientFactoryTest,
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -453,50 +462,52 @@ TEST(MediaApiClientFactoryTest,
 
 TEST(MediaApiClientFactoryTest,
      FailsIfSessionControlDataChannelFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-stats", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("participants", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("session-control", _))
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -511,7 +522,7 @@ TEST(MediaApiClientFactoryTest,
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
@@ -521,54 +532,56 @@ TEST(MediaApiClientFactoryTest,
 
 TEST(MediaApiClientFactoryTest,
      FailsIfVideoAssignmentDataChannelFailsToBeCreated) {
-  rtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionFactoryInterface>
       peer_connection_factory =
           webrtc::MockPeerConnectionFactoryInterface::Create();
-  rtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
-      rtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
+  webrtc::scoped_refptr<webrtc::MockPeerConnectionInterface> peer_connection =
+      webrtc::make_ref_counted<webrtc::MockPeerConnectionInterface>();
   EXPECT_CALL(*peer_connection_factory, CreatePeerConnectionOrError(_, _))
       .WillOnce(Return(
-          static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
+          static_cast<webrtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_AUDIO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+              AddTransceiver(webrtc::MediaType::MEDIA_TYPE_VIDEO, _))
       .Times(3)
-      .WillRepeatedly([](cricket::MediaType media_type,
+      .WillRepeatedly([](webrtc::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
-        return static_cast<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
+        return static_cast<
+            webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-entries", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("media-stats", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("participants", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("session-control", _))
-      .WillOnce(
-          Return(static_cast<rtc::scoped_refptr<webrtc::DataChannelInterface>>(
+      .WillOnce(Return(
+          static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   EXPECT_CALL(*peer_connection, CreateDataChannelOrError("video-assignment", _))
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
       peer_connection_factory_provider =
-          [&](rtc::Thread* signaling_thread, rtc::Thread* worker_thread)
-      -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
   MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
@@ -583,7 +596,7 @@ TEST(MediaApiClientFactoryTest,
               .receiving_video_stream_count = 3,
               .enable_audio_streams = true,
           },
-          rtc::make_ref_counted<MockMediaApiClientObserver>());
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
 
   EXPECT_THAT(media_api_client_status,
               StatusIs(absl::StatusCode::kInternal,
