@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  std::unique_ptr<rtc::Thread> collector_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> collector_thread = webrtc::Thread::Create();
   collector_thread->SetName("collector_thread", nullptr);
   if (!collector_thread->Start()) {
     LOG(ERROR) << "Failed to start collector thread";

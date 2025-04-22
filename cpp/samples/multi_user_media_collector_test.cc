@@ -55,7 +55,7 @@ using ::testing::ScopedMockLog;
 
 TEST(MultiUserMediaCollectorTest, WaitForJoinedTimesOutBeforeJoining) {
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
-      "test_", absl::Seconds(1), rtc::Thread::Create());
+      "test_", absl::Seconds(1), webrtc::Thread::Create());
 
   EXPECT_EQ(collector->WaitForJoined(absl::Seconds(1)).code(),
             absl::StatusCode::kDeadlineExceeded);
@@ -63,7 +63,7 @@ TEST(MultiUserMediaCollectorTest, WaitForJoinedTimesOutBeforeJoining) {
 
 TEST(MultiUserMediaCollectorTest, WaitForJoinedSucceedsAfterJoining) {
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
-      "test_", absl::Seconds(1), rtc::Thread::Create());
+      "test_", absl::Seconds(1), webrtc::Thread::Create());
   collector->OnJoined();
   EXPECT_EQ(collector->WaitForJoined(absl::Seconds(1)), absl::OkStatus());
 }
@@ -71,7 +71,7 @@ TEST(MultiUserMediaCollectorTest, WaitForJoinedSucceedsAfterJoining) {
 TEST(MultiUserMediaCollectorTest,
      WaitForDisconnectedTimesOutBeforeDisconnecting) {
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
-      "test_", absl::Seconds(1), rtc::Thread::Create());
+      "test_", absl::Seconds(1), webrtc::Thread::Create());
 
   EXPECT_EQ(collector->WaitForDisconnected(absl::Seconds(1)).code(),
             absl::StatusCode::kDeadlineExceeded);
@@ -79,7 +79,7 @@ TEST(MultiUserMediaCollectorTest,
 
 TEST(MultiUserMediaCollectorTest,
      WaitForDisconnectedSucceedsAfterDisconnecting) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", absl::Seconds(1), std::move(thread));
@@ -116,7 +116,7 @@ TEST(MultiUserMediaCollectorTest, ClosesAudioAndVideoSegmentsOnDisconnect) {
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(2))
       .WillOnce(Return("identifier_2"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -167,7 +167,7 @@ TEST(MultiUserMediaCollectorTest, ClosingSegmentsRenamesFiles) {
   EXPECT_CALL(mock_renamer,
               Call("test_video_identifier_2_tmp_10x5.yuv",
                    MatchesRegex("test_video_identifier_2_.*_.*_10x5\\.yuv")));
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -204,7 +204,7 @@ TEST(MultiUserMediaCollectorTest, ReceivesAudioFrameAndWritesToFile) {
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -246,7 +246,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -306,7 +306,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(2))
       .WillOnce(Return("identifier_2"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -376,7 +376,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillRepeatedly(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -430,7 +430,7 @@ TEST(MultiUserMediaCollectorTest, StartingNewAudioSegmentReleasesOldSegment) {
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillRepeatedly(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -458,7 +458,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return(absl::InternalError("test error")));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_",
@@ -509,7 +509,7 @@ TEST(MultiUserMediaCollectorTest, ReceivesVideoFrameAndWritesToFile) {
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -550,7 +550,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -608,7 +608,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(2))
       .WillOnce(Return("identifier_2"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -684,7 +684,7 @@ TEST(MultiUserMediaCollectorTest,
       .Times(3)
       .WillRepeatedly(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -755,7 +755,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillRepeatedly(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -808,7 +808,7 @@ TEST(MultiUserMediaCollectorTest, StartingNewVideoSegmentReleasesOldSegment) {
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillRepeatedly(Return("identifier_1"));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_", std::move(mock_output_file_provider).AsStdFunction(),
@@ -836,7 +836,7 @@ TEST(MultiUserMediaCollectorTest,
   EXPECT_CALL(*mock_resource_manager, GetOutputFileIdentifier(1))
       .WillOnce(Return(absl::InternalError("test error")));
   auto renamer = MockFunction<void(absl::string_view, absl::string_view)>();
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<MultiUserMediaCollector>(
       "test_",

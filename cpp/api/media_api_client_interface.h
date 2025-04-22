@@ -295,7 +295,8 @@ class MediaApiClientInterface {
   /// until the client is destroyed.
   static absl::StatusOr<std::unique_ptr<MediaApiClientInterface>> Create(
       const MediaApiClientConfiguration& api_config,
-      rtc::scoped_refptr<MediaApiClientObserverInterface> api_session_observer);
+      webrtc::scoped_refptr<MediaApiClientObserverInterface>
+          api_session_observer);
 };
 
 }  // namespace meet

@@ -54,7 +54,7 @@ VideoTestData CreateVideoTestData(int width, int height) {
   output_data.reserve(height * stride_y + chroma_height * stride_u +
                       chroma_height * stride_v);
 
-  rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
       webrtc::I420Buffer::Create(width, height, stride_y, stride_u, stride_v);
   // Initialize each plane's buffer to all zeros to test that the correct data
   // is read from each plane.

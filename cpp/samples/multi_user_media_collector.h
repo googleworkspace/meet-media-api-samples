@@ -92,7 +92,7 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
   // participant manager.
   MultiUserMediaCollector(absl::string_view output_file_prefix,
                           absl::Duration segment_gap_threshold,
-                          std::unique_ptr<rtc::Thread> collector_thread)
+                          std::unique_ptr<webrtc::Thread> collector_thread)
       : output_file_prefix_(output_file_prefix),
         segment_gap_threshold_(segment_gap_threshold),
         collector_thread_(std::move(collector_thread)) {
@@ -129,7 +129,7 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
       OutputWriterProvider output_writer_provider,
       SegmentRenamer segment_renamer, absl::Duration segment_gap_threshold,
       std::unique_ptr<ResourceManagerInterface> resource_manager,
-      std::unique_ptr<rtc::Thread> collector_thread)
+      std::unique_ptr<webrtc::Thread> collector_thread)
       : output_file_prefix_(output_file_prefix),
         output_writer_provider_(std::move(output_writer_provider)),
         segment_renamer_(std::move(segment_renamer)),
@@ -209,9 +209,9 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
   void HandleAudioData(std::vector<int16_t> samples,
                        ContributingSource contributing_source,
                        absl::Time received_time);
-  void HandleVideoData(rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
-                       ContributingSource contributing_source,
-                       absl::Time received_time);
+  void HandleVideoData(
+      webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
+      ContributingSource contributing_source, absl::Time received_time);
 
   // Closes the audio or video segment. This will rename the file to include
   // the start and end times of the segment.
@@ -243,7 +243,7 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
   // The media collector's internal thread. Used for moving work off of the
   // MediaApiClient's threads and synchronizing access to member variables.
-  std::unique_ptr<rtc::Thread> collector_thread_;
+  std::unique_ptr<webrtc::Thread> collector_thread_;
 };
 
 }  // namespace media_api_samples

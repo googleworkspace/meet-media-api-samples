@@ -59,7 +59,7 @@ void MultiUserMediaCollector::OnAudioFrame(meet::AudioFrame frame) {
 
 void MultiUserMediaCollector::OnVideoFrame(meet::VideoFrame frame) {
   absl::Time received_time = absl::Now();
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       frame.frame.video_frame_buffer()->ToI420();
 
   collector_thread_->PostTask([this, buffer = std::move(buffer),
@@ -128,7 +128,7 @@ void MultiUserMediaCollector::HandleAudioData(std::vector<int16_t> samples,
 }
 
 void MultiUserMediaCollector::HandleVideoData(
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
     uint32_t contributing_source, absl::Time received_time) {
   DCHECK(collector_thread_->IsCurrent());
 

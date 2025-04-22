@@ -33,7 +33,7 @@ class MediaApiClientFactoryInterface {
   /// Creates a `MediaApiClientInterface` instance.
   virtual absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
   CreateMediaApiClient(const MediaApiClientConfiguration& api_config,
-                       rtc::scoped_refptr<MediaApiClientObserverInterface>
+                       webrtc::scoped_refptr<MediaApiClientObserverInterface>
                            api_session_observer) = 0;
 };
 

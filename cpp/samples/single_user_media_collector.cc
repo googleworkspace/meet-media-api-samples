@@ -72,7 +72,7 @@ void SingleUserMediaCollector::HandleAudioBuffer(std::vector<int16_t> pcm16) {
 }
 
 void SingleUserMediaCollector::HandleVideoBuffer(
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
   DCHECK(collector_thread_->IsCurrent());
 
   // Meet video frames are always in YUV420p format.
