@@ -29,6 +29,7 @@ cc_binary(
         "@media_api_samples//cpp/api:media_api_client_interface",
         "@media_api_samples//cpp/api:video_assignment_resource",
         "@media_api_samples//cpp/internal:media_api_client_factory",
+        "@media_api_samples//cpp/internal:webrtc_forward_decls",
         "@webrtc",
     ],
 )
@@ -56,6 +57,7 @@ cc_library(
         "@media_api_samples//cpp/api:media_api_client_interface",
         "@media_api_samples//cpp/api:media_entries_resource",
         "@media_api_samples//cpp/api:participants_resource",
+        "@media_api_samples//cpp/internal:webrtc_forward_decls",
         "@webrtc",
     ],
 )
@@ -128,6 +130,7 @@ cc_library(
         "@com_google_absl//absl/synchronization",
         "@com_google_absl//absl/time",
         "@media_api_samples//cpp/api:media_api_client_interface",
+        "@media_api_samples//cpp/internal:webrtc_forward_decls",
         "@webrtc",
     ],
 )

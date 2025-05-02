@@ -29,6 +29,7 @@ cc_library(
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
+        "@media_api_samples//cpp/internal:webrtc_forward_decls",
         "@webrtc",
     ],
 )
@@ -39,6 +40,7 @@ cc_library(
     deps = [
         ":media_api_client_interface",
         "@com_google_absl//absl/status:statusor",
+        "@media_api_samples//cpp/internal:webrtc_forward_decls",
         "@webrtc",
     ],
 )

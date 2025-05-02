@@ -26,13 +26,15 @@
 #include "cpp/api/media_stats_resource.h"
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/api/stats/attribute.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/stats/rtc_stats.h"
 #include "webrtc/api/stats/rtc_stats_report.h"
 
 namespace meet {
 
 MediaStatsChannelFromClient StatsRequestFromReport(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
     int64_t stats_request_id,
     const absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>&
         allowlist) {

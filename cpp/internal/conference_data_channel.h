@@ -23,9 +23,11 @@
 
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
 #include "cpp/api/media_api_client_interface.h"
 #include "cpp/internal/conference_data_channel_interface.h"
 #include "cpp/internal/resource_handler_interface.h"
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/data_channel_interface.h"
 #include "webrtc/api/scoped_refptr.h"
 
@@ -40,7 +42,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
  public:
   ConferenceDataChannel(
       std::unique_ptr<ResourceHandlerInterface> resource_handler,
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
       : resource_handler_(std::move(resource_handler)),
         data_channel_(std::move(data_channel)) {
     data_channel_->RegisterObserver(this);
@@ -88,7 +90,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
 
   ResourceUpdateCallback callback_;
   std::unique_ptr<ResourceHandlerInterface> resource_handler_;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 };
 
 }  // namespace meet

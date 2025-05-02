@@ -35,12 +35,14 @@
 #include "absl/time/time.h"
 #include "cpp/api/media_api_client_interface.h"
 #include "cpp/api/media_stats_resource.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
 #include "cpp/api/session_control_resource.h"
 #include "cpp/api/video_assignment_resource.h"
 #include "cpp/internal/conference_data_channel_interface.h"
 #include "cpp/internal/conference_peer_connection.h"
 #include "cpp/internal/conference_peer_connection_interface.h"
 #include "cpp/internal/testing/mock_media_api_client_observer.h"
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/make_ref_counted.h"
 #include "webrtc/api/media_stream_interface.h"
 #include "webrtc/api/media_types.h"
@@ -76,8 +78,8 @@ using ::testing::ScopedMockLog;
 using ::testing::SizeIs;
 using ::testing::status::StatusIs;
 
-std::unique_ptr<rtc::Thread> CreateThread(absl::string_view name) {
-  std::unique_ptr<rtc::Thread> thread = rtc::Thread::Create();
+std::unique_ptr<webrtc::Thread> CreateThread(absl::string_view name) {
+  std::unique_ptr<webrtc::Thread> thread = webrtc::Thread::Create();
   thread->SetName(name, nullptr);
   EXPECT_TRUE(thread->Start());
   return thread;
@@ -544,7 +546,7 @@ TEST(MediaApiClientTest, StartsSendingStatsRequestsAfterReceivingStatsUpdate) {
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   ON_CALL(*peer_connection, GetStats)
       .WillByDefault([](webrtc::RTCStatsCollectorCallback* callback) {
-        rtc::scoped_refptr<webrtc::RTCStatsReport> report =
+        webrtc::scoped_refptr<webrtc::RTCStatsReport> report =
             webrtc::RTCStatsReport::Create(webrtc::Timestamp::Zero());
         auto candidate_pair_section =
             std::make_unique<webrtc::RTCIceCandidatePairStats>(
@@ -913,7 +915,7 @@ TEST(MediaApiClientTest, LeaveConferenceFailsIfDisconnected) {
 TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
   webrtc::AudioTrackSinkInterface* audio_track_sink;
   // Audio track.
-  rtc::scoped_refptr<webrtc::MockAudioTrack> mock_audio_track =
+  webrtc::scoped_refptr<webrtc::MockAudioTrack> mock_audio_track =
       webrtc::MockAudioTrack::Create();
   ON_CALL(*mock_audio_track, AddSink)
       .WillByDefault(
@@ -921,7 +923,7 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
             audio_track_sink = sink;
           });
   // Receiver.
-  auto mock_receiver = rtc::scoped_refptr<webrtc::MockRtpReceiver>(
+  auto mock_receiver = webrtc::scoped_refptr<webrtc::MockRtpReceiver>(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource csrc_rtp_source(
       webrtc::Timestamp::Micros(1234567890),
@@ -941,10 +943,10 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
       .WillByDefault(Return(std::vector<webrtc::RtpSource>{
           std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
+      .WillByDefault(Return(webrtc::MediaType::MEDIA_TYPE_AUDIO));
   ON_CALL(*mock_receiver, track).WillByDefault(Return(mock_audio_track));
   // Transceiver.
-  rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
+  webrtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
       webrtc::MockRtpTransceiver::Create();
   ON_CALL(*mock_transceiver, mid).WillByDefault(Return("mid"));
   ON_CALL(*mock_transceiver, receiver).WillByDefault(Return(mock_receiver));
@@ -987,18 +989,17 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
 }
 
 TEST(MediaApiClientTest, HandlesSignaledVideoTrack) {
-  rtc::VideoSinkInterface<webrtc::VideoFrame>* video_track_sink;
+  webrtc::VideoSinkInterface<webrtc::VideoFrame>* video_track_sink;
   // Video track.
-  rtc::scoped_refptr<webrtc::MockVideoTrack> mock_video_track =
+  webrtc::scoped_refptr<webrtc::MockVideoTrack> mock_video_track =
       webrtc::MockVideoTrack::Create();
   ON_CALL(*mock_video_track, AddOrUpdateSink)
       .WillByDefault(
-          [&video_track_sink](rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
-                              const rtc::VideoSinkWants&) {
-            video_track_sink = sink;
-          });
+          [&video_track_sink](
+              webrtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+              const webrtc::VideoSinkWants&) { video_track_sink = sink; });
   // Receiver.
-  auto mock_receiver = rtc::scoped_refptr<webrtc::MockRtpReceiver>(
+  auto mock_receiver = webrtc::scoped_refptr<webrtc::MockRtpReceiver>(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource csrc_rtp_source(
       webrtc::Timestamp::Micros(1234567890),
@@ -1018,10 +1019,10 @@ TEST(MediaApiClientTest, HandlesSignaledVideoTrack) {
       .WillByDefault(Return(std::vector<webrtc::RtpSource>{
           std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
+      .WillByDefault(Return(webrtc::MediaType::MEDIA_TYPE_VIDEO));
   ON_CALL(*mock_receiver, track).WillByDefault(Return(mock_video_track));
   // Transceiver.
-  rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
+  webrtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
       webrtc::MockRtpTransceiver::Create();
   ON_CALL(*mock_transceiver, mid).WillByDefault(Return("mid"));
   ON_CALL(*mock_transceiver, receiver).WillByDefault(Return(mock_receiver));
@@ -1065,14 +1066,14 @@ TEST(MediaApiClientTest, HandlesSignaledVideoTrack) {
 }
 
 TEST(MediaApiClientTest, LogsWarningIfSignaledTrackIsUnsupported) {
-  auto mock_receiver = rtc::scoped_refptr<webrtc::MockRtpReceiver>(
+  auto mock_receiver = webrtc::scoped_refptr<webrtc::MockRtpReceiver>(
       new webrtc::MockRtpReceiver());
   // Non-audio and non-video tracks are unsupported.
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_DATA));
+      .WillByDefault(Return(webrtc::MediaType::MEDIA_TYPE_DATA));
   ON_CALL(*mock_receiver, track)
       .WillByDefault(Return(webrtc::MockAudioTrack::Create()));
-  rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
+  webrtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
       webrtc::MockRtpTransceiver::Create();
   ON_CALL(*mock_transceiver, mid).WillByDefault(Return("mid"));
   ON_CALL(*mock_transceiver, receiver).WillByDefault(Return(mock_receiver));

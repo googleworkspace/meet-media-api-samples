@@ -72,6 +72,8 @@
 #include "cpp/api/participants_resource.h"
 #include "cpp/api/session_control_resource.h"
 #include "cpp/api/video_assignment_resource.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/ref_count.h"
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/api/video/video_frame.h"
@@ -295,7 +297,8 @@ class MediaApiClientInterface {
   /// until the client is destroyed.
   static absl::StatusOr<std::unique_ptr<MediaApiClientInterface>> Create(
       const MediaApiClientConfiguration& api_config,
-      rtc::scoped_refptr<MediaApiClientObserverInterface> api_session_observer);
+      webrtc::scoped_refptr<MediaApiClientObserverInterface>
+          api_session_observer);
 };
 
 }  // namespace meet

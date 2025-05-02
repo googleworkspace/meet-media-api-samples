@@ -33,6 +33,8 @@
 #include "cpp/api/media_entries_resource.h"
 #include "cpp/api/participants_resource.h"
 #include "cpp/samples/media_writing.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/api/video/video_frame_buffer.h"
 
@@ -59,7 +61,7 @@ void MultiUserMediaCollector::OnAudioFrame(meet::AudioFrame frame) {
 
 void MultiUserMediaCollector::OnVideoFrame(meet::VideoFrame frame) {
   absl::Time received_time = absl::Now();
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       frame.frame.video_frame_buffer()->ToI420();
 
   collector_thread_->PostTask([this, buffer = std::move(buffer),
@@ -128,7 +130,7 @@ void MultiUserMediaCollector::HandleAudioData(std::vector<int16_t> samples,
 }
 
 void MultiUserMediaCollector::HandleVideoData(
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
     uint32_t contributing_source, absl::Time received_time) {
   DCHECK(collector_thread_->IsCurrent());
 

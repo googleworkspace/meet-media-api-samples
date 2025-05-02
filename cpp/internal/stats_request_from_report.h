@@ -24,6 +24,8 @@
 #include "absl/container/flat_hash_set.h"
 #include "cpp/api/media_stats_resource.h"
 #include "webrtc/api/scoped_refptr.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/stats/rtc_stats_report.h"
 
 namespace meet {
@@ -36,7 +38,7 @@ namespace meet {
 // Sections and attributes that are not in the allowlist are not included in the
 // request.
 MediaStatsChannelFromClient StatsRequestFromReport(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
     int64_t request_id,
     const absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>&
         allowlist);

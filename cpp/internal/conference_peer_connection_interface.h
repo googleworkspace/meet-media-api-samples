@@ -22,6 +22,8 @@
 #include "absl/strings/string_view.h"
 #include "webrtc/api/rtp_transceiver_interface.h"
 #include "webrtc/api/scoped_refptr.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/stats/rtc_stats_collector_callback.h"
 
 namespace meet {
@@ -31,7 +33,7 @@ class ConferencePeerConnectionInterface {
  public:
   using DisconnectCallback = absl::AnyInvocable<void(absl::Status)>;
   using TrackSignaledCallback = absl::AnyInvocable<void(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
+      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
 
   virtual ~ConferencePeerConnectionInterface() = default;
 

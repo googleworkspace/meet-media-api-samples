@@ -29,6 +29,8 @@
 #include "nlohmann/json.hpp"
 #include "webrtc/api/jsep.h"
 #include "webrtc/api/make_ref_counted.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/peer_connection_interface.h"
 #include "webrtc/api/rtc_error.h"
 #include "webrtc/api/rtp_transceiver_interface.h"
@@ -121,7 +123,7 @@ void ConferencePeerConnection::OnConnectionChange(
 }
 
 void ConferencePeerConnection::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   if (track_signaled_callback_ == nullptr) {
     LOG(WARNING)
         << "ConferencePeerConnection::OnTrack called without callback.";

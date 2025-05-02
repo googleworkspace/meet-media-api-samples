@@ -30,7 +30,9 @@
 #include "absl/time/time.h"
 #include "cpp/api/media_api_client_interface.h"
 #include "cpp/api/video_assignment_resource.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
 #include "cpp/internal/media_api_client_factory.h"
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "cpp/samples/multi_user_media_collector.h"
 #include "webrtc/api/make_ref_counted.h"
 #include "webrtc/rtc_base/thread.h"
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  std::unique_ptr<rtc::Thread> collector_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> collector_thread = webrtc::Thread::Create();
   collector_thread->SetName("collector_thread", nullptr);
   if (!collector_thread->Start()) {
     LOG(ERROR) << "Failed to start collector thread";

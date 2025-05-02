@@ -16,6 +16,7 @@ cc_library(
   name = "webrtc",
   includes = ["webrtc"],
   visibility = ["//visibility:public"],
+  defines = ["FORCE_ADD_WEBRTC_NAMESPACE_EXPORTS"],
   deps = [
     ":webrtc-lib",
   ],

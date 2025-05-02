@@ -29,6 +29,8 @@
 #include "cpp/api/media_api_client_interface.h"
 #include "webrtc/api/media_stream_interface.h"
 #include "webrtc/api/rtp_receiver_interface.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/api/video/video_frame.h"
 #include "webrtc/api/video/video_sink_interface.h"
@@ -45,7 +47,7 @@ class ConferenceAudioTrack : public webrtc::AudioTrackSinkInterface {
 
   ConferenceAudioTrack(
       std::string mid,
-      rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
+      webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
       AudioFrameCallback callback)
       : mid_(std::move(mid)),
         receiver_(std::move(receiver)),
@@ -58,14 +60,14 @@ class ConferenceAudioTrack : public webrtc::AudioTrackSinkInterface {
  private:
   // Media line from the SDP offer/answer that identifies this track.
   std::string mid_;
-  rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
+  webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
   AudioFrameCallback callback_;
 };
 
-// Adapter class for rtc::VideoSinkInterface that converts
+// Adapter class for webrtc::VideoSinkInterface that converts
 // webrtc::VideoFrames to meet::VideoFrames and calls the callback.
 class ConferenceVideoTrack
-    : public rtc::VideoSinkInterface<webrtc::VideoFrame> {
+    : public webrtc::VideoSinkInterface<webrtc::VideoFrame> {
  public:
   using VideoFrameCallback = absl::AnyInvocable<void(VideoFrame frame)>;
 

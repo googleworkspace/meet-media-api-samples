@@ -30,6 +30,8 @@
 #include "webrtc/api/scoped_refptr.h"
 #include "webrtc/api/video/video_frame_buffer.h"
 #include "webrtc/rtc_base/thread.h"
+// TODO: Remove once build has updated to a recent WebRTC version.
+#include "cpp/internal/webrtc_forward_decls.h"
 
 // TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
 // to a version that supports it.
@@ -72,7 +74,7 @@ void SingleUserMediaCollector::HandleAudioBuffer(std::vector<int16_t> pcm16) {
 }
 
 void SingleUserMediaCollector::HandleVideoBuffer(
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
   DCHECK(collector_thread_->IsCurrent());
 
   // Meet video frames are always in YUV420p format.

@@ -24,6 +24,7 @@ cc_library(
         ":conference_peer_connection_interface",
         ":stats_request_from_report",
         ":variant_utils",
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
@@ -58,6 +59,7 @@ cc_library(
         ":participants_resource_handler",
         ":session_control_resource_handler",
         ":video_assignment_resource_handler",
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -79,6 +81,7 @@ cc_library(
     srcs = ["media_api_audio_device_module.cc"],
     hdrs = ["media_api_audio_device_module.h"],
     deps = [
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/log:check",
         "@webrtc",
     ],
@@ -88,6 +91,7 @@ cc_library(
     name = "conference_peer_connection_interface",
     hdrs = ["conference_peer_connection_interface.h"],
     deps = [
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
@@ -103,6 +107,7 @@ cc_library(
         ":conference_media_tracks",
         ":conference_peer_connection_interface",
         ":http_connector_interface",
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -204,6 +209,7 @@ cc_library(
     srcs = ["stats_request_from_report.cc"],
     hdrs = ["stats_request_from_report.h"],
     deps = [
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/container:flat_hash_map",
         "@com_google_absl//absl/container:flat_hash_set",
         "@com_google_absl//absl/log",
@@ -229,6 +235,7 @@ cc_library(
     deps = [
         ":conference_data_channel_interface",
         ":resource_handler_interface",
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -421,6 +428,7 @@ cc_library(
     srcs = ["conference_media_tracks.cc"],
     hdrs = ["conference_media_tracks.h"],
     deps = [
+        ":webrtc_forward_decls",
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/types:optional",
@@ -443,5 +451,14 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest",
         "@media_api_samples//cpp/api:media_api_client_interface",
+    ],
+)
+
+# TODO: Remove once build has updated to a recent WebRTC version.
+cc_library(
+    name = "webrtc_forward_decls",
+    hdrs = ["webrtc_forward_decls.h"],
+    visibility = ["@media_api_samples//cpp:__subpackages__"],
+    deps = [
     ],
 )
