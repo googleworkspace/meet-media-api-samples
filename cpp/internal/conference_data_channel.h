@@ -56,8 +56,8 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
   ConferenceDataChannel& operator=(const ConferenceDataChannel&) = delete;
 
   void OnStateChange() override {
-    LOG(INFO) << "ConferenceDataChannel::OnStateChange: "
-              << data_channel_->state();
+    VLOG(1) << "ConferenceDataChannel::OnStateChange: "
+            << data_channel_->state();
   };
 
   void OnMessage(const webrtc::DataBuffer& buffer) override;
