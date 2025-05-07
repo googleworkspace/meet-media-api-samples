@@ -993,10 +993,9 @@ TEST(MediaApiClientTest, HandlesSignaledVideoTrack) {
       webrtc::MockVideoTrack::Create();
   ON_CALL(*mock_video_track, AddOrUpdateSink)
       .WillByDefault(
-          [&video_track_sink](rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
-                              const rtc::VideoSinkWants&) {
-            video_track_sink = sink;
-          });
+          [&video_track_sink](
+              rtc::VideoSinkInterface<webrtc::VideoFrame>* sink,
+              const rtc::VideoSinkWants&) { video_track_sink = sink; });
   // Receiver.
   auto mock_receiver = rtc::scoped_refptr<webrtc::MockRtpReceiver>(
       new webrtc::MockRtpReceiver());

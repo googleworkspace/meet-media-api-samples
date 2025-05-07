@@ -52,8 +52,8 @@ class MediaApiClientFactory : public MediaApiClientFactoryInterface {
 
   absl::StatusOr<std::unique_ptr<MediaApiClientInterface>> CreateMediaApiClient(
       const MediaApiClientConfiguration& api_config,
-      rtc::scoped_refptr<MediaApiClientObserverInterface> api_session_observer)
-      override;
+      rtc::scoped_refptr<MediaApiClientObserverInterface>
+          api_session_observer) override;
 
  private:
   PeerConnectionFactoryProvider peer_connection_factory_provider_;

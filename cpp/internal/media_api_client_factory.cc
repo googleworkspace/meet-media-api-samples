@@ -205,7 +205,7 @@ MediaApiClientFactory::MediaApiClientFactory() {
       -> rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return webrtc::CreatePeerConnectionFactory(
         /*network_thread=*/nullptr, worker_thread, signaling_thread,
-        rtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread),
+        webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread),
         webrtc::CreateBuiltinAudioEncoderFactory(),
         webrtc::CreateOpusAudioDecoderFactory(),
         std::make_unique<webrtc::VideoEncoderFactoryTemplate<

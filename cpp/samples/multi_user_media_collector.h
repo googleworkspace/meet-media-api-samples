@@ -209,9 +209,9 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
   void HandleAudioData(std::vector<int16_t> samples,
                        ContributingSource contributing_source,
                        absl::Time received_time);
-  void HandleVideoData(rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
-                       ContributingSource contributing_source,
-                       absl::Time received_time);
+  void HandleVideoData(
+      rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
+      ContributingSource contributing_source, absl::Time received_time);
 
   // Closes the audio or video segment. This will rename the file to include
   // the start and end times of the segment.

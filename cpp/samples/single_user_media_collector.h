@@ -130,7 +130,8 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
   };
 
   void HandleAudioBuffer(std::vector<int16_t> pcm16);
-  void HandleVideoBuffer(rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer);
+  void HandleVideoBuffer(
+      rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer);
 
   std::string output_file_prefix_;
   OutputWriterProvider output_writer_provider_;

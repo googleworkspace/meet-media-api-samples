@@ -52,12 +52,13 @@ class MediaApiClient : public MediaApiClientInterface {
     std::unique_ptr<ConferenceDataChannelInterface> video_assignment;
   };
 
-  MediaApiClient(std::unique_ptr<rtc::Thread> client_thread,
-                 std::unique_ptr<rtc::Thread> worker_thread,
-                 rtc::scoped_refptr<MediaApiClientObserverInterface> observer,
-                 std::unique_ptr<ConferencePeerConnectionInterface>
-                     conference_peer_connection,
-                 ConferenceDataChannels data_channels)
+  MediaApiClient(
+      std::unique_ptr<rtc::Thread> client_thread,
+      std::unique_ptr<rtc::Thread> worker_thread,
+      rtc::scoped_refptr<MediaApiClientObserverInterface> observer,
+      std::unique_ptr<ConferencePeerConnectionInterface>
+          conference_peer_connection,
+      ConferenceDataChannels data_channels)
       : client_thread_(std::move(client_thread)),
         worker_thread_(std::move(worker_thread)),
         observer_(std::move(observer)),

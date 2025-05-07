@@ -67,17 +67,19 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   };
 
   void OnAddStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */)
+      override {
     VLOG(1) << "OnAddStream called.";
   }
 
   void OnRemoveStream(
-      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */) override {
+      rtc::scoped_refptr<webrtc::MediaStreamInterface> /* stream */)
+      override {
     VLOG(1) << "OnRemoveStream called.";
   }
 
-  void OnDataChannel(
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel) override {
+  void OnDataChannel(rtc::scoped_refptr<webrtc::DataChannelInterface>
+                         data_channel) override {
     LOG(ERROR) << "OnDataChannel opened from server: " << data_channel->label();
     // The Meet servers should never open a data channel; all data channels are
     // opened by the client.
@@ -153,8 +155,8 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   void OnConnectionChange(
       webrtc::PeerConnectionInterface::PeerConnectionState new_state) override;
 
-  void OnTrack(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) override;
+  void OnTrack(rtc::scoped_refptr<webrtc::RtpTransceiverInterface>
+                   transceiver) override;
 
   // Sets the disconnect callback for the conference peer connection. Conference
   // peer connections can only have one disconnect callback at a time, and the

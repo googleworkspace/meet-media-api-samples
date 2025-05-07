@@ -64,7 +64,8 @@ class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
       : callback_(std::move(callback)) {}
 
   void OnStatsDelivered(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) override {
+      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report)
+      override {
     callback_(report);
   }
 
@@ -336,7 +337,8 @@ void MediaApiClient::CollectStats() {
   }
 
   auto callback = webrtc::make_ref_counted<OnRTCStatsCollected>(
-      [this](const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
+      [this](
+          const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
         MediaStatsChannelFromClient request = StatsRequestFromReport(
             report, stats_config_.stats_request_id, stats_config_.allowlist);
         stats_config_.stats_request_id++;
