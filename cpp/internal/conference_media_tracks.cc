@@ -18,7 +18,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <utility>
+#include <vector>
 
 #include "absl/log/log.h"
 #include "absl/types/optional.h"
@@ -44,33 +46,36 @@ void ConferenceAudioTrack::OnData(
   // Audio data is expected to be in PCM format, where each sample is 16 bits.
   const auto* pcm_data = reinterpret_cast<const int16_t*>(audio_data);
 
+  // Because one track may have multiple contributing sources multiplexed on
+  // it, the receiver maintains an ordered list of contributing sources and
+  // synchronization sources. Sources are in reverse chronological order (from
+  // most recent to oldest).
+  //
+  // The most recent sources should be used for the audio frame that is
+  // currently being processed.
+  std::optional<uint32_t> most_recent_csrc;
+  std::optional<uint32_t> most_recent_ssrc;
+  // Meet sends a contributing source of `kLoudestSpeakerCsrc` to indicate the
+  // loudest speaker. Knowing the loudest speaker can be useful, as it can be
+  // used to determine which participant to prioritize when rendering audio or
+  // video (although other methods may be used as well).
   bool is_from_loudest_speaker = false;
-  std::optional<uint32_t> csrc;
-  std::optional<uint32_t> ssrc;
-  // Audio csrcs and ssrcs are not included in the audio data. Therefore,
-  // extract them from the RtpReceiver.
   for (const auto& rtp_source : receiver_->GetSources()) {
-    // It is expected that there may be 1 or 2 contributing sources. The
-    // contributing source corresponding to the participant's audio stream will
-    // always be present. Meet may also send a contributing source with value
-    // `kLoudestSpeakerCsrc` to indicate that this audio stream is from the
-    // loudest speaker.
-    //
-    // Knowing the loudest speaker can be useful, as it can be used to determine
-    // which participant to prioritize when rendering audio or video (although
-    // other methods may be used as well).
     if (rtp_source.source_type() == webrtc::RtpSourceType::CSRC) {
       if (rtp_source.source_id() == kLoudestSpeakerCsrc) {
         is_from_loudest_speaker = true;
-      } else {
-        csrc = rtp_source.source_id();
+      } else if (!most_recent_csrc.has_value()) {
+        // Take the first CSRC that is not the loudest speaker because CSRCs are
+        // ordered from most recent to oldest.
+        most_recent_csrc = rtp_source.source_id();
       }
-    } else if (rtp_source.source_type() == webrtc::RtpSourceType::SSRC) {
-      ssrc = rtp_source.source_id();
+    } else if (rtp_source.source_type() == webrtc::RtpSourceType::SSRC &&
+               !most_recent_ssrc.has_value()) {
+      most_recent_ssrc = rtp_source.source_id();
     }
   }
 
-  if (!csrc.has_value() || !ssrc.has_value()) {
+  if (!most_recent_csrc.has_value() || !most_recent_ssrc.has_value()) {
     // Before real audio starts flowing, silent audio frames will be received.
     // These frames will not have a CSRC or SSRC. Because these frames will be
     // received frequently, log them at a lower level to avoid cluttering the
@@ -78,10 +83,10 @@ void ConferenceAudioTrack::OnData(
     //
     // However, this may still happen in error cases, so something should be
     // logged.
-    if (!csrc.has_value()) {
+    if (!most_recent_csrc.has_value()) {
       VLOG(2) << "AudioFrame is missing CSRC for mid: " << mid_;
     }
-    if (!ssrc.has_value()) {
+    if (!most_recent_ssrc.has_value()) {
       VLOG(2) << "AudioFrame is missing SSRC for mid: " << mid_;
     }
     return;
@@ -97,8 +102,8 @@ void ConferenceAudioTrack::OnData(
                        .number_of_channels = number_of_channels,
                        .number_of_frames = number_of_frames,
                        .is_from_loudest_speaker = is_from_loudest_speaker,
-                       .contributing_source = csrc.value(),
-                       .synchronization_source = ssrc.value()});
+                       .contributing_source = most_recent_csrc.value(),
+                       .synchronization_source = most_recent_ssrc.value()});
 };
 
 void ConferenceVideoTrack::OnFrame(const webrtc::VideoFrame& frame) {
