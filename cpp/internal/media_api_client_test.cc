@@ -941,7 +941,7 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
       .WillByDefault(Return(std::vector<webrtc::RtpSource>{
           std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_AUDIO));
+      .WillByDefault(Return(cricket::MEDIA_TYPE_AUDIO));
   ON_CALL(*mock_receiver, track).WillByDefault(Return(mock_audio_track));
   // Transceiver.
   rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
@@ -1017,7 +1017,7 @@ TEST(MediaApiClientTest, HandlesSignaledVideoTrack) {
       .WillByDefault(Return(std::vector<webrtc::RtpSource>{
           std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_VIDEO));
+      .WillByDefault(Return(cricket::MEDIA_TYPE_VIDEO));
   ON_CALL(*mock_receiver, track).WillByDefault(Return(mock_video_track));
   // Transceiver.
   rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =
@@ -1068,7 +1068,7 @@ TEST(MediaApiClientTest, LogsWarningIfSignaledTrackIsUnsupported) {
       new webrtc::MockRtpReceiver());
   // Non-audio and non-video tracks are unsupported.
   ON_CALL(*mock_receiver, media_type)
-      .WillByDefault(Return(cricket::MediaType::MEDIA_TYPE_DATA));
+      .WillByDefault(Return(cricket::MediaType::DATA));
   ON_CALL(*mock_receiver, track)
       .WillByDefault(Return(webrtc::MockAudioTrack::Create()));
   rtc::scoped_refptr<webrtc::MockRtpTransceiver> mock_transceiver =

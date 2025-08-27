@@ -96,7 +96,7 @@ absl::Status ConfigureTransceivers(
       // starts.
       webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
           audio_result = peer_connection.AddTransceiver(
-              cricket::MediaType::MEDIA_TYPE_AUDIO, audio_init);
+              cricket::MEDIA_TYPE_AUDIO, audio_init);
 
       if (!audio_result.ok()) {
         return absl::InternalError(
@@ -112,8 +112,8 @@ absl::Status ConfigureTransceivers(
     video_init.stream_ids = {absl::StrCat("video_stream_", i)};
 
     webrtc::RTCErrorOr<rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>
-        video_result = peer_connection.AddTransceiver(
-            cricket::MediaType::MEDIA_TYPE_VIDEO, video_init);
+        video_result = peer_connection.AddTransceiver(cricket::MEDIA_TYPE_VIDEO,
+                                                      video_init);
 
     if (!video_result.ok()) {
       return absl::InternalError(absl::StrCat(

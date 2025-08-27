@@ -67,8 +67,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -76,8 +75,7 @@ TEST(MediaApiClientFactoryTest,
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -186,8 +184,7 @@ TEST(MediaApiClientFactoryTest, FailsIfAudioTransceiverFailsToBeCreated) {
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .WillOnce([](cricket::MediaType media_type,
                    const webrtc::RtpTransceiverInit& init) {
         return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
@@ -228,8 +225,7 @@ TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -237,8 +233,7 @@ TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .WillOnce([](cricket::MediaType media_type,
                    const webrtc::RtpTransceiverInit& init) {
         return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
@@ -285,8 +280,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -294,8 +288,7 @@ TEST(MediaApiClientFactoryTest,
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -342,8 +335,7 @@ TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -351,8 +343,7 @@ TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -405,8 +396,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -414,8 +404,7 @@ TEST(MediaApiClientFactoryTest,
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -471,8 +460,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -480,8 +468,7 @@ TEST(MediaApiClientFactoryTest,
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -541,8 +528,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(
           static_cast<rtc::scoped_refptr<webrtc::PeerConnectionInterface>>(
               peer_connection)));
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_AUDIO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_AUDIO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
@@ -550,8 +536,7 @@ TEST(MediaApiClientFactoryTest,
             rtc::scoped_refptr<webrtc::RtpTransceiverInterface>>(
             webrtc::MockRtpTransceiver::Create());
       });
-  EXPECT_CALL(*peer_connection,
-              AddTransceiver(cricket::MediaType::MEDIA_TYPE_VIDEO, _))
+  EXPECT_CALL(*peer_connection, AddTransceiver(cricket::MEDIA_TYPE_VIDEO, _))
       .Times(3)
       .WillRepeatedly([](cricket::MediaType media_type,
                          const webrtc::RtpTransceiverInit& init) {
