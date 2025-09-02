@@ -20,6 +20,13 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 webrtc_path = "/usr/local/google/home/pareynolds/src/webrtc-checkout/"
 
 http_archive(
+    name = "rules_cc",
+    sha256 = "b8b918a85f9144c01f6cfe0f45e4f2838c7413961a8ff23bc0c6cdf8bb07a3b6",
+    strip_prefix = "rules_cc-0.1.5",
+    url = "https://github.com/bazelbuild/rules_cc/releases/download/0.1.5/rules_cc-0.1.5.tar.gz",
+)
+
+http_archive(
     name = "rules_pkg",
     urls = [
         "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/1.0.1/rules_pkg-1.0.1.tar.gz",
