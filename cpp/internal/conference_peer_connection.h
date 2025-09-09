@@ -121,9 +121,8 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
     VLOG(1) << "OnIceCandidateError called.";
   }
 
-  void OnIceCandidatesRemoved(
-      const std::vector<cricket::Candidate>& candidates) override {
-    VLOG(1) << "OnIceCandidatesRemoved: " << candidates.size();
+  void OnIceCandidateRemoved(const webrtc::IceCandidate* candidate) override {
+    VLOG(1) << "OnIceCandidatesRemoved: " << candidate->sdp_mid();
   }
 
   void OnIceConnectionReceivingChange(bool /* receiving */) override {
