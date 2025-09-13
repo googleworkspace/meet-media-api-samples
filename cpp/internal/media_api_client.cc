@@ -79,7 +79,7 @@ absl::Status MediaApiClient::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
     absl::string_view access_token) {
   {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     if (state_ != State::kReady) {
       return absl::FailedPreconditionError(absl::StrCat(
           "ConnectActiveConference called in ", StateToString(state_),
@@ -104,7 +104,7 @@ absl::Status MediaApiClient::ConnectActiveConference(
     }
 
     {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (state_ != State::kConnecting) {
         LOG(WARNING)
             << "Client in " << StateToString(state_)
@@ -122,7 +122,7 @@ absl::Status MediaApiClient::ConnectActiveConference(
 absl::Status MediaApiClient::LeaveConference(int64_t request_id) {
   State state;
   {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
 
     if (state_ == State::kDisconnected) {
       return absl::InternalError(
@@ -148,7 +148,7 @@ absl::Status MediaApiClient::LeaveConference(int64_t request_id) {
 
 absl::Status MediaApiClient::SendRequest(const ResourceRequest &request) {
   {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     if (state_ != State::kJoined) {
       LOG(WARNING)
           << "SendRequest called while client is in " << StateToString(state_)
@@ -240,7 +240,7 @@ void MediaApiClient::HandleResourceUpdate(ResourceUpdate update) {
     if (session_control_resource.session_status.connection_state ==
         SessionStatus::ConferenceConnectionState::kJoined) {
       {
-        absl::MutexLock lock(&mutex_);
+        absl::MutexLock lock(mutex_);
         if (state_ != State::kJoining) {
           LOG(WARNING) << "Received joined session status while in "
                        << StateToString(state_)
@@ -315,7 +315,7 @@ void MediaApiClient::MaybeDisconnect(absl::Status status) {
   }
 
   {
-    absl::MutexLock lock(&mutex_);
+    absl::MutexLock lock(mutex_);
     if (state_ == State::kDisconnected) {
       LOG(WARNING) << "Client attempted to disconnect with status: "
                    << status.message()
