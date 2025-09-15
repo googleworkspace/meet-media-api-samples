@@ -100,11 +100,7 @@ TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
       });
   auto answer_description =
-      std::make_unique<webrtc::MockSessionDescriptionInterface>();
-  EXPECT_CALL(*answer_description, ToString(_)).WillOnce([](std::string* str) {
-    *str = kWebRtcOffer;
-    return true;
-  });
+      webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, kWebRtcOffer);
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
@@ -177,11 +173,7 @@ TEST(ConferencePeerConnectionTest, ConnectFailsWhenHttpConnectorFails) {
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
       });
   auto answer_description =
-      std::make_unique<webrtc::MockSessionDescriptionInterface>();
-  EXPECT_CALL(*answer_description, ToString(_)).WillOnce([](std::string* str) {
-    *str = kWebRtcOffer;
-    return true;
-  });
+      webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, kWebRtcOffer);
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
@@ -208,11 +200,7 @@ TEST(ConferencePeerConnectionTest,
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
       });
   auto answer_description =
-      std::make_unique<webrtc::MockSessionDescriptionInterface>();
-  EXPECT_CALL(*answer_description, ToString(_)).WillOnce([](std::string* str) {
-    *str = kWebRtcOffer;
-    return true;
-  });
+      webrtc::CreateSessionDescription(webrtc::SdpType::kOffer, kWebRtcOffer);
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
