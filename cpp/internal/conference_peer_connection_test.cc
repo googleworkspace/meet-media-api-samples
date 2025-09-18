@@ -40,7 +40,6 @@
 #include "webrtc/api/set_remote_description_observer_interface.h"
 #include "webrtc/api/test/mock_peerconnectioninterface.h"
 #include "webrtc/api/test/mock_rtp_transceiver.h"
-#include "webrtc/api/test/mock_session_description_interface.h"
 #include "webrtc/rtc_base/thread.h"
 
 namespace meet {
