@@ -54,11 +54,24 @@ export class DefaultCommunicationProtocolImpl
       }),
     });
     if (!response.ok) {
-      throw new Error(
-        `Failed to join meeting, status: ${response.status}, message: ${response.statusText}`,
-      );
+      const bodyReader = response.body?.getReader();
+      let error = '';
+      if (bodyReader) {
+        const decoder = new TextDecoder();
+        let readingDone = false;
+        while (!readingDone) {
+          const {done, value} = await bodyReader?.read();
+          if (done) {
+            readingDone = true;
+            break;
+          }
+          error += decoder.decode(value);
+        }
+      }
+      const errorJson = JSON.parse(error);
+      throw new Error(`${JSON.stringify(errorJson, null, 2)}`);
     }
-    const body = await response.json();
-    return {answer: body['answer']} as MediaApiCommunicationResponse;
+    const payload = await response.json();
+    return {answer: payload['answer']} as MediaApiCommunicationResponse;
   }
 }

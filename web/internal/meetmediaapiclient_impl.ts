@@ -388,20 +388,11 @@ export class MeetMediaApiClientImpl implements MeetMediaApiClient {
 
     pcOffer = await this.peerConnection.createOffer();
     await this.peerConnection.setLocalDescription(pcOffer);
-    let response: MediaApiCommunicationResponse;
-    try {
-      const protocol: MediaApiCommunicationProtocol =
-        communicationProtocol ??
-        new DefaultCommunicationProtocolImpl(this.requiredConfiguration);
-      response = await protocol.connectActiveConference(pcOffer.sdp ?? '');
-    } catch (e) {
-      throw new Error(
-        'Internal error, call to connectActiveConference failed, Exception: ' +
-          (e as Error).name +
-          ' ' +
-          (e as Error).message,
-      );
-    }
+    const protocol: MediaApiCommunicationProtocol =
+      communicationProtocol ??
+      new DefaultCommunicationProtocolImpl(this.requiredConfiguration);
+    const response: MediaApiCommunicationResponse =
+      await protocol.connectActiveConference(pcOffer.sdp ?? '');
     if (response?.answer) {
       await this.peerConnection.setRemoteDescription({
         type: 'answer',
