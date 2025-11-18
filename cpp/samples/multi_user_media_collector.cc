@@ -220,7 +220,8 @@ void MultiUserMediaCollector::OnDisconnected(absl::Status status) {
   DCHECK(!disconnect_notification_.HasBeenNotified());
 
   LOG(INFO) << "MultiUserMediaCollector::OnDisconnected " << status;
-  collector_thread_->PostTask([this] {
+  collector_thread_->PostTask([this, status = std::move(status)] {
+    disconnect_status_ = std::move(status);
     for (auto& [contributing_source, audio_segment] : audio_segments_) {
       CloseAudioSegment(*audio_segment);
     }
@@ -231,6 +232,14 @@ void MultiUserMediaCollector::OnDisconnected(absl::Status status) {
     video_segments_.clear();
 
     disconnect_notification_.Notify();
+
+    if (!join_notification_.HasBeenNotified()) {
+      // This notification is used to break out of the join/leave wait loop in
+      // the sample. We only want to notify if we have not joined the
+      // conference. If we have, then the user will have been notified by the
+      // disconnect notification.
+      join_notification_.Notify();
+    }
   });
 }
 

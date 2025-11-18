@@ -44,24 +44,30 @@ using ::testing::MockFunction;
 using ::testing::Return;
 
 TEST(SingleUserMediaCollectorTest, WaitForJoinedTimesOutBeforeJoining) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
-      "test_", rtc::Thread::Create());
+      "test_", std::move(thread));
 
   EXPECT_EQ(collector->WaitForJoined(absl::Seconds(1)).code(),
             absl::StatusCode::kDeadlineExceeded);
 }
 
 TEST(SingleUserMediaCollectorTest, WaitForJoinedSucceedsAfterJoining) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
-      "test_", rtc::Thread::Create());
+      "test_", std::move(thread));
   collector->OnJoined();
   EXPECT_EQ(collector->WaitForJoined(absl::Seconds(1)), absl::OkStatus());
 }
 
 TEST(SingleUserMediaCollectorTest,
      WaitForDisconnectedTimesOutBeforeDisconnecting) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
-      "test_", rtc::Thread::Create());
+      "test_", std::move(thread));
 
   EXPECT_EQ(collector->WaitForDisconnected(absl::Seconds(1)).code(),
             absl::StatusCode::kDeadlineExceeded);
@@ -69,10 +75,34 @@ TEST(SingleUserMediaCollectorTest,
 
 TEST(SingleUserMediaCollectorTest,
      WaitForDisconnectedSucceedsAfterDisconnecting) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
-      "test_", rtc::Thread::Create());
+      "test_", std::move(thread));
   collector->OnDisconnected(absl::OkStatus());
   EXPECT_EQ(collector->WaitForDisconnected(absl::Seconds(1)), absl::OkStatus());
+}
+
+TEST(SingleUserMediaCollectorTest,
+     WaitForJoinedSucceedsAfterDisconnectingWithNonOkStatus) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
+  auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
+      "test_", std::move(thread));
+  collector->OnDisconnected(absl::InternalError("test"));
+  EXPECT_EQ(collector->WaitForJoined(absl::Seconds(1)),
+            absl::InternalError("test"));
+}
+
+TEST(SingleUserMediaCollectorTest,
+     WaitForDisconnectedSucceedsAfterDisconnectingWithNonOkStatus) {
+  auto thread = rtc::Thread::Create();
+  thread->Start();
+  auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
+      "test_", std::move(thread));
+  collector->OnDisconnected(absl::InternalError("test"));
+  EXPECT_EQ(collector->WaitForDisconnected(absl::Seconds(1)),
+            absl::InternalError("test"));
 }
 
 TEST(SingleUserMediaCollectorTest, ReceivesAudioFrameAndWritesToAudioFile) {

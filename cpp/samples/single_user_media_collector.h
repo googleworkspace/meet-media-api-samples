@@ -21,6 +21,7 @@
 #include <fstream>
 #include <ios>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -100,7 +101,16 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
   }
   void OnDisconnected(absl::Status status) override {
     LOG(INFO) << "SingleUserMediaCollector::OnDisconnected " << status;
+    collector_thread_->BlockingCall(
+        [&] { disconnect_status_ = std::move(status); });
     disconnect_notification_.Notify();
+    if (!join_notification_.HasBeenNotified()) {
+      // This notification is used to break out of the join/leave wait loop in
+      // the sample. We only want to notify if we have not joined the
+      // conference. If we have, then the user will have been notified by the
+      // disconnect notification.
+      join_notification_.Notify();
+    }
   }
 
   absl::Status WaitForJoined(absl::Duration timeout) {
@@ -108,14 +118,26 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
       return absl::DeadlineExceededError(
           "Timed out waiting for joined notification");
     }
-    return absl::OkStatus();
+    return collector_thread_->BlockingCall([&] {
+      if (disconnect_status_.has_value()) {
+        // If there is a disconnect status that means the client has failed to
+        // join.
+        return *disconnect_status_;
+      }
+      return absl::OkStatus();
+    });
   }
   absl::Status WaitForDisconnected(absl::Duration timeout) {
     if (!disconnect_notification_.WaitForNotificationWithTimeout(timeout)) {
       return absl::DeadlineExceededError(
           "Timed out waiting for disconnected notification");
     }
-    return absl::OkStatus();
+    return collector_thread_->BlockingCall([&] {
+      if (!disconnect_status_.has_value()) {
+        return absl::InternalError("Disconnect status not set");
+      }
+      return *disconnect_status_;
+    });
   }
 
   void OnAudioFrame(meet::AudioFrame frame) override;
@@ -154,6 +176,9 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
   // The media collector's internal thread. Used for moving work off of the
   // MediaApiClient's threads and synchronizing access to member variables.
   std::unique_ptr<rtc::Thread> collector_thread_;
+
+  // The status of the disconnection from the meeting.
+  std::optional<absl::Status> disconnect_status_ = std::nullopt;
 };
 
 }  // namespace media_api_samples
