@@ -153,6 +153,7 @@ cc_test(
     deps = [
         ":curl_connector",
         ":mock_curl_api_wrapper",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:cord",
         "@com_google_googletest//:gtest_main",

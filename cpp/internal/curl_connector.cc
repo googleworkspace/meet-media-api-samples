@@ -39,6 +39,33 @@ const json* FindOrNull(const json& json, absl::string_view key) {
   return it != json.cend() ? &*it : nullptr;
 }
 
+absl::StatusCode GetStatusCodeFromString(absl::string_view status_str) {
+  if (status_str == "OK") return absl::StatusCode::kOk;
+  if (status_str == "CANCELLED") return absl::StatusCode::kCancelled;
+  if (status_str == "UNKNOWN") return absl::StatusCode::kUnknown;
+  if (status_str == "INVALID_ARGUMENT")
+    return absl::StatusCode::kInvalidArgument;
+  if (status_str == "DEADLINE_EXCEEDED")
+    return absl::StatusCode::kDeadlineExceeded;
+  if (status_str == "NOT_FOUND") return absl::StatusCode::kNotFound;
+  if (status_str == "ALREADY_EXISTS") return absl::StatusCode::kAlreadyExists;
+  if (status_str == "PERMISSION_DENIED")
+    return absl::StatusCode::kPermissionDenied;
+  if (status_str == "UNAUTHENTICATED")
+    return absl::StatusCode::kUnauthenticated;
+  if (status_str == "RESOURCE_EXHAUSTED")
+    return absl::StatusCode::kResourceExhausted;
+  if (status_str == "FAILED_PRECONDITION")
+    return absl::StatusCode::kFailedPrecondition;
+  if (status_str == "ABORTED") return absl::StatusCode::kAborted;
+  if (status_str == "OUT_OF_RANGE") return absl::StatusCode::kOutOfRange;
+  if (status_str == "UNIMPLEMENTED") return absl::StatusCode::kUnimplemented;
+  if (status_str == "INTERNAL") return absl::StatusCode::kInternal;
+  if (status_str == "UNAVAILABLE") return absl::StatusCode::kUnavailable;
+  if (status_str == "DATA_LOSS") return absl::StatusCode::kDataLoss;
+  return absl::StatusCode::kUnknown;
+}
+
 }  // namespace
 
 absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
@@ -91,25 +118,15 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
 
   if (const json* error_field = FindOrNull(json_request_response, "error");
       error_field != nullptr) {
-    std::string status;
+    absl::StatusCode status_code = absl::StatusCode::kUnknown;
     if (const json* code_field = FindOrNull(*error_field, "status");
         code_field != nullptr) {
-      status = code_field->get<std::string>();
-    } else {
-      status = "Unknown error status";
+      status_code = GetStatusCodeFromString(code_field->get<std::string>());
     }
 
-    std::string message;
-    if (const json* message_field = FindOrNull(*error_field, "message");
-        message_field != nullptr) {
-      message = message_field->get<std::string>();
-    } else {
-      message = "Unknown error message";
-    }
+    std::string response_data = curl_request.GetResponseData();
 
-    return absl::Status(absl::StatusCode::kInternal,
-                        absl::StrCat("Received error from Meet servers. ",
-                                     status, ": ", message));
+    return absl::Status(status_code, response_data);
   }
 
   return absl::UnknownError(

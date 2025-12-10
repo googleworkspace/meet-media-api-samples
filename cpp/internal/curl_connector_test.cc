@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include <curl/curl.h>
@@ -34,8 +35,10 @@ namespace {
 
 using Json = ::nlohmann::json;
 using ::testing::_;
+using ::testing::AllOf;
 using ::testing::HasSubstr;
 using ::testing::StrEq;
+using ::testing::status::StatusIs;
 
 TEST(CurlConnectorTest, PopulatesRequest) {
   CURLoption populated_option;
@@ -120,9 +123,18 @@ TEST(CurlConnectorTest, ReturnsResponse) {
   EXPECT_EQ(response.value(), "some sdp answer");
 }
 
-TEST(CurlConnectorTest, ReturnsErrorFromResponse) {
+struct StatusCodeTestParams {
+  std::string status_str;
+  absl::StatusCode status_code;
+};
+
+using CurlConnectorStatusCodeTest =
+    ::testing::TestWithParam<StatusCodeTestParams>;
+
+TEST_P(CurlConnectorStatusCodeTest, ReturnsErrorFromResponse) {
+  const StatusCodeTestParams& params = GetParam();
   nlohmann::basic_json<> response_body;
-  response_body["error"]["status"] = "some error status";
+  response_body["error"]["status"] = params.status_str;
   response_body["error"]["message"] = "some error message";
   auto mock_curl_api = std::make_unique<MockCurlApiWrapper>();
   EXPECT_CALL(*mock_curl_api, EasySetOptPtr(_, CURLOPT_WRITEDATA, _))
@@ -141,10 +153,39 @@ TEST(CurlConnectorTest, ReturnsErrorFromResponse) {
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
       "some sdp offer");
 
-  ASSERT_FALSE(response.ok());
-  EXPECT_THAT(response.status().message(),
-              HasSubstr("some error status: some error message"));
+  EXPECT_THAT(response, StatusIs(params.status_code,
+                                 AllOf(HasSubstr(params.status_str),
+                                       HasSubstr("some error message"))));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    CurlConnectorStatusCodeTest, CurlConnectorStatusCodeTest,
+    ::testing::Values(
+        StatusCodeTestParams{"CANCELLED", absl::StatusCode::kCancelled},
+        StatusCodeTestParams{"UNKNOWN", absl::StatusCode::kUnknown},
+        StatusCodeTestParams{"INVALID_ARGUMENT",
+                             absl::StatusCode::kInvalidArgument},
+        StatusCodeTestParams{"DEADLINE_EXCEEDED",
+                             absl::StatusCode::kDeadlineExceeded},
+        StatusCodeTestParams{"NOT_FOUND", absl::StatusCode::kNotFound},
+        StatusCodeTestParams{"ALREADY_EXISTS",
+                             absl::StatusCode::kAlreadyExists},
+        StatusCodeTestParams{"PERMISSION_DENIED",
+                             absl::StatusCode::kPermissionDenied},
+        StatusCodeTestParams{"UNAUTHENTICATED",
+                             absl::StatusCode::kUnauthenticated},
+        StatusCodeTestParams{"RESOURCE_EXHAUSTED",
+                             absl::StatusCode::kResourceExhausted},
+        StatusCodeTestParams{"FAILED_PRECONDITION",
+                             absl::StatusCode::kFailedPrecondition},
+        StatusCodeTestParams{"ABORTED", absl::StatusCode::kAborted},
+        StatusCodeTestParams{"OUT_OF_RANGE", absl::StatusCode::kOutOfRange},
+        StatusCodeTestParams{"UNIMPLEMENTED", absl::StatusCode::kUnimplemented},
+        StatusCodeTestParams{"INTERNAL", absl::StatusCode::kInternal},
+        StatusCodeTestParams{"UNAVAILABLE", absl::StatusCode::kUnavailable},
+        StatusCodeTestParams{"DATA_LOSS", absl::StatusCode::kDataLoss},
+        StatusCodeTestParams{"SOME_GARBAGE_STATUS",
+                             absl::StatusCode::kUnknown}));
 
 TEST(CurlConnectorTest,
      ReturnsDefaultErrorWhenErrorDetailsAreMissingInResponse) {
@@ -167,9 +208,8 @@ TEST(CurlConnectorTest,
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
       "some sdp offer");
 
-  ASSERT_FALSE(response.ok());
-  EXPECT_THAT(response.status().message(),
-              HasSubstr("Unknown error status: Unknown error message"));
+  EXPECT_THAT(response, StatusIs(absl::StatusCode::kUnknown,
+                                 StrEq(response_body.dump())));
 }
 
 TEST(CurlConnectorTest, ReturnsErrorWhenResponseIsEmpty) {
