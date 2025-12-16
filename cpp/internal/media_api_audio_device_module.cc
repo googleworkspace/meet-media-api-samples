@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/media_api_audio_device_module.h"
+#include "meet_clients/internal/media_api_audio_device_module.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -22,11 +22,11 @@
 #include <vector>
 
 #include "absl/log/check.h"
-#include "webrtc/api/audio/audio_device_defines.h"
-#include "webrtc/api/task_queue/pending_task_safety_flag.h"
-#include "webrtc/api/units/time_delta.h"
-#include "webrtc/rtc_base/thread.h"
-#include "webrtc/rtc_base/time_utils.h"
+#include "api/audio/audio_device_defines.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/units/time_delta.h"
+#include "rtc_base/thread.h"
+#include "rtc_base/time_utils.h"
 
 namespace meet {
 
@@ -72,7 +72,7 @@ void MediaApiAudioDeviceModule::ProcessPlayData() {
     return;
   }
 
-  int64_t process_start_time = rtc::TimeMillis();
+  int64_t process_start_time = webrtc::TimeMillis();
   const size_t number_of_samples = kAudioSampleRatePerMillisecond *
                                    sampling_interval_.ms() *
                                    kNumberOfAudioChannels;
@@ -88,7 +88,7 @@ void MediaApiAudioDeviceModule::ProcessPlayData() {
         kAudioSampleRatePerMillisecond * 1000, sample_buffer.data(),
         samples_out, &elapsed_time_ms, &ntp_time_ms);
   }
-  int64_t process_end_time = rtc::TimeMillis();
+  int64_t process_end_time = webrtc::TimeMillis();
 
   // Delay the next sampling for either:
   // 1. (sampling interval) - (time to process current sample)

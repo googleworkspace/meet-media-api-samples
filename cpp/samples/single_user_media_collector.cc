@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/single_user_media_collector.h"
+#include "meet_clients/samples/single_user_media_collector.h"
 
 #include <cstdint>
 #include <memory>
@@ -25,11 +25,11 @@
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/samples/media_writing.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/video/video_frame_buffer.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/samples/media_writing.h"
+#include "api/scoped_refptr.h"
+#include "api/video/video_frame_buffer.h"
+#include "rtc_base/thread.h"
 
 // TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
 // to a version that supports it.
@@ -72,7 +72,7 @@ void SingleUserMediaCollector::HandleAudioBuffer(std::vector<int16_t> pcm16) {
 }
 
 void SingleUserMediaCollector::HandleVideoBuffer(
-    rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
+    webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer) {
   DCHECK(collector_thread_->IsCurrent());
 
   // Meet video frames are always in YUV420p format.

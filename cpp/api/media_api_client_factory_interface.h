@@ -20,8 +20,8 @@
 #include <memory>
 
 #include "absl/status/statusor.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "webrtc/api/scoped_refptr.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "api/scoped_refptr.h"
 
 namespace meet {
 
@@ -33,7 +33,7 @@ class MediaApiClientFactoryInterface {
   /// Creates a `MediaApiClientInterface` instance.
   virtual absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
   CreateMediaApiClient(const MediaApiClientConfiguration& api_config,
-                       rtc::scoped_refptr<MediaApiClientObserverInterface>
+                       webrtc::scoped_refptr<MediaApiClientObserverInterface>
                            api_session_observer) = 0;
 };
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/conference_data_channel.h"
+#include "meet_clients/internal/conference_data_channel.h"
 
 #include <memory>
 #include <string>
@@ -30,13 +30,13 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/session_control_resource.h"
-#include "cpp/internal/resource_handler_interface.h"
-#include "webrtc/api/data_channel_interface.h"
-#include "webrtc/api/rtc_error.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/test/mock_data_channel.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/session_control_resource.h"
+#include "meet_clients/internal/resource_handler_interface.h"
+#include "api/data_channel_interface.h"
+#include "api/rtc_error.h"
+#include "api/scoped_refptr.h"
+#include "api/test/mock_data_channel.h"
 
 namespace meet {
 namespace {

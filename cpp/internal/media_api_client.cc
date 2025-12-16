@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/media_api_client.h"
+#include "meet_clients/internal/media_api_client.h"
 
 #include <cstdint>
 #include <functional>
@@ -29,27 +29,27 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/media_stats_resource.h"
-#include "cpp/api/session_control_resource.h"
-#include "cpp/api/video_assignment_resource.h"
-#include "cpp/internal/conference_media_tracks.h"
-#include "cpp/internal/stats_request_from_report.h"
-#include "cpp/internal/variant_utils.h"
-#include "webrtc/api/create_peerconnection_factory.h"
-#include "webrtc/api/make_ref_counted.h"
-#include "webrtc/api/media_stream_interface.h"
-#include "webrtc/api/media_types.h"
-#include "webrtc/api/peer_connection_interface.h"
-#include "webrtc/api/rtp_receiver_interface.h"
-#include "webrtc/api/rtp_transceiver_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/stats/rtc_stats_collector_callback.h"
-#include "webrtc/api/stats/rtc_stats_report.h"
-#include "webrtc/api/task_queue/pending_task_safety_flag.h"
-#include "webrtc/api/units/time_delta.h"
-#include "webrtc/api/video/video_source_interface.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/media_stats_resource.h"
+#include "meet_clients/api/session_control_resource.h"
+#include "meet_clients/api/video_assignment_resource.h"
+#include "meet_clients/internal/conference_media_tracks.h"
+#include "meet_clients/internal/stats_request_from_report.h"
+#include "meet_clients/internal/variant_utils.h"
+#include "api/create_peerconnection_factory.h"
+#include "api/make_ref_counted.h"
+#include "api/media_stream_interface.h"
+#include "api/media_types.h"
+#include "api/peer_connection_interface.h"
+#include "api/rtp_receiver_interface.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/stats/rtc_stats_collector_callback.h"
+#include "api/stats/rtc_stats_report.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/units/time_delta.h"
+#include "api/video/video_source_interface.h"
+#include "rtc_base/thread.h"
 
 namespace meet {
 namespace {
@@ -58,13 +58,13 @@ namespace {
 class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
  public:
   using Callback = absl::AnyInvocable<void(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report)>;
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)>;
 
   explicit OnRTCStatsCollected(Callback callback)
       : callback_(std::move(callback)) {}
 
   void OnStatsDelivered(
-      const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report)
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)
       override {
     callback_(report);
   }
@@ -117,7 +117,7 @@ absl::Status MediaApiClient::ConnectActiveConference(
   }));
 
   return absl::OkStatus();
-};
+}
 
 absl::Status MediaApiClient::LeaveConference(int64_t request_id) {
   State state;
@@ -171,17 +171,17 @@ absl::Status MediaApiClient::SendRequest(const ResourceRequest &request) {
             return data_channels_.video_assignment->SendRequest(request);
           }},
       request);
-};
+}
 
 void MediaApiClient::HandleTrackSignaled(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   // Tracks should only be signaled by the conference peer connection during its
   // connection flow. Therefore, no state check is needed.
 
-  rtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver =
+  webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver =
       transceiver->receiver();
-  cricket::MediaType media_type = receiver->media_type();
-  rtc::scoped_refptr<webrtc::MediaStreamTrackInterface> receiver_track =
+  webrtc::MediaType media_type = receiver->media_type();
+  webrtc::scoped_refptr<webrtc::MediaStreamTrackInterface> receiver_track =
       receiver->track();
   // MID should always exist since Meet only supports BUNDLE srtp streams.
   std::string mid;
@@ -193,7 +193,7 @@ void MediaApiClient::HandleTrackSignaled(
   }
 
   switch (media_type) {
-    case cricket::MEDIA_TYPE_AUDIO: {
+    case webrtc::MediaType::AUDIO: {
       auto conference_audio_track = std::make_unique<ConferenceAudioTrack>(
           mid, std::move(receiver),
           std::bind_front(&MediaApiClientObserverInterface::OnAudioFrame,
@@ -204,14 +204,14 @@ void MediaApiClient::HandleTrackSignaled(
       media_tracks_.push_back(std::move(conference_audio_track));
     }
       return;
-    case cricket::MEDIA_TYPE_VIDEO: {
+    case webrtc::MediaType::VIDEO: {
       auto conference_video_track = std::make_unique<ConferenceVideoTrack>(
           mid, std::bind_front(&MediaApiClientObserverInterface::OnVideoFrame,
                                observer_));
       auto video_track =
           static_cast<webrtc::VideoTrackInterface *>(receiver_track.get());
       video_track->AddOrUpdateSink(conference_video_track.get(),
-                                   rtc::VideoSinkWants());
+                                   webrtc::VideoSinkWants());
       media_tracks_.push_back(std::move(conference_video_track));
     }
       return;
@@ -220,7 +220,7 @@ void MediaApiClient::HandleTrackSignaled(
                    << media_type;
       break;
   }
-};
+}
 
 void MediaApiClient::HandleResourceUpdate(ResourceUpdate update) {
   observer_->OnResourceUpdate(update);
@@ -296,7 +296,7 @@ void MediaApiClient::HandleResourceUpdate(ResourceUpdate update) {
       CollectStats();
     }));
   }
-};
+}
 
 void MediaApiClient::MaybeDisconnect(absl::Status status) {
   // This method closes the peer connection if the client has not already been
@@ -328,7 +328,7 @@ void MediaApiClient::MaybeDisconnect(absl::Status status) {
 
   conference_peer_connection_->Close();
   observer_->OnDisconnected(status);
-};
+}
 
 void MediaApiClient::CollectStats() {
   if (stats_config_.upload_interval == 0) {
@@ -338,7 +338,7 @@ void MediaApiClient::CollectStats() {
 
   auto callback = webrtc::make_ref_counted<OnRTCStatsCollected>(
       [this](
-          const rtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
+          const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
         MediaStatsChannelFromClient request = StatsRequestFromReport(
             report, stats_config_.stats_request_id, stats_config_.allowlist);
         stats_config_.stats_request_id++;

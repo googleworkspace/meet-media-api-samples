@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/conference_media_tracks.h"
+#include "meet_clients/internal/conference_media_tracks.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,11 +25,11 @@
 #include "absl/log/log.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "webrtc/api/rtp_packet_info.h"
-#include "webrtc/api/rtp_packet_infos.h"
-#include "webrtc/api/transport/rtp/rtp_source.h"
-#include "webrtc/api/video/video_frame.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "api/rtp_packet_info.h"
+#include "api/rtp_packet_infos.h"
+#include "api/transport/rtp/rtp_source.h"
+#include "api/video/video_frame.h"
 
 namespace meet {
 
@@ -104,7 +104,7 @@ void ConferenceAudioTrack::OnData(
                        .is_from_loudest_speaker = is_from_loudest_speaker,
                        .contributing_source = most_recent_csrc.value(),
                        .synchronization_source = most_recent_ssrc.value()});
-};
+}
 
 void ConferenceVideoTrack::OnFrame(const webrtc::VideoFrame& frame) {
   const webrtc::RtpPacketInfos& packet_infos = frame.packet_infos();
@@ -123,6 +123,6 @@ void ConferenceVideoTrack::OnFrame(const webrtc::VideoFrame& frame) {
                        // video frame.
                        .contributing_source = packet_info.csrcs().front(),
                        .synchronization_source = packet_info.ssrc()});
-};
+}
 
 }  // namespace meet

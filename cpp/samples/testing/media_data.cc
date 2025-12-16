@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/testing/media_data.h"
+#include "meet_clients/samples/testing/media_data.h"
 
 #include <cstdint>
 #include <cstring>
@@ -22,10 +22,10 @@
 #include <utility>
 #include <vector>
 
-#include "cpp/api/media_api_client_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/api/video/video_frame.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
 
 namespace media_api_samples {
 
@@ -54,7 +54,7 @@ VideoTestData CreateVideoTestData(int width, int height) {
   output_data.reserve(height * stride_y + chroma_height * stride_u +
                       chroma_height * stride_v);
 
-  rtc::scoped_refptr<webrtc::I420Buffer> buffer =
+  webrtc::scoped_refptr<webrtc::I420Buffer> buffer =
       webrtc::I420Buffer::Create(width, height, stride_y, stride_u, stride_v);
   // Initialize each plane's buffer to all zeros to test that the correct data
   // is read from each plane.

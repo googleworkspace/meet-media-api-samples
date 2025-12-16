@@ -22,13 +22,13 @@
 #include <cstdint>
 #include <utility>
 
-#include "webrtc/api/audio/audio_device.h"
-#include "webrtc/api/audio/audio_device_defines.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/task_queue/pending_task_safety_flag.h"
-#include "webrtc/api/units/time_delta.h"
-#include "webrtc/modules/audio_device/include/audio_device_default.h"
-#include "webrtc/rtc_base/thread.h"
+#include "api/audio/audio_device.h"
+#include "api/audio/audio_device_defines.h"
+#include "api/scoped_refptr.h"
+#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/units/time_delta.h"
+#include "modules/audio_device/include/audio_device_default.h"
+#include "rtc_base/thread.h"
 
 namespace meet {
 
@@ -61,19 +61,19 @@ class MediaApiAudioDeviceModule
   // Default constructor for production use.
   //
   // In production, audio should be sampled at 48000 Hz every 10ms.
-  explicit MediaApiAudioDeviceModule(rtc::Thread& worker_thread)
+  explicit MediaApiAudioDeviceModule(webrtc::Thread& worker_thread)
       : MediaApiAudioDeviceModule(worker_thread,
                                   webrtc::TimeDelta::Millis(10)) {}
 
   // Constructor for testing with configurable sampling interval; the default
   // sampling interval of 10ms is too small to write non-flaky tests with.
-  MediaApiAudioDeviceModule(rtc::Thread& worker_thread,
+  MediaApiAudioDeviceModule(webrtc::Thread& worker_thread,
                             webrtc::TimeDelta sampling_interval)
       : worker_thread_(worker_thread),
         sampling_interval_(std::move(sampling_interval)) {
     safety_flag_ = webrtc::PendingTaskSafetyFlag::CreateAttachedToTaskQueue(
         /*alive=*/true, &worker_thread_);
-  };
+  }
 
   int32_t RegisterAudioCallback(webrtc::AudioTransport* callback) override;
   int32_t StartPlayout() override;
@@ -124,10 +124,10 @@ class MediaApiAudioDeviceModule
   //   2. `ConferenceAudioTrack::OnData()` is called on the worker thread and
   //   therefore does not need to switch to the worker thread to read the
   //   audio csrcs and ssrcs.
-  rtc::Thread& worker_thread_;
+  webrtc::Thread& worker_thread_;
   // Used to ensure that tasks are not posted after `Terminate()` is called,
   // since this class does not own the worker thread.
-  rtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> safety_flag_;
+  webrtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> safety_flag_;
   webrtc::TimeDelta sampling_interval_;
 
   webrtc::AudioTransport* audio_callback_ = nullptr;

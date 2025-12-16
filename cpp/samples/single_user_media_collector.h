@@ -32,12 +32,12 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/samples/output_file.h"
-#include "cpp/samples/output_writer_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/video/video_frame_buffer.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/samples/output_file.h"
+#include "meet_clients/samples/output_writer_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/video/video_frame_buffer.h"
+#include "rtc_base/thread.h"
 
 // TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
 // to a version that supports it.
@@ -54,7 +54,7 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
  public:
   // Default constructor that writes media to real files.
   SingleUserMediaCollector(absl::string_view output_file_prefix,
-                           std::unique_ptr<rtc::Thread> collector_thread)
+                           std::unique_ptr<webrtc::Thread> collector_thread)
       : output_file_prefix_(output_file_prefix),
         collector_thread_(std::move(collector_thread)) {
     output_writer_provider_ = [](absl::string_view file_name) {
@@ -79,7 +79,7 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
   // Constructor that allows injecting a custom writer provider for testing.
   SingleUserMediaCollector(absl::string_view output_file_prefix,
-                           std::unique_ptr<rtc::Thread> collector_thread,
+                           std::unique_ptr<webrtc::Thread> collector_thread,
                            OutputWriterProvider output_writer_provider)
       : output_file_prefix_(output_file_prefix),
         output_writer_provider_(std::move(output_writer_provider)),
@@ -153,7 +153,7 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
   void HandleAudioBuffer(std::vector<int16_t> pcm16);
   void HandleVideoBuffer(
-      rtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer);
+      webrtc::scoped_refptr<webrtc::VideoFrameBuffer> buffer);
 
   std::string output_file_prefix_;
   OutputWriterProvider output_writer_provider_;
@@ -175,7 +175,7 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
   // The media collector's internal thread. Used for moving work off of the
   // MediaApiClient's threads and synchronizing access to member variables.
-  std::unique_ptr<rtc::Thread> collector_thread_;
+  std::unique_ptr<webrtc::Thread> collector_thread_;
 
   // The status of the disconnection from the meeting.
   std::optional<absl::Status> disconnect_status_ = std::nullopt;

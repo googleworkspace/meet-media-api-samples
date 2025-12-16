@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/curl_request.h"
+#include "meet_clients/internal/curl_request.h"
 
 #include <string>
 
@@ -23,7 +23,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include <curl/curl.h>
-#include "cpp/internal/testing/mock_curl_api_wrapper.h"
+#include "meet_clients/internal/testing/mock_curl_api_wrapper.h"
 
 namespace meet {
 namespace {

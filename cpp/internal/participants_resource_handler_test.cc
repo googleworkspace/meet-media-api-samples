@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/participants_resource_handler.h"
+#include "meet_clients/internal/participants_resource_handler.h"
 
 #include <utility>
 
@@ -24,8 +24,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/types/optional.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/participants_resource.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/participants_resource.h"
 
 namespace meet {
 namespace {

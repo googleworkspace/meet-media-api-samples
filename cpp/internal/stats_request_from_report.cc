@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/stats_request_from_report.h"
+#include "meet_clients/internal/stats_request_from_report.h"
 
 #include <cstdint>
 #include <string>
@@ -23,16 +23,16 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/log.h"
-#include "cpp/api/media_stats_resource.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/stats/attribute.h"
-#include "webrtc/api/stats/rtc_stats.h"
-#include "webrtc/api/stats/rtc_stats_report.h"
+#include "meet_clients/api/media_stats_resource.h"
+#include "api/scoped_refptr.h"
+#include "api/stats/attribute.h"
+#include "api/stats/rtc_stats.h"
+#include "api/stats/rtc_stats_report.h"
 
 namespace meet {
 
 MediaStatsChannelFromClient StatsRequestFromReport(
-    const rtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
+    const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report,
     int64_t stats_request_id,
     const absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>&
         allowlist) {

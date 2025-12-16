@@ -21,7 +21,7 @@
 #include <ios>
 #include <utility>
 
-#include "cpp/samples/output_writer_interface.h"
+#include "meet_clients/samples/output_writer_interface.h"
 
 namespace media_api_samples {
 

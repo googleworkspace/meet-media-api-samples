@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/curl_connector.h"
+#include "meet_clients/internal/curl_connector.h"
 
 #include <memory>
 #include <string>
@@ -25,8 +25,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "nlohmann/json.hpp"
-#include "cpp/internal/curl_request.h"
+#include "third_party/icu/source/tools/toolutil/json-json.hpp"
+#include "meet_clients/internal/curl_request.h"
 
 namespace meet {
 namespace {
@@ -132,6 +132,6 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
   return absl::UnknownError(
       absl::StrCat("Received response without `answer` or `error` field: ",
                    json_request_response.dump()));
-};
+}
 
 }  // namespace meet

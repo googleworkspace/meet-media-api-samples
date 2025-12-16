@@ -22,7 +22,7 @@
 
 #include "gmock/gmock.h"
 #include <curl/curl.h>
-#include "cpp/internal/curl_request.h"
+#include "meet_clients/internal/curl_request.h"
 
 namespace meet {
 

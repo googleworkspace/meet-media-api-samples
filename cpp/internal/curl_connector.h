@@ -24,8 +24,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "cpp/internal/curl_request.h"
-#include "cpp/internal/http_connector_interface.h"
+#include "meet_clients/internal/curl_request.h"
+#include "meet_clients/internal/http_connector_interface.h"
 
 namespace meet {
 
@@ -34,7 +34,7 @@ namespace meet {
 class CurlConnector : public HttpConnectorInterface {
  public:
   explicit CurlConnector(std::unique_ptr<CurlApiWrapper> curl_api_wrapper)
-      : curl_api_wrapper_(std::move(curl_api_wrapper)) {};
+      : curl_api_wrapper_(std::move(curl_api_wrapper)) {}
 
   absl::StatusOr<std::string> ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,

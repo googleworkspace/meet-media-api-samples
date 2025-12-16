@@ -19,7 +19,7 @@
 
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
-#include "cpp/api/media_api_client_interface.h"
+#include "meet_clients/api/media_api_client_interface.h"
 
 namespace meet {
 

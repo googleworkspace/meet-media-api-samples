@@ -1,0 +1,620 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../webrtc.gni")
+
+rtc_library("media_api_client") {
+  sources = [
+    "media_api_client.cc",
+    "media_api_client.h",
+  ]
+  deps = [
+    ":conference_data_channel_interface",
+    ":conference_media_tracks",
+    ":conference_peer_connection_interface",
+    ":stats_request_from_report",
+    ":variant_utils",
+    "../api:media_api_client_interface",
+    "../api:media_stats_resource",
+    "../api:session_control_resource",
+    "../api:video_assignment_resource",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "../../api:create_peerconnection_factory",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:media_stream_interface",
+    "../../api:rtc_stats_api",
+    "../../api:rtp_parameters",
+    "../../api:scoped_refptr",
+    "../../api/task_queue:pending_task_safety_flag",
+    "../../api/units:time_delta",
+    "../../api/video:video_frame",
+    "../../rtc_base:threading",
+  ]
+}
+
+rtc_library("media_api_client_factory") {
+  sources = [
+    "media_api_client_factory.cc",
+    "media_api_client_factory.h",
+  ]
+  deps = [
+    ":conference_data_channel",
+    ":conference_peer_connection",
+    ":curl_connector",
+    ":curl_request",
+    ":http_connector_interface",
+    ":media_api_audio_device_module",
+    ":media_api_client",
+    ":media_entries_resource_handler",
+    ":media_stats_resource_handler",
+    ":participants_resource_handler",
+    ":session_control_resource_handler",
+    ":video_assignment_resource_handler",
+    "../api:media_api_client_factory_interface",
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../api:create_peerconnection_factory",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:rtc_error",
+    "../../api:rtp_parameters",
+    "../../api:rtp_transceiver_direction",
+    "../../api:scoped_refptr",
+    "../../api/audio_codecs:builtin_audio_encoder_factory",
+    "../../api/audio_codecs:opus_audio_decoder_factory",
+    "../../api/video_codecs:video_decoder_factory_template",
+    "../../api/video_codecs:video_decoder_factory_template_dav1d_adapter",
+    "../../api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
+    "../../api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
+    "../../api/video_codecs:video_encoder_factory_template",
+    "../../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
+    "../../rtc_base:threading",
+  ]
+}
+
+rtc_source_set("variant_utils") {
+  sources = [ "variant_utils.h" ]
+}
+
+rtc_library("media_api_audio_device_module") {
+  sources = [
+    "media_api_audio_device_module.cc",
+    "media_api_audio_device_module.h",
+  ]
+  deps = [
+    "//third_party/abseil-cpp/absl/log:check",
+    "../../api:scoped_refptr",
+    "../../api/audio:audio_device",
+    "../../api/task_queue:pending_task_safety_flag",
+    "../../api/units:time_delta",
+    "../../modules/audio_device:audio_device_default",
+    "../../rtc_base:threading",
+    "../../rtc_base:timeutils",
+  ]
+}
+
+rtc_source_set("conference_peer_connection_interface") {
+  sources = [ "conference_peer_connection_interface.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:rtc_stats_api",
+    "../../api:scoped_refptr",
+  ]
+}
+
+rtc_library("conference_peer_connection") {
+  sources = [
+    "conference_peer_connection.cc",
+    "conference_peer_connection.h",
+  ]
+  deps = [
+    ":conference_media_tracks",
+    ":conference_peer_connection_interface",
+    ":http_connector_interface",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/jsoncpp",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:media_stream_interface",
+    "../../api:rtc_error",
+    "../../api:rtc_stats_api",
+    "../../api:scoped_refptr",
+  ]
+}
+
+rtc_source_set("sdp_constants") {
+  sources = [ "testing/sdp_constants.h" ]
+}
+
+rtc_library("mock_media_api_client_observer") {
+  testonly = true
+  sources = [ "testing/mock_media_api_client_observer.h" ]
+  deps = [
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/status",
+  ]
+}
+
+rtc_library("mock_curl_api_wrapper") {
+  testonly = true
+  sources = [ "testing/mock_curl_api_wrapper.h" ]
+  deps = [
+    ":curl_request",
+    "//third_party/curl",
+  ]
+}
+
+rtc_source_set("http_connector_interface") {
+  sources = [ "http_connector_interface.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+  ]
+}
+
+rtc_library("curl_connector") {
+  sources = [
+    "curl_connector.cc",
+    "curl_connector.h",
+  ]
+  deps = [
+    ":curl_request",
+    ":http_connector_interface",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("curl_request") {
+  sources = [
+    "curl_request.cc",
+    "curl_request.h",
+  ]
+  deps = [
+    "//third_party/abseil-cpp/absl/cleanup",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:cord",
+    "//third_party/curl",
+  ]
+}
+
+rtc_library("stats_request_from_report") {
+  sources = [
+    "stats_request_from_report.cc",
+    "stats_request_from_report.h",
+  ]
+  deps = [
+    "../api:media_stats_resource",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "//third_party/abseil-cpp/absl/log",
+    "../../api:rtc_stats_api",
+    "../../api:scoped_refptr",
+  ]
+}
+
+rtc_source_set("conference_data_channel_interface") {
+  sources = [ "conference_data_channel_interface.h" ]
+  deps = [
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/status",
+  ]
+}
+
+rtc_library("conference_data_channel") {
+  sources = [
+    "conference_data_channel.cc",
+    "conference_data_channel.h",
+  ]
+  deps = [
+    ":conference_data_channel_interface",
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:rtc_error",
+    "../../api:scoped_refptr",
+  ]
+}
+
+rtc_source_set("resource_handler_interface") {
+  sources = [ "resource_handler_interface.h" ]
+  deps = [
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+  ]
+}
+
+rtc_library("media_entries_resource_handler") {
+  sources = [
+    "media_entries_resource_handler.cc",
+    "media_entries_resource_handler.h",
+  ]
+  deps = [
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:media_entries_resource",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("media_stats_resource_handler") {
+  sources = [
+    "media_stats_resource_handler.cc",
+    "media_stats_resource_handler.h",
+  ]
+  deps = [
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:media_stats_resource",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("participants_resource_handler") {
+  sources = [
+    "participants_resource_handler.cc",
+    "participants_resource_handler.h",
+  ]
+  deps = [
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:participants_resource",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("session_control_resource_handler") {
+  sources = [
+    "session_control_resource_handler.cc",
+    "session_control_resource_handler.h",
+  ]
+  deps = [
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:session_control_resource",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("video_assignment_resource_handler") {
+  sources = [
+    "video_assignment_resource_handler.cc",
+    "video_assignment_resource_handler.h",
+  ]
+  deps = [
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:video_assignment_resource",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_library("conference_media_tracks") {
+  sources = [
+    "conference_media_tracks.cc",
+    "conference_media_tracks.h",
+  ]
+  deps = [
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/types:optional",
+    "//third_party/abseil-cpp/absl/types:span",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:media_stream_interface",
+    "../../api:rtp_packet_info",
+    "../../api:scoped_refptr",
+    "../../api/transport/rtp:rtp_source",
+    "../../api/video:video_frame",
+  ]
+}
+
+rtc_test("media_api_client_test") {
+  sources = [ "media_api_client_test.cc" ]
+  deps = [
+    ":conference_data_channel_interface",
+    ":conference_peer_connection",
+    ":conference_peer_connection_interface",
+    ":media_api_client",
+    ":mock_media_api_client_observer",
+    "../api:media_api_client_interface",
+    "../api:media_stats_resource",
+    "../api:session_control_resource",
+    "../api:video_assignment_resource",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/abseil-cpp/absl/time",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:media_stream_interface",
+    "../../api:mock_media_stream_interface",
+    "../../api:mock_rtp",
+    "../../api:mock_video_track",
+    "../../api:rtc_stats_api",
+    "../../api:rtp_headers",
+    "../../api:rtp_packet_info",
+    "../../api:rtp_parameters",
+    "../../api:scoped_refptr",
+    "../../api/transport/rtp:rtp_source",
+    "../../api/units:timestamp",
+    "../../api/video:video_frame",
+    "../../rtc_base:threading",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("media_api_client_factory_test") {
+  sources = [ "media_api_client_factory_test.cc" ]
+  deps = [
+    ":http_connector_interface",
+    ":media_api_client_factory",
+    ":mock_media_api_client_observer",
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:mock_data_channel",
+    "../../api:mock_peer_connection_factory_interface",
+    "../../api:mock_peerconnectioninterface",
+    "../../api:mock_rtp",
+    "../../api:rtc_error",
+    "../../api:rtp_parameters",
+    "../../api:scoped_refptr",
+    "../../rtc_base:threading",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("media_api_audio_device_module_test") {
+  sources = [ "media_api_audio_device_module_test.cc" ]
+  deps = [
+    ":media_api_audio_device_module",
+    "//third_party/abseil-cpp/absl/time",
+    "../../api:make_ref_counted",
+    "../../api/units:time_delta",
+    "../../modules/audio_device:mock_audio_device",
+    "../../rtc_base:threading",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("conference_peer_connection_test") {
+  sources = [ "conference_peer_connection_test.cc" ]
+  deps = [
+    ":conference_peer_connection",
+    ":http_connector_interface",
+    ":sdp_constants",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:make_ref_counted",
+    "../../api:mock_peerconnectioninterface",
+    "../../api:mock_rtp",
+    "../../api:rtc_error",
+    "../../api:scoped_refptr",
+    "../../pc:webrtc_sdp",
+    "../../rtc_base:threading",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("curl_connector_test") {
+  sources = [ "curl_connector_test.cc" ]
+  deps = [
+    ":curl_connector",
+    ":mock_curl_api_wrapper",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:cord",
+    "//third_party/curl",
+    "//third_party/jsoncpp",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("curl_request_test") {
+  sources = [ "curl_request_test.cc" ]
+  deps = [
+    ":curl_request",
+    ":mock_curl_api_wrapper",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/strings:cord",
+    "//third_party/curl",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("stats_request_from_report_test") {
+  sources = [ "stats_request_from_report_test.cc" ]
+  deps = [
+    ":stats_request_from_report",
+    "../api:media_stats_resource",
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "../../api:rtc_stats_api",
+    "../../api:scoped_refptr",
+    "../../api/units:timestamp",
+    "../../stats:rtc_stats",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("conference_data_channel_test") {
+  sources = [ "conference_data_channel_test.cc" ]
+  deps = [
+    ":conference_data_channel",
+    ":resource_handler_interface",
+    "../api:media_api_client_interface",
+    "../api:session_control_resource",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "../../api:libjingle_peerconnection_api",
+    "../../api:mock_data_channel",
+    "../../api:rtc_error",
+    "../../api:scoped_refptr",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("media_entries_resource_handler_test") {
+  sources = [ "media_entries_resource_handler_test.cc" ]
+  deps = [
+    ":media_entries_resource_handler",
+    "../api:media_api_client_interface",
+    "../api:media_entries_resource",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/types:optional",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("media_stats_resource_handler_test") {
+  sources = [ "media_stats_resource_handler_test.cc" ]
+  deps = [
+    ":media_stats_resource_handler",
+    "../api:media_api_client_interface",
+    "../api:media_stats_resource",
+    "../api:session_control_resource",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/jsoncpp",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("participants_resource_handler_test") {
+  sources = [ "participants_resource_handler_test.cc" ]
+  deps = [
+    ":participants_resource_handler",
+    "../api:media_api_client_interface",
+    "../api:participants_resource",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("session_control_resource_handler_test") {
+  sources = [ "session_control_resource_handler_test.cc" ]
+  deps = [
+    ":session_control_resource_handler",
+    "../api:media_api_client_interface",
+    "../api:media_stats_resource",
+    "../api:session_control_resource",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/jsoncpp",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("video_assignment_resource_handler_test") {
+  sources = [ "video_assignment_resource_handler_test.cc" ]
+  deps = [
+    ":video_assignment_resource_handler",
+    "../api:media_api_client_interface",
+    "../api:session_control_resource",
+    "../api:video_assignment_resource",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/jsoncpp",
+    "../../test:test_support",
+  ]
+}
+
+rtc_test("conference_media_tracks_test") {
+  sources = [ "conference_media_tracks_test.cc" ]
+  deps = [
+    ":conference_media_tracks",
+    "../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/base:log_severity",
+    "//third_party/abseil-cpp/absl/log:globals",
+    "../../api:mock_rtp",
+    "../../api:rtp_packet_info",
+    "../../api:scoped_refptr",
+    "../../api/transport/rtp:rtp_source",
+    "../../api/units:timestamp",
+    "../../api/video:video_frame",
+    "../../test:test_support",
+  ]
+}

@@ -21,8 +21,8 @@
 #include <memory>
 #include <vector>
 
-#include "cpp/api/media_api_client_interface.h"
-#include "webrtc/api/video/video_frame.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "api/video/video_frame.h"
 
 // TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
 // to a version that supports it.

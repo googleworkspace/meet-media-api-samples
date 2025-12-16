@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/output_file.h"
+#include "meet_clients/samples/output_file.h"
 
 #include <ios>
 

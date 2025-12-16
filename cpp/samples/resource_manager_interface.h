@@ -22,8 +22,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_entries_resource.h"
-#include "cpp/api/participants_resource.h"
+#include "meet_clients/api/media_entries_resource.h"
+#include "meet_clients/api/participants_resource.h"
 
 namespace media_api_samples {
 

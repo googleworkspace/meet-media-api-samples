@@ -28,12 +28,12 @@
 #include "absl/status/statusor.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/video_assignment_resource.h"
-#include "cpp/internal/media_api_client_factory.h"
-#include "cpp/samples/multi_user_media_collector.h"
-#include "webrtc/api/make_ref_counted.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/video_assignment_resource.h"
+#include "meet_clients/internal/media_api_client_factory.h"
+#include "meet_clients/samples/multi_user_media_collector.h"
+#include "api/make_ref_counted.h"
+#include "rtc_base/thread.h"
 
 ABSL_FLAG(std::string, output_file_prefix, "/tmp/test_output_",
           "Directory and file prefix where files will be written. Files will "
@@ -131,7 +131,7 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
-  std::unique_ptr<rtc::Thread> collector_thread = rtc::Thread::Create();
+  std::unique_ptr<webrtc::Thread> collector_thread = webrtc::Thread::Create();
   collector_thread->SetName("collector_thread", nullptr);
   if (!collector_thread->Start()) {
     LOG(ERROR) << "Failed to start collector thread";

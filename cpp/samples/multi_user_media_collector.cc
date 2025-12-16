@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/multi_user_media_collector.h"
+#include "meet_clients/samples/multi_user_media_collector.h"
 
 #include <cstdint>
 #include <memory>
@@ -29,12 +29,12 @@
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/media_entries_resource.h"
-#include "cpp/api/participants_resource.h"
-#include "cpp/samples/media_writing.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/video/video_frame_buffer.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/media_entries_resource.h"
+#include "meet_clients/api/participants_resource.h"
+#include "meet_clients/samples/media_writing.h"
+#include "api/scoped_refptr.h"
+#include "api/video/video_frame_buffer.h"
 
 namespace media_api_samples {
 namespace {
@@ -59,7 +59,7 @@ void MultiUserMediaCollector::OnAudioFrame(meet::AudioFrame frame) {
 
 void MultiUserMediaCollector::OnVideoFrame(meet::VideoFrame frame) {
   absl::Time received_time = absl::Now();
-  rtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
+  webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer =
       frame.frame.video_frame_buffer()->ToI420();
 
   collector_thread_->PostTask([this, buffer = std::move(buffer),
@@ -128,7 +128,7 @@ void MultiUserMediaCollector::HandleAudioData(std::vector<int16_t> samples,
 }
 
 void MultiUserMediaCollector::HandleVideoData(
-    rtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
+    webrtc::scoped_refptr<webrtc::I420BufferInterface> buffer,
     uint32_t contributing_source, absl::Time received_time) {
   DCHECK(collector_thread_->IsCurrent());
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/stats_request_from_report.h"
+#include "meet_clients/internal/stats_request_from_report.h"
 
 #include <memory>
 #include <string>
@@ -23,11 +23,11 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
-#include "cpp/api/media_stats_resource.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/stats/rtc_stats_report.h"
-#include "webrtc/api/stats/rtcstats_objects.h"
-#include "webrtc/api/units/timestamp.h"
+#include "meet_clients/api/media_stats_resource.h"
+#include "api/scoped_refptr.h"
+#include "api/stats/rtc_stats_report.h"
+#include "api/stats/rtcstats_objects.h"
+#include "api/units/timestamp.h"
 
 namespace meet {
 namespace {

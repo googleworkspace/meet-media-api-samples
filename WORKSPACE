@@ -16,16 +16,6 @@ workspace(name = "media_api_samples")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
-# See README.md - Replace this with the local path to your WebRTC checkout.
-webrtc_path = "/usr/local/google/home/pareynolds/src/webrtc-checkout/"
-
-http_archive(
-    name = "rules_cc",
-    sha256 = "b8b918a85f9144c01f6cfe0f45e4f2838c7413961a8ff23bc0c6cdf8bb07a3b6",
-    strip_prefix = "rules_cc-0.1.5",
-    url = "https://github.com/bazelbuild/rules_cc/releases/download/0.1.5/rules_cc-0.1.5.tar.gz",
-)
-
 http_archive(
     name = "rules_pkg",
     urls = [
@@ -64,93 +54,4 @@ yarn_install(
     name = "npm",
     package_json = "@//:package.json",
     yarn_lock = "@//:yarn.lock",
-)
-
-# === Abseil ===
-
-http_archive(
-    name = "com_google_absl",
-    integrity = "sha256-9Q5awxGoE4Laf6dblzEOS5AGR0+VYKxG9UqZZ/B9SuM=",
-    strip_prefix = "abseil-cpp-20240722.0",
-    urls = [
-        "https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz",
-    ],
-)
-
-# Abseil-Python
-http_archive(
-    name = "com_google_absl_py",  # 2024-04-16
-    integrity = "sha256-kpYxSP+2fHkqFfDL/9TDJvpcHil5IECWLTYFYRtl3c4=",
-    strip_prefix = "abseil-py-fae7e951d46011fdaf62685893ef4efd48544c0a",
-    urls = ["https://github.com/abseil/abseil-py/archive/fae7e951d46011fdaf62685893ef4efd48544c0a.zip"],
-)
-
-# === GoogleTest ===
-
-http_archive(
-    name = "com_google_googletest",
-    sha256 = "ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363",
-    strip_prefix = "googletest-1.13.0",
-    url = "https://github.com/google/googletest/archive/refs/tags/v1.13.0.tar.gz",
-)
-
-
-# === JSON ===
-
-http_archive(
-    name = "nlohmann_json",
-    integrity = "sha256-DY71r3+XlOMmNIAZPEkVSbK6bMdLsBiQYgKtpJinlAY=",
-    strip_prefix = "json-3.11.3",
-    url = "https://github.com/nlohmann/json/archive/refs/tags/v3.11.3.tar.gz",
-)
-
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "930c2c3b5ecc6c9c12615cf5ad93f1cd6e12d0aba862b572e076259970ac3a53",
-    strip_prefix = "protobuf-3.21.12",
-    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.21.12.tar.gz"],
-)
-
-http_archive(
-    name = "com_github_grpc_grpc",
-    sha256 = "edf25f4db6c841853b7a29d61b0980b516dc31a1b6cdc399bcf24c1446a4a249",
-    strip_prefix = "grpc-%s" % "1.47.0",
-    urls = ["https://github.com/grpc/grpc/archive/v%s.zip" % "1.47.0"],
-)
-
-http_archive(
-    name = "zlib",
-    build_file = "@com_github_grpc_grpc//:third_party/zlib.BUILD",
-    # Last updated 2024-01-22
-    sha256 = "17e88863f3600672ab49182f217281b6fc4d3c762bde361935e436a95214d05c",
-    strip_prefix = "zlib-1.3.1",
-    urls = ["https://github.com/madler/zlib/archive/refs/tags/v1.3.1.tar.gz"],
-)
-
-http_archive(
-    name = "curl",
-    integrity = "sha256-KREkoAfuURGZeCWUCzh2swSPfTHnPpyqaBuA/kiy3NU=",
-    urls = ["https://curl.se/download/curl-8.9.1.tar.gz"],
-    strip_prefix = "curl-8.9.1",
-    build_file = "curl.BUILD",
-)
-
-http_archive(
-    name = "com_google_googleurl",
-    # Last updated 2024-10-09
-    sha256 = "3db90606ea9ca123d11f85c6fa3627a1e1e403d38c7fd1854a628cf1da3be5e2",
-    urls = ["https://storage.googleapis.com/quiche-envoy-integration/googleurl-9cdb1f4d1a365ebdbcbf179dadf7f8aa5ee802e7.tar.gz"],
-)
-
-# === WebRTC ===
-# Note: This is intended to point to a local build of WebRTC.
-new_local_repository(
-    name = "webrtc",
-    path = webrtc_path,
-    build_file = "webrtc.BUILD",
-)
-
-local_repository(
-    name = "boringssl",
-    path = webrtc_path + "webrtc/third_party/boringssl/src",
 )

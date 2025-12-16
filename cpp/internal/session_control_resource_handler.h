@@ -21,8 +21,8 @@
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/internal/resource_handler_interface.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/internal/resource_handler_interface.h"
 
 namespace meet {
 

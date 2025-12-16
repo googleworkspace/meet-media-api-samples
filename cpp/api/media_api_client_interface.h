@@ -67,14 +67,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "cpp/api/media_entries_resource.h"
-#include "cpp/api/media_stats_resource.h"
-#include "cpp/api/participants_resource.h"
-#include "cpp/api/session_control_resource.h"
-#include "cpp/api/video_assignment_resource.h"
-#include "webrtc/api/ref_count.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/video/video_frame.h"
+#include "meet_clients/api/media_entries_resource.h"
+#include "meet_clients/api/media_stats_resource.h"
+#include "meet_clients/api/participants_resource.h"
+#include "meet_clients/api/session_control_resource.h"
+#include "meet_clients/api/video_assignment_resource.h"
+#include "api/ref_count.h"
+#include "api/scoped_refptr.h"
+#include "api/video/video_frame.h"
 
 namespace meet {
 
@@ -295,7 +295,7 @@ class MediaApiClientInterface {
   /// until the client is destroyed.
   static absl::StatusOr<std::unique_ptr<MediaApiClientInterface>> Create(
       const MediaApiClientConfiguration& api_config,
-      rtc::scoped_refptr<MediaApiClientObserverInterface>
+      webrtc::scoped_refptr<MediaApiClientObserverInterface>
           api_session_observer);
 };
 

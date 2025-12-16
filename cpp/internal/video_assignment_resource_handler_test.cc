@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/video_assignment_resource_handler.h"
+#include "meet_clients/internal/video_assignment_resource_handler.h"
 
 #include <optional>
 #include <string>
@@ -25,10 +25,10 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "nlohmann/json.hpp"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/api/session_control_resource.h"
-#include "cpp/api/video_assignment_resource.h"
+#include "third_party/icu/source/tools/toolutil/json-json.hpp"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/api/session_control_resource.h"
+#include "meet_clients/api/video_assignment_resource.h"
 
 namespace meet {
 namespace {

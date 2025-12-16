@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/conference_peer_connection.h"
+#include "meet_clients/internal/conference_peer_connection.h"
 
 #include <memory>
 #include <string>
@@ -28,19 +28,19 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
-#include "cpp/internal/http_connector_interface.h"
-#include "cpp/internal/testing/sdp_constants.h"
-#include "webrtc/api/jsep.h"
-#include "webrtc/api/make_ref_counted.h"
-#include "webrtc/api/peer_connection_interface.h"
-#include "webrtc/api/rtc_error.h"
-#include "webrtc/api/rtp_transceiver_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/set_local_description_observer_interface.h"
-#include "webrtc/api/set_remote_description_observer_interface.h"
-#include "webrtc/api/test/mock_peerconnectioninterface.h"
-#include "webrtc/api/test/mock_rtp_transceiver.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/internal/http_connector_interface.h"
+#include "meet_clients/internal/testing/sdp_constants.h"
+#include "api/jsep.h"
+#include "api/make_ref_counted.h"
+#include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/set_local_description_observer_interface.h"
+#include "api/set_remote_description_observer_interface.h"
+#include "api/test/mock_peerconnectioninterface.h"
+#include "api/test/mock_rtp_transceiver.h"
+#include "rtc_base/thread.h"
 
 namespace meet {
 namespace {
@@ -64,13 +64,13 @@ class MockPeerConnection : public webrtc::MockPeerConnectionInterface {
   using webrtc::MockPeerConnectionInterface::SetLocalDescription;
   MOCK_METHOD(
       void, SetLocalDescription,
-      (rtc::scoped_refptr<webrtc::SetLocalDescriptionObserverInterface>),
+      (webrtc::scoped_refptr<webrtc::SetLocalDescriptionObserverInterface>),
       (override));
 
   MOCK_METHOD(
       void, SetRemoteDescription,
       (std::unique_ptr<webrtc::SessionDescriptionInterface>,
-       rtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface>),
+       webrtc::scoped_refptr<webrtc::SetRemoteDescriptionObserverInterface>),
       (override));
 };
 
@@ -83,8 +83,8 @@ class MockHttpConnector : public HttpConnectorInterface {
               (override));
 };
 
-std::unique_ptr<rtc::Thread> CreateSignalingThread() {
-  std::unique_ptr<rtc::Thread> thread = rtc::Thread::Create();
+std::unique_ptr<webrtc::Thread> CreateSignalingThread() {
+  std::unique_ptr<webrtc::Thread> thread = webrtc::Thread::Create();
   thread->SetName("signaling_thread", nullptr);
   EXPECT_TRUE(thread->Start());
   return thread;
@@ -93,7 +93,7 @@ std::unique_ptr<rtc::Thread> CreateSignalingThread() {
 TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
   EXPECT_CALL(*peer_connection, SetLocalDescription(_))
-      .WillOnce([&](rtc::scoped_refptr<
+      .WillOnce([&](webrtc::scoped_refptr<
                     webrtc::SetLocalDescriptionObserverInterface>
                         observer) {
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
@@ -110,7 +110,7 @@ TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(
           [&](std::unique_ptr<webrtc::SessionDescriptionInterface> description,
-              rtc::scoped_refptr<
+              webrtc::scoped_refptr<
                   webrtc::SetRemoteDescriptionObserverInterface>
                   observer) {
             std::string remote_description;
@@ -145,7 +145,7 @@ TEST(ConferencePeerConnectionTest,
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
   EXPECT_CALL(*peer_connection, SetLocalDescription(_))
       .WillOnce(
-          [&](rtc::scoped_refptr<
+          [&](webrtc::scoped_refptr<
               webrtc::SetLocalDescriptionObserverInterface>
                   observer) {
             observer->OnSetLocalDescriptionComplete(
@@ -166,7 +166,7 @@ TEST(ConferencePeerConnectionTest,
 TEST(ConferencePeerConnectionTest, ConnectFailsWhenHttpConnectorFails) {
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
   EXPECT_CALL(*peer_connection, SetLocalDescription(_))
-      .WillOnce([&](rtc::scoped_refptr<
+      .WillOnce([&](webrtc::scoped_refptr<
                     webrtc::SetLocalDescriptionObserverInterface>
                         observer) {
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
@@ -193,7 +193,7 @@ TEST(ConferencePeerConnectionTest,
      ConnectFailsWhenSettingRemoteDescriptionFails) {
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
   EXPECT_CALL(*peer_connection, SetLocalDescription(_))
-      .WillOnce([&](rtc::scoped_refptr<
+      .WillOnce([&](webrtc::scoped_refptr<
                     webrtc::SetLocalDescriptionObserverInterface>
                         observer) {
         observer->OnSetLocalDescriptionComplete(webrtc::RTCError::OK());
@@ -208,7 +208,7 @@ TEST(ConferencePeerConnectionTest,
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(
           [&](std::unique_ptr<webrtc::SessionDescriptionInterface> description,
-              rtc::scoped_refptr<
+              webrtc::scoped_refptr<
                   webrtc::SetRemoteDescriptionObserverInterface>
                   observer) {
             observer->OnSetRemoteDescriptionComplete(
@@ -341,7 +341,7 @@ TEST(ConferencePeerConnectionTest,
 
 TEST(ConferencePeerConnectionTest,
      CallsTrackSignaledCallbackWhenTrackIsSignaled) {
-  MockFunction<void(rtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>
+  MockFunction<void(webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>
       mock_function;
   absl::Notification notification;
   EXPECT_CALL(mock_function, Call(_)).WillOnce([&notification](auto) {

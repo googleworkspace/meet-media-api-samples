@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/resource_manager.h"
+#include "meet_clients/samples/resource_manager.h"
 
 #include <cstdint>
 #include <memory>
@@ -32,8 +32,8 @@
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_entries_resource.h"
-#include "cpp/api/participants_resource.h"
+#include "meet_clients/api/media_entries_resource.h"
+#include "meet_clients/api/participants_resource.h"
 
 namespace media_api_samples {
 namespace {

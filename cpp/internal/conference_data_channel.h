@@ -23,11 +23,11 @@
 
 #include "absl/log/log.h"
 #include "absl/status/status.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/internal/conference_data_channel_interface.h"
-#include "cpp/internal/resource_handler_interface.h"
-#include "webrtc/api/data_channel_interface.h"
-#include "webrtc/api/scoped_refptr.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/internal/conference_data_channel_interface.h"
+#include "meet_clients/internal/resource_handler_interface.h"
+#include "api/data_channel_interface.h"
+#include "api/scoped_refptr.h"
 
 namespace meet {
 
@@ -40,11 +40,11 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
  public:
   ConferenceDataChannel(
       std::unique_ptr<ResourceHandlerInterface> resource_handler,
-      rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
+      webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel)
       : resource_handler_(std::move(resource_handler)),
         data_channel_(std::move(data_channel)) {
     data_channel_->RegisterObserver(this);
-  };
+  }
 
   ~ConferenceDataChannel() override {
     data_channel_->UnregisterObserver();
@@ -58,7 +58,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
   void OnStateChange() override {
     VLOG(1) << "ConferenceDataChannel::OnStateChange: "
             << data_channel_->state();
-  };
+  }
 
   void OnMessage(const webrtc::DataBuffer& buffer) override;
 
@@ -88,7 +88,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
 
   ResourceUpdateCallback callback_;
   std::unique_ptr<ResourceHandlerInterface> resource_handler_;
-  rtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
+  webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 };
 
 }  // namespace meet

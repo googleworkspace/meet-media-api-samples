@@ -1,0 +1,70 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("../../webrtc.gni")
+
+rtc_source_set("media_api_client_interface") {
+  sources = [ "media_api_client_interface.h" ]
+  deps = [
+    ":media_entries_resource",
+    ":media_stats_resource",
+    ":participants_resource",
+    ":session_control_resource",
+    ":video_assignment_resource",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/types:span",
+    "../../api:ref_count",
+    "../../api:scoped_refptr",
+    "../../api/video:video_frame",
+  ]
+}
+
+rtc_source_set("media_api_client_factory_interface") {
+  sources = [ "media_api_client_factory_interface.h" ]
+  deps = [
+    ":media_api_client_interface",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "../../api:scoped_refptr",
+  ]
+}
+
+rtc_source_set("media_stats_resource") {
+  sources = [ "media_stats_resource.h" ]
+  deps = [
+    "//third_party/abseil-cpp/absl/container:flat_hash_map",
+    "//third_party/abseil-cpp/absl/container:flat_hash_set",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
+}
+
+rtc_source_set("participants_resource") {
+  sources = [ "participants_resource.h" ]
+}
+
+rtc_source_set("video_assignment_resource") {
+  sources = [ "video_assignment_resource.h" ]
+  deps = [ "//third_party/abseil-cpp/absl/status" ]
+}
+
+rtc_source_set("media_entries_resource") {
+  sources = [ "media_entries_resource.h" ]
+}
+
+rtc_source_set("session_control_resource") {
+  sources = [ "session_control_resource.h" ]
+  deps = [ "//third_party/abseil-cpp/absl/status" ]
+}

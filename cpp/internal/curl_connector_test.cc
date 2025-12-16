@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/curl_connector.h"
+#include "meet_clients/internal/curl_connector.h"
 
 #include <memory>
 #include <string>
@@ -27,8 +27,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include <curl/curl.h>
-#include "nlohmann/json.hpp"
-#include "cpp/internal/testing/mock_curl_api_wrapper.h"
+#include "third_party/icu/source/tools/toolutil/json-json.hpp"
+#include "meet_clients/internal/testing/mock_curl_api_wrapper.h"
 
 namespace meet {
 namespace {

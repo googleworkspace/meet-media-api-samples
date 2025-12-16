@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/media_writing.h"
+#include "meet_clients/samples/media_writing.h"
 
 #include <cstdint>
 #include <vector>
 
-#include "cpp/samples/output_writer_interface.h"
-#include "webrtc/api/video/video_frame_buffer.h"
+#include "meet_clients/samples/output_writer_interface.h"
+#include "api/video/video_frame_buffer.h"
 
 namespace media_api_samples {
 

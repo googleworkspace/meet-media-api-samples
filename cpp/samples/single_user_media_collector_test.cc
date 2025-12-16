@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/samples/single_user_media_collector.h"
+#include "meet_clients/samples/single_user_media_collector.h"
 
 #include <cstdint>
 #include <ios>
@@ -28,13 +28,13 @@
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
 #include "absl/time/time.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/samples/output_writer_interface.h"
-#include "cpp/samples/testing/media_data.h"
-#include "cpp/samples/testing/mock_output_writer.h"
-#include "webrtc/api/make_ref_counted.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/samples/output_writer_interface.h"
+#include "meet_clients/samples/testing/media_data.h"
+#include "meet_clients/samples/testing/mock_output_writer.h"
+#include "api/make_ref_counted.h"
+#include "api/scoped_refptr.h"
+#include "rtc_base/thread.h"
 
 namespace media_api_samples {
 namespace {
@@ -44,7 +44,7 @@ using ::testing::MockFunction;
 using ::testing::Return;
 
 TEST(SingleUserMediaCollectorTest, WaitForJoinedTimesOutBeforeJoining) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -54,7 +54,7 @@ TEST(SingleUserMediaCollectorTest, WaitForJoinedTimesOutBeforeJoining) {
 }
 
 TEST(SingleUserMediaCollectorTest, WaitForJoinedSucceedsAfterJoining) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -64,7 +64,7 @@ TEST(SingleUserMediaCollectorTest, WaitForJoinedSucceedsAfterJoining) {
 
 TEST(SingleUserMediaCollectorTest,
      WaitForDisconnectedTimesOutBeforeDisconnecting) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -75,7 +75,7 @@ TEST(SingleUserMediaCollectorTest,
 
 TEST(SingleUserMediaCollectorTest,
      WaitForDisconnectedSucceedsAfterDisconnecting) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -85,7 +85,7 @@ TEST(SingleUserMediaCollectorTest,
 
 TEST(SingleUserMediaCollectorTest,
      WaitForJoinedSucceedsAfterDisconnectingWithNonOkStatus) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -96,7 +96,7 @@ TEST(SingleUserMediaCollectorTest,
 
 TEST(SingleUserMediaCollectorTest,
      WaitForDisconnectedSucceedsAfterDisconnectingWithNonOkStatus) {
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread));
@@ -125,7 +125,7 @@ TEST(SingleUserMediaCollectorTest, ReceivesAudioFrameAndWritesToAudioFile) {
       mock_output_file_provider;
   EXPECT_CALL(mock_output_file_provider, Call("test_audio.pcm"))
       .WillOnce(Return(std::move(mock_output_file)));
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread),
@@ -157,7 +157,7 @@ TEST(SingleUserMediaCollectorTest, ReceivesAudioFrameOnlyCreatesOneAudioFile) {
   EXPECT_CALL(mock_output_file_provider, Call(_))
       .Times(1)
       .WillOnce(Return(std::move(mock_output_file)));
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread),
@@ -191,7 +191,7 @@ TEST(SingleUserMediaCollectorTest, ReceivesVideoFrameAndWritesToVideoFile) {
       mock_output_file_provider;
   EXPECT_CALL(mock_output_file_provider, Call("test_video_0_10x5.yuv"))
       .WillOnce(Return(std::move(mock_output_file)));
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread),
@@ -217,7 +217,7 @@ TEST(SingleUserMediaCollectorTest,
         write_notification.Notify();
         return std::make_unique<MockOutputWriter>();
       });
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread),
@@ -256,7 +256,7 @@ TEST(SingleUserMediaCollectorTest,
         write_notification3.Notify();
         return std::make_unique<MockOutputWriter>();
       });
-  auto thread = rtc::Thread::Create();
+  auto thread = webrtc::Thread::Create();
   thread->Start();
   auto collector = webrtc::make_ref_counted<SingleUserMediaCollector>(
       "test_", std::move(thread),

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/conference_media_tracks.h"
+#include "meet_clients/internal/conference_media_tracks.h"
 
 #include <cstdint>
 #include <optional>
@@ -27,15 +27,15 @@
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
 #include "absl/log/globals.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "webrtc/api/rtp_packet_info.h"
-#include "webrtc/api/rtp_packet_infos.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/test/mock_rtpreceiver.h"
-#include "webrtc/api/transport/rtp/rtp_source.h"
-#include "webrtc/api/units/timestamp.h"
-#include "webrtc/api/video/i420_buffer.h"
-#include "webrtc/api/video/video_frame.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "api/rtp_packet_info.h"
+#include "api/rtp_packet_infos.h"
+#include "api/scoped_refptr.h"
+#include "api/test/mock_rtpreceiver.h"
+#include "api/transport/rtp/rtp_source.h"
+#include "api/units/timestamp.h"
+#include "api/video/i420_buffer.h"
+#include "api/video/video_frame.h"
 
 namespace meet {
 namespace {
@@ -51,7 +51,7 @@ using ::testing::SizeIs;
 using ::testing::UnorderedElementsAre;
 
 TEST(ConferenceAudioTrackTest, CallsObserverWithAudioFrameFromLoudestSpeaker) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   // Expect that only the first CSRC and SSRC are used.
   //
@@ -116,7 +116,7 @@ TEST(ConferenceAudioTrackTest, CallsObserverWithAudioFrameFromLoudestSpeaker) {
 
 TEST(ConferenceAudioTrackTest,
      CallsObserverWithAudioFrameFromNonLoudestSpeaker) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource csrc_rtp_source_1(
       webrtc::Timestamp::Micros(1234567890),
@@ -192,7 +192,7 @@ TEST(ConferenceAudioTrackTest, LogsErrorWithUnsupportedBitsPerSample) {
 }
 
 TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrc) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource ssrc_rtp_source(
       webrtc::Timestamp::Micros(1234567890),
@@ -225,7 +225,7 @@ TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrc) {
 }
 
 TEST(ConferenceAudioTrackTest, LogsErrorWithMissingSsrc) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource csrc_rtp_source(
       webrtc::Timestamp::Micros(1234567890),
@@ -257,7 +257,7 @@ TEST(ConferenceAudioTrackTest, LogsErrorWithMissingSsrc) {
   EXPECT_EQ(message, "AudioFrame is missing SSRC for mid: mid");
 }
 TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrcAndSsrc) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   EXPECT_CALL(*mock_receiver, GetSources)
       .WillOnce(Return(std::vector<webrtc::RtpSource>()));
@@ -288,7 +288,7 @@ TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrcAndSsrc) {
 }
 
 TEST(ConferenceAudioTrackTest, LogsErrorWithOnlyLoudestSpeakerCsrc) {
-  rtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource csrc_rtp_source(
       webrtc::Timestamp::Micros(1234567890),

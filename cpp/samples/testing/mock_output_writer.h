@@ -20,7 +20,7 @@
 #include <ios>
 
 #include "gmock/gmock.h"
-#include "cpp/samples/output_writer_interface.h"
+#include "meet_clients/samples/output_writer_interface.h"
 
 namespace media_api_samples {
 

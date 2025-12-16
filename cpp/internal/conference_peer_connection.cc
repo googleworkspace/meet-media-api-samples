@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/conference_peer_connection.h"
+#include "meet_clients/internal/conference_peer_connection.h"
 
 #include <memory>
 #include <string>
@@ -26,15 +26,15 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
-#include "nlohmann/json.hpp"
-#include "webrtc/api/jsep.h"
-#include "webrtc/api/make_ref_counted.h"
-#include "webrtc/api/peer_connection_interface.h"
-#include "webrtc/api/rtc_error.h"
-#include "webrtc/api/rtp_transceiver_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/set_local_description_observer_interface.h"
-#include "webrtc/api/set_remote_description_observer_interface.h"
+#include "third_party/icu/source/tools/toolutil/json-json.hpp"
+#include "api/jsep.h"
+#include "api/make_ref_counted.h"
+#include "api/peer_connection_interface.h"
+#include "api/rtc_error.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/set_local_description_observer_interface.h"
+#include "api/set_remote_description_observer_interface.h"
 
 namespace meet {
 namespace {
@@ -62,7 +62,7 @@ class SetLocalDescriptionObserver
           absl::StrCat("Error setting local description: ", error.message()));
     }
     notification_.Notify();
-  };
+  }
 
   absl::StatusOr<std::string> GetLocalDescription() {
     notification_.WaitForNotification();
@@ -88,7 +88,7 @@ class SetRemoteDescriptionObserver
           absl::StrCat("Error setting remote description: ", error.message()));
     }
     notification_.Notify();
-  };
+  }
 
   absl::Status GetRemoteDescription() {
     notification_.WaitForNotification();
@@ -121,7 +121,7 @@ void ConferencePeerConnection::OnConnectionChange(
 }
 
 void ConferencePeerConnection::OnTrack(
-    rtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
+    webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver) {
   if (track_signaled_callback_ == nullptr) {
     LOG(WARNING)
         << "ConferencePeerConnection::OnTrack called without callback.";

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "cpp/internal/curl_request.h"
+#include "meet_clients/internal/curl_request.h"
 
 #include <cstddef>
 #include <cstdint>

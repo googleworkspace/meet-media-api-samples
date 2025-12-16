@@ -22,20 +22,20 @@
 
 #include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
-#include "cpp/api/media_api_client_factory_interface.h"
-#include "cpp/api/media_api_client_interface.h"
-#include "cpp/internal/http_connector_interface.h"
-#include "webrtc/api/peer_connection_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/rtc_base/thread.h"
+#include "meet_clients/api/media_api_client_factory_interface.h"
+#include "meet_clients/api/media_api_client_interface.h"
+#include "meet_clients/internal/http_connector_interface.h"
+#include "api/peer_connection_interface.h"
+#include "api/scoped_refptr.h"
+#include "rtc_base/thread.h"
 
 namespace meet {
 
 class MediaApiClientFactory : public MediaApiClientFactoryInterface {
  public:
   using PeerConnectionFactoryProvider = absl::AnyInvocable<
-      rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>(
-          rtc::Thread* signaling_thread, rtc::Thread* worker_thread)>;
+      webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>(
+          webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)>;
   using HttpConnectorProvider =
       absl::AnyInvocable<std::unique_ptr<HttpConnectorInterface>()>;
 
@@ -52,7 +52,7 @@ class MediaApiClientFactory : public MediaApiClientFactoryInterface {
 
   absl::StatusOr<std::unique_ptr<MediaApiClientInterface>> CreateMediaApiClient(
       const MediaApiClientConfiguration& api_config,
-      rtc::scoped_refptr<MediaApiClientObserverInterface>
+      webrtc::scoped_refptr<MediaApiClientObserverInterface>
           api_session_observer) override;
 
  private:

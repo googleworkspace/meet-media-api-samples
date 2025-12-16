@@ -99,11 +99,11 @@ class CurlRequest {
     kPut,
   };
 
-  explicit CurlRequest(CurlApiWrapper& curl_api) : curl_api_(curl_api) {};
+  explicit CurlRequest(CurlApiWrapper& curl_api) : curl_api_(curl_api) {}
 
   absl::Status Send();
 
-  std::string GetResponseData() const { return std::string(response_data_); };
+  std::string GetResponseData() const { return std::string(response_data_); }
   void SetRequestUrl(std::string url) {
     request_parameters_.url = std::move(url);
   }
@@ -115,7 +115,7 @@ class CurlRequest {
   }
   void SetRequestMethod(Method method) {
     request_parameters_.request_method = RequestMethodToCurlOption(method);
-  };
+  }
   void SetCaCertPath(absl::string_view ca_cert_path) {
     ca_cert_path_ = std::string(ca_cert_path);
   }

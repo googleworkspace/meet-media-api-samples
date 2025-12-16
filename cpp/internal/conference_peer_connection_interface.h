@@ -20,9 +20,9 @@
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "webrtc/api/rtp_transceiver_interface.h"
-#include "webrtc/api/scoped_refptr.h"
-#include "webrtc/api/stats/rtc_stats_collector_callback.h"
+#include "api/rtp_transceiver_interface.h"
+#include "api/scoped_refptr.h"
+#include "api/stats/rtc_stats_collector_callback.h"
 
 namespace meet {
 
@@ -31,7 +31,7 @@ class ConferencePeerConnectionInterface {
  public:
   using DisconnectCallback = absl::AnyInvocable<void(absl::Status)>;
   using TrackSignaledCallback = absl::AnyInvocable<void(
-      rtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
+      webrtc::scoped_refptr<webrtc::RtpTransceiverInterface>)>;
 
   virtual ~ConferencePeerConnectionInterface() = default;
 
