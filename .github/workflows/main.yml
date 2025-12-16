@@ -33,13 +33,19 @@ jobs:
       - name: 📦 Prepare dependencies
         uses: ./.github/actions/prepare-deps
 
-      - name: 🚧 Build
+      - name: 🕸️ Build Web
         run: |
-          sed -i -e 's|webrtc_path = ".*"|webrtc_path = "${{ github.workspace }}/webrtc-checkout/"|g' WORKSPACE
-          # Don't `build ...`, as includes irrelevant targets in `webrtc-checkout`.
-          bazel-7.4.1 build cpp/...
           bazel-7.4.1 build web/...
 
-      - name: 🔍 Test
+      - name: 🔧 Make build script executable
+        run: chmod +x cpp/build.sh
+
+      - name: 🚧 Build C++ (No Cache Hit)
+        if: ${{ steps.cache-webrtc.outputs.cache-hit != 'true' }}
         run: |
-          bazel-7.4.1 test cpp/...
+          cd cpp && ./build.sh --cached_webrtc=false
+
+      - name: 🚧 Build C++ (Cache Hit)
+        if: ${{ steps.cache-webrtc.outputs.cache-hit == 'true' }}
+        run: |
+          cd cpp && ./build.sh --cached_webrtc=true

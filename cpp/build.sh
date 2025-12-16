@@ -24,9 +24,41 @@ WEBRTC_SRC="$WEBRTC_DIR/src"
 CURRENT_DIR=$(pwd)
 # ---------------------
 
+# --- Argument Parsing ---
+CACHED_WEBRTC=0
+NINJA_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --cached_webrtc=*)
+      # Handle explicit value (e.g., --cached_webrtc=true)
+      VAL="${1#*=}"
+      if [[ "$VAL" == "true" ]]; then
+        CACHED_WEBRTC=1
+      else
+        CACHED_WEBRTC=0
+      fi
+      shift
+      ;;
+    --cached_webrtc)
+      # Handle standalone flag (treat as true)
+      CACHED_WEBRTC=1
+      shift
+      ;;
+    *)
+      # Collect unknown args to pass to Ninja
+      NINJA_ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+# ---------------------
+
 echo -e "\033[1;36m🔍  [1/5] Scanning for WebRTC Universe...\033[0m"
 
-if [ ! -d "$WEBRTC_SRC" ]; then
+if [ "$CACHED_WEBRTC" -eq 1 ]; then
+    echo -e "\033[1;33m    ⏩  Skipping WebRTC checkout: --cached_webrtc specified.\033[0m"
+elif [ ! -d "$WEBRTC_SRC" ]; then
     echo -e "\033[1;33m    ⚠️  WebRTC checkout not found. Initializing auto-fetch sequence...\033[0m"
 
     # Check for depot_tools first
@@ -44,13 +76,23 @@ if [ ! -d "$WEBRTC_SRC" ]; then
     fetch --nohooks webrtc
 
     echo -e "\033[1;34m    🔄  Syncing dependencies...\033[0m"
-    gclient sync
+    gclient sync --nohooks --with_branch_heads --no-history --shallow
 
     popd > /dev/null
     echo -e "\033[1;32m    ✅  WebRTC Universe created successfully.\033[0m"
 else
     echo -e "\033[1;32m    ✅  Found existing WebRTC checkout.\033[0m"
 fi
+
+echo -e "\033[1;36m🏗️   [1.5/5] Hydrating Dependencies (Sysroot & Clang)...\033[0m"
+pushd "$WEBRTC_SRC" > /dev/null
+    echo -e "\033[1;34m    🐧  Installing Debian Sysroot...\033[0m"
+    python3 build/linux/sysroot_scripts/install-sysroot.py --arch=amd64
+
+    echo -e "\033[1;34m    🔨  Installing Clang Compiler...\033[0m"
+    python3 tools/clang/scripts/update.py
+popd > /dev/null
+echo -e "\033[1;32m    ✅  Build environment hydrated.\033[0m"
 
 echo -e "\033[1;36m💉  [2/5] Injecting your code into the matrix...\033[0m"
 # Clean replace of the destination folder
@@ -107,7 +149,7 @@ if [ ! -f "$WEBRTC_SRC/out/Default/build.ninja" ]; then
 fi
 
 echo -e "\033[1;36m🔨  [5/5] Compiling... (Grab a coffee ☕)\033[0m"
-ninja -C "$WEBRTC_SRC/out/Default" "$MODULE_NAME:$TARGET_NAME" "$@"
+ninja -C "$WEBRTC_SRC/out/Default" "$MODULE_NAME:$TARGET_NAME" "${NINJA_ARGS[@]}"
 
 echo -e "\033[1;35m==================================================\033[0m"
 echo -e "\033[1;32m🎉  BUILD SUCCESS! You are ready to rock. 🎸\033[0m"

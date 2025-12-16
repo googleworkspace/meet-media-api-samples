@@ -20,8 +20,28 @@ runs:
     # https://github.com/actions/runner-images/issues/709
     - name: ♻️ Free up disk space
       run: |
+        echo "🚧 Starting cleanup operations..."
+        echo "🤖 Deleting Boost..."
         sudo rm -rf "/usr/local/share/boost"
+
+        echo "🤖 Deleting Android SDKs... Beep boop, bye-bye!"
+        sudo rm -rf /usr/local/lib/android
+
+        echo "🗑️  Tossing .NET..."
+        sudo rm -rf /usr/share/dotnet
+
+        echo "🧙‍♂️ Vanishing Haskell..."
+        sudo rm -rf /opt/ghc
+
+        echo "🔍 Losing CodeQL..."
+        sudo rm -rf /opt/codeql
+
+        echo "🛠️  Emptying the Tool Cache... (We don't need no tools!)"
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+        # Check space
+        echo "🚀 Space freed! Let's see how much room for activities we have:"
+        df -h
       shell: bash
 
     - name: 🔧 Install tools
@@ -37,10 +57,10 @@ runs:
       run: echo "TZ=UTC" >> $GITHUB_ENV
       shell: bash
 
-    # We want to cache the build for a week, so we include the date (year and week) in the version.
+    # We want to cache the build once per day, so we include the date in the version.
     - name: 🧱 Generate Cache Version
       run: |
-        CACHE_VERSION=${{ runner.os }}-$(date +%Y-%V)-webrtc
+        CACHE_VERSION=${{ runner.os }}-$(date +%Y-%V-%D)-webrtc
         echo "CACHE_VERSION=$CACHE_VERSION" >> $GITHUB_ENV
       shell: bash
 
@@ -48,7 +68,7 @@ runs:
     # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy
     - name: 📦 Cache WebRTC build
       id: cache-webrtc
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: webrtc-checkout
         key: ${{ env.CACHE_VERSION }}
@@ -58,30 +78,4 @@ runs:
       run: |
         git clone --depth 1 https://chromium.googlesource.com/chromium/tools/depot_tools.git
         echo "$(pwd)/depot_tools" >> $GITHUB_PATH
-      shell: bash
-
-    - name: 📡 Fetch and build WebRTC
-      if: ${{ steps.cache-webrtc.outputs.cache-hit != 'true' }}
-      run: |
-        mkdir webrtc-checkout
-        pushd webrtc-checkout
-        fetch --nohooks webrtc
-        pushd src
-        git checkout b00c469cad3f8c926fcf81ded90b90b6e1e62b9c
-        popd
-        sed -i -e "s|'src/resources'],|'src/resources'],'condition':'rtc_include_tests==true',|" src/DEPS
-        gclient sync
-        pushd src
-        gn gen out/Default --args='is_debug=false use_custom_libcxx=false rtc_include_tests=false rtc_build_examples=false dcheck_always_on=true rtc_use_x11=false use_rtti=true'
-        ninja -C out/Default
-        popd
-        mv src webrtc
-        pushd webrtc
-        # Delete all unnecessary files, maintaining directory structure. Required to conserve Github
-        # runner disk space.
-        find . -type f ! -name "libwebrtc.a" ! -name "*.h" ! -path "*/boringssl/src/*" -delete
-        # Housekeeping: delete empty directories.
-        find . -type d -empty -delete
-        popd
-        popd
       shell: bash
