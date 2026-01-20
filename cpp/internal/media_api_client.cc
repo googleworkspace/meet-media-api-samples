@@ -337,11 +337,8 @@ void MediaApiClient::CollectStats() {
   }
 
   auto callback = webrtc::make_ref_counted<OnRTCStatsCollected>(
-      [this, safety = alive_flag_](
-          const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
-        if (!safety->alive()) {
-          return;
-        }
+      [this](
+          const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
         MediaStatsChannelFromClient request = StatsRequestFromReport(
             report, stats_config_.stats_request_id, stats_config_.allowlist);
         stats_config_.stats_request_id++;
@@ -357,7 +354,7 @@ void MediaApiClient::CollectStats() {
         // Closing the peer connection will cancel any pending and future tasks,
         // stopping stats collection.
         client_thread_->PostDelayedTask(
-            SafeTask(safety, [this]() { CollectStats(); }),
+            [&]() { CollectStats(); },
             webrtc::TimeDelta::Seconds(stats_config_.upload_interval));
       });
   conference_peer_connection_->GetStats(callback.get());
