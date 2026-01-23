@@ -198,10 +198,10 @@ void MultiUserMediaCollector::HandleVideoData(
   WriteYuv420(*i420, *video_segment->writer);
 }
 
-void MultiUserMediaCollector::OnResourceUpdate(meet::ResourceUpdate update) {
-  absl::Time received_time = absl::Now();
+void MultiUserMediaCollector::OnMessageFromServer(
+    meet::MessageFromServer update) {
   collector_thread_->PostTask(
-      [this, update = std::move(update), received_time = received_time] {
+      [this, update = std::move(update), received_time = absl::Now()] {
         if (std::holds_alternative<meet::MediaEntriesChannelToClient>(update)) {
           resource_manager_->OnMediaEntriesResourceUpdate(
               std::move(std::get<meet::MediaEntriesChannelToClient>(update)),

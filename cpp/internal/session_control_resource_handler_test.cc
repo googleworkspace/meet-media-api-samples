@@ -41,7 +41,7 @@ using Json = ::nlohmann::json;
 TEST(SessionControlResourceHandlerTest, ParsesMultipleResourceSnapshots) {
   SessionControlResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -83,7 +83,7 @@ TEST(SessionControlResourceHandlerTest, ParsesMultipleResourceSnapshots) {
 
 TEST(SessionControlResourceHandlerTest, ParsesDisconnectReasons) {
   SessionControlResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -129,7 +129,7 @@ TEST(SessionControlResourceHandlerTest, ParsesDisconnectReasons) {
 TEST(SessionControlResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
   SessionControlResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": []
     })json");
@@ -143,7 +143,7 @@ TEST(SessionControlResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
 TEST(SessionControlResourceHandlerTest, ParsesResponseField) {
   SessionControlResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "response": {
           "requestId": 123,
@@ -167,7 +167,7 @@ TEST(SessionControlResourceHandlerTest, ParsesResponseField) {
 
 TEST(SessionControlResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
   SessionControlResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       handler.ParseUpdate(" random garbage that is not json!");
 
   EXPECT_FALSE(parsed_update.ok());
@@ -179,7 +179,7 @@ TEST(SessionControlResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
 
 TEST(SessionControlResourceHandlerTest, UnexpectedResourcesReturnsErrorStatus) {
   SessionControlResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> parsed_update = handler.ParseUpdate(R"json({
+  absl::StatusOr<MessageFromServer> parsed_update = handler.ParseUpdate(R"json({
         "resources": {
           "sessionStatus": {
             "connectionState": "STATE_JOINED"

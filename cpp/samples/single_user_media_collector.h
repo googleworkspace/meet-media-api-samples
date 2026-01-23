@@ -91,7 +91,7 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
     collector_thread_->Stop();
   }
 
-  void OnResourceUpdate(meet::ResourceUpdate update) override {
+  void OnMessageFromServer(meet::MessageFromServer update) override {
     // This sample does not handle resource updates.
   }
 

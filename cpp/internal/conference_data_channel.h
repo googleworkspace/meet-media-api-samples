@@ -66,7 +66,7 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
   // current behavior reflects desired future behavior.
   bool IsOkToCallOnTheNetworkThread() override { return true; }
 
-  // Sets the callback for receiving resource updates from the resource data
+  // Sets the callback for receiving messages from the data
   // channel.
   //
   // The callback is called on the associated peer connection's network thread.
@@ -77,16 +77,16 @@ class ConferenceDataChannel : public ConferenceDataChannelInterface,
   // Setting the callback is not thread-safe, so it should only be called before
   // the resource data channel is used (i.e. before the peer connection is
   // started).
-  void SetCallback(ResourceUpdateCallback callback) override {
+  void SetCallback(MessageFromServerCallback callback) override {
     callback_ = std::move(callback);
   }
 
-  absl::Status SendRequest(ResourceRequest request) override;
+  absl::Status SendRequest(MessageToServer request) override;
 
  private:
   std::string label() const { return data_channel_->label(); }
 
-  ResourceUpdateCallback callback_;
+  MessageFromServerCallback callback_;
   std::unique_ptr<ResourceHandlerInterface> resource_handler_;
   webrtc::scoped_refptr<webrtc::DataChannelInterface> data_channel_;
 };

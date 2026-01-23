@@ -33,11 +33,11 @@ class ResourceHandlerInterface {
  public:
   virtual ~ResourceHandlerInterface() = default;
 
-  virtual absl::StatusOr<ResourceUpdate> ParseUpdate(
+  virtual absl::StatusOr<MessageFromServer> ParseUpdate(
       absl::string_view update) = 0;
 
   virtual absl::StatusOr<std::string> StringifyRequest(
-      const ResourceRequest& request) = 0;
+      const MessageToServer& request) = 0;
 };
 
 }  // namespace meet

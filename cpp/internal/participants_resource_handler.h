@@ -32,10 +32,11 @@ class ParticipantsResourceHandler : public ResourceHandlerInterface {
   ParticipantsResourceHandler() = default;
   ~ParticipantsResourceHandler() = default;
 
-  absl::StatusOr<ResourceUpdate> ParseUpdate(absl::string_view update) override;
+  absl::StatusOr<MessageFromServer> ParseUpdate(
+      absl::string_view update) override;
 
   absl::StatusOr<std::string> StringifyRequest(
-      const ResourceRequest& request) override {
+      const MessageToServer& request) override {
     return absl::UnimplementedError(
         "Participants resourceHandler does not support requests from the "
         "client.");

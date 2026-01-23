@@ -41,7 +41,7 @@ using Json = ::nlohmann::json;
 TEST(VideoAssignmentResourceHandlerTest, ParsesResourceSnapshots) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -79,7 +79,7 @@ TEST(VideoAssignmentResourceHandlerTest,
      ParsesResourceSnapshotsMultipleCanvases) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -125,7 +125,7 @@ TEST(VideoAssignmentResourceHandlerTest,
 TEST(VideoAssignmentResourceHandlerTest, ParsesMultipleResourceSnapshots) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -185,7 +185,7 @@ TEST(VideoAssignmentResourceHandlerTest,
      ParsesResourceSnapshotsNoVideoAssignmentOk) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {}
@@ -202,7 +202,7 @@ TEST(VideoAssignmentResourceHandlerTest,
 TEST(VideoAssignmentResourceHandlerTest, ParsesResponseField) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "response": {
         "requestId": 1,
@@ -229,7 +229,7 @@ TEST(VideoAssignmentResourceHandlerTest,
      ParsesResponseFieldNoVideoAssignmentOk) {
   VideoAssignmentResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "response": {
         "requestId": 1,
@@ -249,7 +249,7 @@ TEST(VideoAssignmentResourceHandlerTest,
 
 TEST(VideoAssignmentResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
   VideoAssignmentResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       handler.ParseUpdate(" random garbage that is not json!");
 
   EXPECT_EQ(parsed_update.status().code(), absl::StatusCode::kInternal);
@@ -261,7 +261,7 @@ TEST(VideoAssignmentResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
 TEST(VideoAssignmentResourceHandlerTest,
      UnexpectedResourcesReturnsErrorStatus) {
   VideoAssignmentResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> parsed_update = handler.ParseUpdate(R"json({
+  absl::StatusOr<MessageFromServer> parsed_update = handler.ParseUpdate(R"json({
         "resources":
           {
             "videoAssignment": {
@@ -285,7 +285,7 @@ TEST(VideoAssignmentResourceHandlerTest,
 
 TEST(VideoAssignmentResourceHandlerTest, UnexpectedCanvasesReturnsErrorStatus) {
   VideoAssignmentResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> parsed_update = handler.ParseUpdate(R"json({
+  absl::StatusOr<MessageFromServer> parsed_update = handler.ParseUpdate(R"json({
         "resources": [
           {
             "videoAssignment": {

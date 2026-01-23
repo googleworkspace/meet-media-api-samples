@@ -36,11 +36,11 @@ class MediaStatsResourceHandler : public ResourceHandlerInterface {
   MediaStatsResourceHandler& operator=(const MediaStatsResourceHandler&) =
       delete;
 
-  absl::StatusOr<ResourceUpdate> ParseUpdate(
+  absl::StatusOr<MessageFromServer> ParseUpdate(
       absl::string_view update) override;
 
   absl::StatusOr<std::string> StringifyRequest(
-      const ResourceRequest& request) override;
+      const MessageToServer& request) override;
 };
 
 }  // namespace meet

@@ -46,7 +46,7 @@ const Json* FindOrNull(const Json& json, absl::string_view key) {
 
 }  // namespace
 
-absl::StatusOr<ResourceUpdate> VideoAssignmentResourceHandler::ParseUpdate(
+absl::StatusOr<MessageFromServer> VideoAssignmentResourceHandler::ParseUpdate(
     absl::string_view update) {
   VLOG(1) << kVideoAssignmentResourceName
           << " resource update received: " << update;
@@ -176,7 +176,7 @@ absl::StatusOr<ResourceUpdate> VideoAssignmentResourceHandler::ParseUpdate(
 }
 
 absl::StatusOr<std::string> VideoAssignmentResourceHandler::StringifyRequest(
-    const ResourceRequest& request) {
+    const MessageToServer& request) {
   if (!std::holds_alternative<VideoAssignmentChannelFromClient>(request)) {
     return absl::InvalidArgumentError(
         "VideoAssignmentResourceHandler only supports "

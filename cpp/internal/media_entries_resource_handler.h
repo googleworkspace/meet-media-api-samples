@@ -27,15 +27,16 @@
 
 namespace meet {
 
-class MediaEntriesResourceHandler: public ResourceHandlerInterface {
+class MediaEntriesResourceHandler : public ResourceHandlerInterface {
  public:
   MediaEntriesResourceHandler() = default;
   ~MediaEntriesResourceHandler() = default;
 
-  absl::StatusOr<ResourceUpdate> ParseUpdate(absl::string_view update) override;
+  absl::StatusOr<MessageFromServer> ParseUpdate(
+      absl::string_view update) override;
 
   absl::StatusOr<std::string> StringifyRequest(
-      const ResourceRequest& request) override {
+      const MessageToServer& request) override {
     return absl::UnimplementedError(
         "Media entries resourceHandler does not support requests from the "
         "client.");

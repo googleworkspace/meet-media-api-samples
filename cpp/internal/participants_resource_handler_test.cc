@@ -33,7 +33,7 @@ using ::testing::SizeIs;
 
 TEST(ParticipantsResourceHandlerTest, ParsesSignedInUserFromSnapshot) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3,
@@ -70,7 +70,7 @@ TEST(ParticipantsResourceHandlerTest, ParsesSignedInUserFromSnapshot) {
 TEST(ParticipantsResourceHandlerTest,
      ParsesSignedInUserWithoutOptionalFieldsFromSnapshot) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3,
@@ -96,7 +96,7 @@ TEST(ParticipantsResourceHandlerTest,
 
 TEST(ParticipantsResourceHandlerTest, ParsesAnonymousUserFromDeletedSnapshot) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3,
@@ -128,7 +128,7 @@ TEST(ParticipantsResourceHandlerTest, ParsesAnonymousUserFromDeletedSnapshot) {
 
 TEST(ParticipantsResourceHandlerTest, ParsesPhoneUserFromDeletedSnapshot) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3,
@@ -159,7 +159,7 @@ TEST(ParticipantsResourceHandlerTest, ParsesPhoneUserFromDeletedSnapshot) {
 
 TEST(ParticipantsResourceHandlerTest, ParsesMultipleResourceSnapshots) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3,
@@ -194,7 +194,7 @@ TEST(ParticipantsResourceHandlerTest, ParsesMultipleResourceSnapshots) {
 
 TEST(ParticipantsResourceHandlerTest, NoParticipantIsOk) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{
       "id": 3
@@ -210,7 +210,7 @@ TEST(ParticipantsResourceHandlerTest, NoParticipantIsOk) {
 
 TEST(ParticipantsResourceHandlerTest, ResourceSnapshotIdIsZeroIfMissing) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": [{}]
   })json");
@@ -225,7 +225,7 @@ TEST(ParticipantsResourceHandlerTest, ResourceSnapshotIdIsZeroIfMissing) {
 
 TEST(ParticipantsResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": []
   })json");
@@ -238,7 +238,7 @@ TEST(ParticipantsResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
 
 TEST(ParticipantsResourceHandlerTest, ParsesMultipleDeletedResources) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "deletedResources": [
       {
@@ -268,7 +268,7 @@ TEST(ParticipantsResourceHandlerTest, ParsesMultipleDeletedResources) {
 TEST(ParticipantsResourceHandlerTest,
      DeletedResourcesUpdateEmptyArrayParsesJson) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "deletedResources": []
   })json");
@@ -281,7 +281,7 @@ TEST(ParticipantsResourceHandlerTest,
 
 TEST(ParticipantsResourceHandlerTest, DeletedResourcesIdIsZeroIfMissing) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "deletedResources": [{}]
   })json");
@@ -295,7 +295,7 @@ TEST(ParticipantsResourceHandlerTest, DeletedResourcesIdIsZeroIfMissing) {
 
 TEST(MediaEntriesResourceHandlerTest, DeletedResourcesMissingParticipantIsOk) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "deletedResources": [{
       "id": 3
@@ -313,7 +313,7 @@ TEST(MediaEntriesResourceHandlerTest, DeletedResourcesMissingParticipantIsOk) {
 
 TEST(ParticipantsResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(" random garbage that is not json!");
 
   EXPECT_EQ(status_or_parsed_update.status().code(),
@@ -326,7 +326,7 @@ TEST(ParticipantsResourceHandlerTest, MalformedJsonReturnsErrorStatus) {
 TEST(ParticipantsResourceHandlerTest,
      UnexpectedResourceSnapshotsReturnsErrorStatus) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "resources": {
       "id": 3,
@@ -351,7 +351,7 @@ TEST(ParticipantsResourceHandlerTest,
 TEST(ParticipantsResourceHandlerTest,
      UnexpectedDeletedResourcesReturnsErrorStatus) {
   ParticipantsResourceHandler handler;
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
     "deletedResources": {
       "id": 3

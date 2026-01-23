@@ -42,7 +42,7 @@ const Json* FindOrNull(const Json& json, absl::string_view key) {
 
 }  // namespace
 
-absl::StatusOr<ResourceUpdate> MediaEntriesResourceHandler::ParseUpdate(
+absl::StatusOr<MessageFromServer> MediaEntriesResourceHandler::ParseUpdate(
     absl::string_view update) {
   VLOG(1) << "Media entries resource update received: " << update;
 

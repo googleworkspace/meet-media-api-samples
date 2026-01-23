@@ -32,10 +32,11 @@ class SessionControlResourceHandler : public ResourceHandlerInterface {
   SessionControlResourceHandler() = default;
   ~SessionControlResourceHandler() override = default;
 
-  absl::StatusOr<ResourceUpdate> ParseUpdate(absl::string_view update) override;
+  absl::StatusOr<MessageFromServer> ParseUpdate(
+      absl::string_view update) override;
 
   absl::StatusOr<std::string> StringifyRequest(
-      const ResourceRequest& request) override;
+      const MessageToServer& request) override;
 
   // SessionControlResourceHandler is neither copyable nor movable.
   SessionControlResourceHandler(const SessionControlResourceHandler&) = delete;

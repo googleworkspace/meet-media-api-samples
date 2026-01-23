@@ -110,8 +110,8 @@ class MockConferenceDataChannel : public ConferenceDataChannelInterface {
     ON_CALL(*this, SetCallback).WillByDefault(Return());
   }
 
-  MOCK_METHOD(void, SetCallback, (ResourceUpdateCallback), (override));
-  MOCK_METHOD(absl::Status, SendRequest, (ResourceRequest), (override));
+  MOCK_METHOD(void, SetCallback, (MessageFromServerCallback), (override));
+  MOCK_METHOD(absl::Status, SendRequest, (MessageToServer), (override));
 };
 
 MediaApiClient::ConferenceDataChannels CreateConferenceDataChannels() {
@@ -248,25 +248,25 @@ TEST(MediaApiClientTest, HandlesPeerConnectionDisconnected) {
       StatusIs(absl::StatusCode::kInternal, "Peer connection disconnected."));
 }
 
-TEST(MediaApiClientTest, CallsObserverOnResourceUpdate) {
+TEST(MediaApiClientTest, CallsObserverOnMessageFromServer) {
   auto observer = webrtc::make_ref_counted<MockMediaApiClientObserver>();
-  ResourceUpdate received_resource_update;
+  MessageFromServer received_resource_update;
   absl::Notification resource_update_notification;
-  EXPECT_CALL(*observer, OnResourceUpdate)
+  EXPECT_CALL(*observer, OnMessageFromServer)
       .WillOnce([&received_resource_update, &resource_update_notification](
-                    ResourceUpdate resource_update) {
+                    MessageFromServer resource_update) {
         received_resource_update = std::move(resource_update);
         resource_update_notification.Notify();
       });
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       std::move(observer), std::make_unique<MockConferencePeerConnection>(),
@@ -306,13 +306,13 @@ TEST(MediaApiClientTest,
       });
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       std::move(observer), std::move(peer_connection),
@@ -347,13 +347,13 @@ TEST(MediaApiClientTest,
   EXPECT_CALL(*observer, OnJoined).Times(0);
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       std::move(observer), std::make_unique<MockConferencePeerConnection>(),
@@ -402,13 +402,13 @@ TEST(MediaApiClientTest, DisconnectsAfterReceivingDisconnectedSessionStatus) {
       });
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       std::move(observer), std::make_unique<MockConferencePeerConnection>(),
@@ -438,13 +438,13 @@ TEST(MediaApiClientTest, DisconnectsAfterReceivingDisconnectedSessionStatus) {
 TEST(MediaApiClientTest, DisconnectingTwiceLogsWarning) {
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       webrtc::make_ref_counted<MockMediaApiClientObserver>(),
@@ -503,13 +503,13 @@ TEST(MediaApiClientTest, DisconnectingClosesConferencePeerConnection) {
       .RetiresOnSaturation();
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       webrtc::make_ref_counted<MockMediaApiClientObserver>(),
@@ -555,30 +555,30 @@ TEST(MediaApiClientTest, StartsSendingStatsRequestsAfterReceivingStatsUpdate) {
         callback->OnStatsDelivered(std::move(report));
       });
   auto media_stats_data_channel = std::make_unique<MockConferenceDataChannel>();
-  std::vector<ResourceRequest> received_requests;
+  std::vector<MessageToServer> received_requests;
   EXPECT_CALL(*media_stats_data_channel, SendRequest)
       // Expect 3 requests: 1 initial request, 2 periodic requests.
       .Times(3)
-      .WillRepeatedly([&received_requests](ResourceRequest request) {
+      .WillRepeatedly([&received_requests](MessageToServer request) {
         received_requests.push_back(std::move(request));
         return absl::OkStatus();
       });
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*media_stats_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
+  ConferenceDataChannelInterface::MessageFromServerCallback
       session_control_update_callback;
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            session_control_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        session_control_update_callback = std::move(callback);
+      });
   MediaApiClient client(
       CreateThread("client_thread"), CreateThread("worker_thread"),
       std::move(observer), std::move(peer_connection),
@@ -661,7 +661,7 @@ TEST(MediaApiClientTest, SendMediaStatsRequestReturnsError) {
   absl::Notification send_request_called_notification;
   ON_CALL(*media_stats_data_channel, SendRequest)
       .WillByDefault(
-          [&send_request_called_notification](ResourceRequest request) {
+          [&send_request_called_notification](MessageToServer request) {
             send_request_called_notification.Notify();
             return absl::OkStatus();
           });
@@ -691,9 +691,9 @@ TEST(MediaApiClientTest, SendMediaStatsRequestReturnsError) {
 TEST(MediaApiClientTest, SendSessionControlRequestSucceeds) {
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ResourceRequest received_resource_request;
+  MessageToServer received_resource_request;
   EXPECT_CALL(*session_control_data_channel, SendRequest)
-      .WillOnce([&received_resource_request](ResourceRequest request) {
+      .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
         return absl::OkStatus();
       });
@@ -723,9 +723,9 @@ TEST(MediaApiClientTest, SendSessionControlRequestSucceeds) {
 TEST(MediaApiClientTest, SendVideoAssignmentRequestSucceeds) {
   auto video_assignment_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ResourceRequest received_resource_request;
+  MessageToServer received_resource_request;
   EXPECT_CALL(*video_assignment_data_channel, SendRequest)
-      .WillOnce([&received_resource_request](ResourceRequest request) {
+      .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
         return absl::OkStatus();
       });
@@ -789,9 +789,9 @@ TEST(MediaApiClientTest, SendRequestLogsWarningIfClientNotJoined) {
 TEST(MediaApiClientTest, LeaveConferenceSendsLeaveRequest) {
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ResourceRequest received_resource_request;
+  MessageToServer received_resource_request;
   EXPECT_CALL(*session_control_data_channel, SendRequest)
-      .WillOnce([&received_resource_request](ResourceRequest request) {
+      .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
         return absl::OkStatus();
       });
@@ -868,16 +868,16 @@ TEST(MediaApiClientTest, LeaveConferenceFailsIfDisconnected) {
       });
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  ConferenceDataChannelInterface::ResourceUpdateCallback
+  ConferenceDataChannelInterface::MessageFromServerCallback
       resource_update_callback;
   EXPECT_CALL(*session_control_data_channel, SetCallback)
-      .WillOnce(
-          [&](ConferenceDataChannelInterface::ResourceUpdateCallback callback) {
-            resource_update_callback = std::move(callback);
-          });
+      .WillOnce([&](ConferenceDataChannelInterface::MessageFromServerCallback
+                        callback) {
+        resource_update_callback = std::move(callback);
+      });
   absl::Notification notification;
   ON_CALL(*session_control_data_channel, SendRequest)
-      .WillByDefault([&notification](ResourceRequest request) {
+      .WillByDefault([&notification](MessageToServer request) {
         notification.Notify();
         return absl::OkStatus();
       });

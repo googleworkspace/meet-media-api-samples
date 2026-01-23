@@ -45,7 +45,7 @@ const Json* FindOrNull(const Json& json, absl::string_view key) {
 
 }  // namespace
 
-absl::StatusOr<ResourceUpdate> ParticipantsResourceHandler::ParseUpdate(
+absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
     absl::string_view update) {
   VLOG(1) << kParticipantsResourceName
           << " resource update received: " << update;

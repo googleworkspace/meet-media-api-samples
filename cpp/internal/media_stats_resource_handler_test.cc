@@ -39,7 +39,7 @@ using ::testing::UnorderedElementsAre;
 using Json = ::nlohmann::json;
 
 TEST(MediaStatsResourceHandlerTest, ParsesPopulatedResource) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [{
         "configuration":{
@@ -74,7 +74,7 @@ TEST(MediaStatsResourceHandlerTest, ParsesPopulatedResource) {
 }
 
 TEST(MediaStatsResourceHandlerTest, ParsesEmptyAllowlist) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [{
         "configuration":{
@@ -91,7 +91,7 @@ TEST(MediaStatsResourceHandlerTest, ParsesEmptyAllowlist) {
 }
 
 TEST(MediaStatsResourceHandlerTest, ZeroResourcesReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": []
       })json");
@@ -103,7 +103,7 @@ TEST(MediaStatsResourceHandlerTest, ZeroResourcesReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MultipleResourcesReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {
@@ -129,7 +129,7 @@ TEST(MediaStatsResourceHandlerTest, MultipleResourcesReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, NonArrayResourcesReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": "non-array-value"
       })json");
@@ -143,7 +143,7 @@ TEST(MediaStatsResourceHandlerTest, NonArrayResourcesReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingConfigurationReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {}
@@ -159,7 +159,7 @@ TEST(MediaStatsResourceHandlerTest, MissingConfigurationReturnsErrorStatus) {
 
 TEST(MediaStatsResourceHandlerTest,
      MissingUploadIntervalSecondsReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {
@@ -176,7 +176,7 @@ TEST(MediaStatsResourceHandlerTest,
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingAllowlistReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {
@@ -194,7 +194,7 @@ TEST(MediaStatsResourceHandlerTest, MissingAllowlistReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingKeysReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {
@@ -215,7 +215,7 @@ TEST(MediaStatsResourceHandlerTest, MissingKeysReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, NonArrayKeysReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
       "resources": [
         {
@@ -238,7 +238,7 @@ TEST(MediaStatsResourceHandlerTest, NonArrayKeysReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, ParsesResponse) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "requestId": 1,
@@ -260,7 +260,7 @@ TEST(MediaStatsResourceHandlerTest, ParsesResponse) {
 }
 
 TEST(MediaStatsResourceHandlerTest, ParsesResponseWithoutUploadMediaStats) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "requestId": 1,
@@ -281,7 +281,7 @@ TEST(MediaStatsResourceHandlerTest, ParsesResponseWithoutUploadMediaStats) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingRequestIdReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "status": {
@@ -300,7 +300,7 @@ TEST(MediaStatsResourceHandlerTest, MissingRequestIdReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingStatusReturnsOKStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "requestId": 1,
@@ -312,7 +312,7 @@ TEST(MediaStatsResourceHandlerTest, MissingStatusReturnsOKStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingStatusCodeReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "requestId": 1,
@@ -331,7 +331,7 @@ TEST(MediaStatsResourceHandlerTest, MissingStatusCodeReturnsErrorStatus) {
 }
 
 TEST(MediaStatsResourceHandlerTest, MissingStatusMessageReturnsErrorStatus) {
-  absl::StatusOr<ResourceUpdate> parsed_update =
+  absl::StatusOr<MessageFromServer> parsed_update =
       MediaStatsResourceHandler().ParseUpdate(R"json({
     "response": {
       "requestId": 1,

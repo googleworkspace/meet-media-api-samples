@@ -146,7 +146,7 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
   void OnAudioFrame(meet::AudioFrame frame) override;
   void OnVideoFrame(meet::VideoFrame frame) override;
-  void OnResourceUpdate(meet::ResourceUpdate update) override;
+  void OnMessageFromServer(meet::MessageFromServer update) override;
 
   void OnJoined() override {
     // The `MediaApiClient` will only call this method once.

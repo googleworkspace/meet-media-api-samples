@@ -58,13 +58,13 @@ namespace {
 class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
  public:
   using Callback = absl::AnyInvocable<void(
-      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)>;
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report)>;
 
   explicit OnRTCStatsCollected(Callback callback)
       : callback_(std::move(callback)) {}
 
   void OnStatsDelivered(
-      const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report)
+      const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report)
       override {
     callback_(report);
   }
@@ -146,7 +146,7 @@ absl::Status MediaApiClient::LeaveConference(int64_t request_id) {
   return status;
 }
 
-absl::Status MediaApiClient::SendRequest(const ResourceRequest &request) {
+absl::Status MediaApiClient::SendRequest(const MessageToServer& request) {
   {
     absl::MutexLock lock(mutex_);
     if (state_ != State::kJoined) {
@@ -199,7 +199,7 @@ void MediaApiClient::HandleTrackSignaled(
           std::bind_front(&MediaApiClientObserverInterface::OnAudioFrame,
                           observer_));
       auto audio_track =
-          static_cast<webrtc::AudioTrackInterface *>(receiver_track.get());
+          static_cast<webrtc::AudioTrackInterface*>(receiver_track.get());
       audio_track->AddSink(conference_audio_track.get());
       media_tracks_.push_back(std::move(conference_audio_track));
     }
@@ -209,7 +209,7 @@ void MediaApiClient::HandleTrackSignaled(
           mid, std::bind_front(&MediaApiClientObserverInterface::OnVideoFrame,
                                observer_));
       auto video_track =
-          static_cast<webrtc::VideoTrackInterface *>(receiver_track.get());
+          static_cast<webrtc::VideoTrackInterface*>(receiver_track.get());
       video_track->AddOrUpdateSink(conference_video_track.get(),
                                    webrtc::VideoSinkWants());
       media_tracks_.push_back(std::move(conference_video_track));
@@ -222,8 +222,8 @@ void MediaApiClient::HandleTrackSignaled(
   }
 }
 
-void MediaApiClient::HandleResourceUpdate(ResourceUpdate update) {
-  observer_->OnResourceUpdate(update);
+void MediaApiClient::HandleMessageFromServer(MessageFromServer update) {
+  observer_->OnMessageFromServer(update);
 
   if (std::holds_alternative<SessionControlChannelToClient>(update)) {
     SessionControlChannelToClient session_control_update =

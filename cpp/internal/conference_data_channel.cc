@@ -44,7 +44,7 @@ void ConferenceDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
   }
 
   absl::string_view message(buffer.data.cdata<char>(), buffer.size());
-  absl::StatusOr<ResourceUpdate> update_parse_status =
+  absl::StatusOr<MessageFromServer> update_parse_status =
       resource_handler_->ParseUpdate(message);
   if (!update_parse_status.ok()) {
     LOG(ERROR) << "Received " << label()
@@ -58,7 +58,7 @@ void ConferenceDataChannel::OnMessage(const webrtc::DataBuffer& buffer) {
   callback_(*std::move(update_parse_status));
 }
 
-absl::Status ConferenceDataChannel::SendRequest(ResourceRequest request) {
+absl::Status ConferenceDataChannel::SendRequest(MessageToServer request) {
   absl::StatusOr<std::string> stringify_status =
       resource_handler_->StringifyRequest(request);
   if (!stringify_status.ok()) {

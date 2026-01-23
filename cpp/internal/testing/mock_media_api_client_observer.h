@@ -27,7 +27,7 @@ class MockMediaApiClientObserver : public MediaApiClientObserverInterface {
  public:
   MOCK_METHOD(void, OnJoined, (), (override));
   MOCK_METHOD(void, OnDisconnected, (absl::Status), (override));
-  MOCK_METHOD(void, OnResourceUpdate, (ResourceUpdate), (override));
+  MOCK_METHOD(void, OnMessageFromServer, (MessageFromServer), (override));
   MOCK_METHOD(void, OnAudioFrame, (AudioFrame), (override));
   MOCK_METHOD(void, OnVideoFrame, (VideoFrame), (override));
 };

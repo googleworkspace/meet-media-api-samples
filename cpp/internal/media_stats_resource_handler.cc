@@ -47,7 +47,7 @@ const Json* FindOrNull(const Json& json, absl::string_view key) {
 
 }  // namespace
 
-absl::StatusOr<ResourceUpdate> MediaStatsResourceHandler::ParseUpdate(
+absl::StatusOr<MessageFromServer> MediaStatsResourceHandler::ParseUpdate(
     absl::string_view update) {
   VLOG(1) << kMediaStatsResourceName << " resource update received: " << update;
 
@@ -186,7 +186,7 @@ absl::StatusOr<ResourceUpdate> MediaStatsResourceHandler::ParseUpdate(
 }
 
 absl::StatusOr<std::string> MediaStatsResourceHandler::StringifyRequest(
-    const ResourceRequest& request) {
+    const MessageToServer& request) {
   if (!std::holds_alternative<MediaStatsChannelFromClient>(request)) {
     return absl::InvalidArgumentError(
         "MediaStatsResourceHandler only supports MediaStatsChannelFromClient");

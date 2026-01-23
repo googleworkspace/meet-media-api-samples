@@ -33,7 +33,7 @@ using ::testing::SizeIs;
 TEST(MediaEntriesResourceHandlerTest, ParsesMultipleResourceSnapshots) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -107,7 +107,7 @@ TEST(MediaEntriesResourceHandlerTest, ParsesMultipleResourceSnapshots) {
 
 TEST(MediaEntriesResourceHandlerTest,
      ParsesSignedInUserWithoutOptionalFieldsFromSnapshot) {
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       MediaEntriesResourceHandler().ParseUpdate(R"json({
         "resources": [
           {
@@ -140,7 +140,7 @@ TEST(MediaEntriesResourceHandlerTest,
 TEST(MediaEntriesResourceHandlerTest, NoMediaEntryIsOk) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -160,7 +160,7 @@ TEST(MediaEntriesResourceHandlerTest, NoMediaEntryIsOk) {
 TEST(MediaEntriesResourceHandlerTest, ResourceSnapshotIdIsZeroIfMissing) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": [
           {
@@ -190,7 +190,7 @@ TEST(MediaEntriesResourceHandlerTest, ResourceSnapshotIdIsZeroIfMissing) {
 TEST(MediaEntriesResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "resources": []
     })json");
@@ -204,7 +204,7 @@ TEST(MediaEntriesResourceHandlerTest, ResourcesUpdateEmptyArrayParsesJson) {
 TEST(MediaEntriesResourceHandlerTest, ParsesMultipleDeletedResources) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "deletedResources": [
           {
@@ -234,7 +234,7 @@ TEST(MediaEntriesResourceHandlerTest,
      DeletedResourcesUpdateEmptyArrayParsesJson) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "deletedResources": []
     })json");
@@ -248,7 +248,7 @@ TEST(MediaEntriesResourceHandlerTest,
 TEST(MediaEntriesResourceHandlerTest, DeletedResourcesIdIsZeroIfMissing) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "deletedResources": [
           {
@@ -267,7 +267,7 @@ TEST(MediaEntriesResourceHandlerTest, DeletedResourcesIdIsZeroIfMissing) {
 TEST(MediaEntriesResourceHandlerTest, DeletedResourcesMissingMediaEntryIsOk) {
   MediaEntriesResourceHandler handler;
 
-  absl::StatusOr<ResourceUpdate> status_or_parsed_update =
+  absl::StatusOr<MessageFromServer> status_or_parsed_update =
       handler.ParseUpdate(R"json({
         "deletedResources": [
           {

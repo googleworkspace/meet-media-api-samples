@@ -73,15 +73,15 @@ class MediaApiClient : public MediaApiClientInterface {
         std::bind_front(&MediaApiClient::HandleTrackSignaled, this));
 
     data_channels_.media_entries->SetCallback(
-        std::bind_front(&MediaApiClient::HandleResourceUpdate, this));
+        std::bind_front(&MediaApiClient::HandleMessageFromServer, this));
     data_channels_.media_stats->SetCallback(
-        std::bind_front(&MediaApiClient::HandleResourceUpdate, this));
+        std::bind_front(&MediaApiClient::HandleMessageFromServer, this));
     data_channels_.participants->SetCallback(
-        std::bind_front(&MediaApiClient::HandleResourceUpdate, this));
+        std::bind_front(&MediaApiClient::HandleMessageFromServer, this));
     data_channels_.session_control->SetCallback(
-        std::bind_front(&MediaApiClient::HandleResourceUpdate, this));
+        std::bind_front(&MediaApiClient::HandleMessageFromServer, this));
     data_channels_.video_assignment->SetCallback(
-        std::bind_front(&MediaApiClient::HandleResourceUpdate, this));
+        std::bind_front(&MediaApiClient::HandleMessageFromServer, this));
   }
 
   ~MediaApiClient() override {
@@ -100,7 +100,7 @@ class MediaApiClient : public MediaApiClientInterface {
                                        absl::string_view conference_id,
                                        absl::string_view access_token) override;
   absl::Status LeaveConference(int64_t request_id) override;
-  absl::Status SendRequest(const ResourceRequest& request) override;
+  absl::Status SendRequest(const MessageToServer& request) override;
 
  private:
   enum class State { kReady, kConnecting, kJoining, kJoined, kDisconnected };
@@ -146,7 +146,7 @@ class MediaApiClient : public MediaApiClientInterface {
   // Handles resource updates from Meet servers.
   //
   // Resources may be received while in the joining and joined states.
-  void HandleResourceUpdate(ResourceUpdate update);
+  void HandleMessageFromServer(MessageFromServer update);
   void HandleTrackSignaled(
       webrtc::scoped_refptr<webrtc::RtpTransceiverInterface> transceiver);
   // Collects stats from the peer connection, sends them to Meet servers, and

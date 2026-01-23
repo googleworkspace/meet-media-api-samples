@@ -27,15 +27,15 @@ namespace meet {
 // from Meet servers.
 class ConferenceDataChannelInterface {
  public:
-  using ResourceUpdateCallback = absl::AnyInvocable<void(ResourceUpdate)>;
+  using MessageFromServerCallback = absl::AnyInvocable<void(MessageFromServer)>;
 
   virtual ~ConferenceDataChannelInterface() = default;
 
   // Sets the callback for receiving resource updates from Meet servers.
-  virtual void SetCallback(ResourceUpdateCallback callback) = 0;
+  virtual void SetCallback(MessageFromServerCallback callback) = 0;
 
   // Sends a resource request to Meet servers.
-  virtual absl::Status SendRequest(ResourceRequest request) = 0;
+  virtual absl::Status SendRequest(MessageToServer request) = 0;
 };
 
 }  // namespace meet

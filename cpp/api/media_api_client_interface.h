@@ -93,24 +93,17 @@ struct MediaApiClientConfiguration {
   bool enable_audio_streams = false;
 };
 
-/// Requests that can be sent to Meet servers.
-///
-/// Requests can expect a corresponding response via the
-/// `MediaApiClientObserverInterface`.
+/// Messages that can be sent to Meet servers.
 ///
 /// @note In this client implementation, stats requests are sent automatically
 /// by the client. They do not need to be sent using
 /// `MediaApiClientInterface::SendRequest`.
-using ResourceRequest =
+using MessageToServer =
     std::variant<SessionControlChannelFromClient,
-                 VideoAssignmentChannelFromClient,
-                 MediaStatsChannelFromClient>;
+                 VideoAssignmentChannelFromClient, MediaStatsChannelFromClient>;
 
-/// Updates that can be received from Meet servers.
-///
-/// Updates can be received in response to a request sent via
-/// `MediaApiClientInterface::SendRequest` or from a push from Meet servers.
-using ResourceUpdate =
+/// Messages that can be received from Meet servers.
+using MessageFromServer =
     std::variant<SessionControlChannelToClient, VideoAssignmentChannelToClient,
                  MediaEntriesChannelToClient, ParticipantsChannelToClient,
                  MediaStatsChannelToClient>;
@@ -196,7 +189,8 @@ class MediaApiClientObserverInterface : public webrtc::RefCountInterface {
   /// This client implementation passes an OK status for graceful disconnections
   /// and an error status for ungraceful disconnections. Graceful disconnections
   /// can be analyzed by checking the `SessionControlChannelToClient` resource
-  /// update received via `MediaApiClientObserverInterface::OnResourceUpdate`.
+  /// update received via
+  /// `MediaApiClientObserverInterface::OnMessageFromServer`.
   virtual void OnDisconnected(absl::Status status) = 0;
 
   /// Invoked when a resource update is received from Meet servers.
@@ -206,7 +200,7 @@ class MediaApiClientObserverInterface : public webrtc::RefCountInterface {
   ///
   /// This will only be invoked while in the
   /// `meet::SessionStatus::ConferenceConnectionState::kJoined` state.
-  virtual void OnResourceUpdate(ResourceUpdate update) = 0;
+  virtual void OnMessageFromServer(MessageFromServer update) = 0;
 
   /// Callback for receiving audio frames.
   ///
@@ -283,7 +277,7 @@ class MediaApiClientInterface {
   /// unique to other requests' IDs. The request ID can be used to
   /// associate the request to the response or error in the
   /// `MediaApiClientObserverInterface`.
-  virtual absl::Status SendRequest(const ResourceRequest& request) = 0;
+  virtual absl::Status SendRequest(const MessageToServer& request) = 0;
 
   /// Creates a new instance of `MediaApiClientInterface`.
   ///

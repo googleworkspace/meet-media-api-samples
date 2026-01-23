@@ -55,10 +55,10 @@ using ::testing::status::StatusIs;
 
 class MockResourceHandler : public ResourceHandlerInterface {
  public:
-  MOCK_METHOD(absl::StatusOr<ResourceUpdate>, ParseUpdate,
+  MOCK_METHOD(absl::StatusOr<MessageFromServer>, ParseUpdate,
               (absl::string_view update), (override));
   MOCK_METHOD(absl::StatusOr<std::string>, StringifyRequest,
-              (const ResourceRequest &request), (override));
+              (const MessageToServer& request), (override));
 };
 
 TEST(ConferenceDataChannelTest, SendRequestSucceeds) {
@@ -113,7 +113,7 @@ TEST(ConferenceDataChannelTest, SendRequestLogsErrorWhenTransmissionFails) {
   ScopedMockLog log(kDoNotCaptureLogsYet);
   std::string message;
   EXPECT_CALL(log, Log(ERROR, _, _))
-      .WillOnce([&message](int, const std::string &, const std::string &msg) {
+      .WillOnce([&message](int, const std::string&, const std::string& msg) {
         message = msg;
       });
   log.StartCapturingLogs();
@@ -130,9 +130,9 @@ TEST(ConferenceDataChannelTest, SendRequestLogsErrorWhenTransmissionFails) {
 TEST(ConferenceDataChannelTest,
      CreatingConferenceDataChannelRegistersObserver) {
   auto data_channel = webrtc::MockDataChannelInterface::Create();
-  webrtc::DataChannelObserver *observer;
+  webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
-      .WillOnce([&observer](webrtc::DataChannelObserver *inner_observer) {
+      .WillOnce([&observer](webrtc::DataChannelObserver* inner_observer) {
         observer = inner_observer;
       });
 
@@ -147,17 +147,17 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateSucceeds) {
   EXPECT_CALL(*resource_handler, ParseUpdate(_))
       .WillOnce(Return(SessionControlChannelToClient()));
   auto data_channel = webrtc::MockDataChannelInterface::Create();
-  webrtc::DataChannelObserver *observer;
+  webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
-      .WillOnce([&observer](webrtc::DataChannelObserver *inner_observer) {
+      .WillOnce([&observer](webrtc::DataChannelObserver* inner_observer) {
         observer = inner_observer;
       });
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
-  ResourceUpdate received_update;
-  MockFunction<void(ResourceUpdate)> mock_function;
+  MessageFromServer received_update;
+  MockFunction<void(MessageFromServer)> mock_function;
   EXPECT_CALL(mock_function, Call)
-      .WillOnce([&received_update](ResourceUpdate update) {
+      .WillOnce([&received_update](MessageFromServer update) {
         received_update = std::move(update);
       });
   conference_data_channel.SetCallback(mock_function.AsStdFunction());
@@ -170,9 +170,9 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateSucceeds) {
 
 TEST(ConferenceDataChannelTest, ReceivingUpdateWithoutCallbackDoesNothing) {
   auto data_channel = webrtc::MockDataChannelInterface::Create();
-  webrtc::DataChannelObserver *observer;
+  webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
-      .WillOnce([&observer](webrtc::DataChannelObserver *inner_observer) {
+      .WillOnce([&observer](webrtc::DataChannelObserver* inner_observer) {
         observer = inner_observer;
       });
   ConferenceDataChannel conference_data_channel(
@@ -180,7 +180,7 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateWithoutCallbackDoesNothing) {
   ScopedMockLog log(kDoNotCaptureLogsYet);
   std::string message;
   EXPECT_CALL(log, Log(WARNING, _, _))
-      .WillOnce([&message](int, const std::string &, const std::string &msg) {
+      .WillOnce([&message](int, const std::string&, const std::string& msg) {
         message = msg;
       });
   log.StartCapturingLogs();
@@ -193,18 +193,18 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateWithoutCallbackDoesNothing) {
 
 TEST(ConferenceDataChannelTest, ReceivingUpdateFailsWhenReceivingBinaryData) {
   auto data_channel = webrtc::MockDataChannelInterface::Create();
-  webrtc::DataChannelObserver *observer;
+  webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
-      .WillOnce([&observer](webrtc::DataChannelObserver *inner_observer) {
+      .WillOnce([&observer](webrtc::DataChannelObserver* inner_observer) {
         observer = inner_observer;
       });
   ConferenceDataChannel conference_data_channel(
       std::make_unique<MockResourceHandler>(), std::move(data_channel));
-  conference_data_channel.SetCallback([](ResourceUpdate /*update*/) {});
+  conference_data_channel.SetCallback([](MessageFromServer /*update*/) {});
   ScopedMockLog log(kDoNotCaptureLogsYet);
   std::string message;
   EXPECT_CALL(log, Log(ERROR, _, _))
-      .WillOnce([&message](int, const std::string &, const std::string &msg) {
+      .WillOnce([&message](int, const std::string&, const std::string& msg) {
         message = msg;
       });
   log.StartCapturingLogs();
@@ -220,18 +220,18 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateFailsWhenParsingFails) {
   EXPECT_CALL(*resource_handler, ParseUpdate(_))
       .WillOnce(Return(absl::InternalError("parsing-error")));
   auto data_channel = webrtc::MockDataChannelInterface::Create();
-  webrtc::DataChannelObserver *observer;
+  webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
-      .WillOnce([&observer](webrtc::DataChannelObserver *inner_observer) {
+      .WillOnce([&observer](webrtc::DataChannelObserver* inner_observer) {
         observer = inner_observer;
       });
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
-  conference_data_channel.SetCallback([](ResourceUpdate /*update*/) {});
+  conference_data_channel.SetCallback([](MessageFromServer /*update*/) {});
   ScopedMockLog log(kDoNotCaptureLogsYet);
   std::string message;
   EXPECT_CALL(log, Log(ERROR, _, _))
-      .WillOnce([&message](int, const std::string &, const std::string &msg) {
+      .WillOnce([&message](int, const std::string&, const std::string& msg) {
         message = msg;
       });
   log.StartCapturingLogs();

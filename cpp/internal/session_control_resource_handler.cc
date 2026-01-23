@@ -74,7 +74,7 @@ StringToMeetingDisconnectReason(absl::string_view reason) {
 
 }  // namespace
 
-absl::StatusOr<ResourceUpdate> SessionControlResourceHandler::ParseUpdate(
+absl::StatusOr<MessageFromServer> SessionControlResourceHandler::ParseUpdate(
     absl::string_view update) {
   VLOG(1) << kSessionControlResourceName
           << " resource update received: " << update;
@@ -179,7 +179,7 @@ absl::StatusOr<ResourceUpdate> SessionControlResourceHandler::ParseUpdate(
 }
 
 absl::StatusOr<std::string> SessionControlResourceHandler::StringifyRequest(
-    const ResourceRequest& request) {
+    const MessageToServer& request) {
   if (!std::holds_alternative<SessionControlChannelFromClient>(request)) {
     return absl::InvalidArgumentError(
         "SessionControlResourceHandler only supports "
