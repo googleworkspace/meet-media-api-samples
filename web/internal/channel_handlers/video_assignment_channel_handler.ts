@@ -122,10 +122,9 @@ export class VideoAssignmentChannelHandler {
     );
     const resolve = this.pendingRequestResolveMap.get(response.requestId);
     if (resolve){
-      try{
+      try {
         resolve(response.status);
-      }
-      finally{
+      } finally {
         this.pendingRequestResolveMap.delete(response.requestId);
       }
     }
