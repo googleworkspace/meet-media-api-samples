@@ -109,7 +109,7 @@ export class MediaStatsChannelHandler {
       response,
     );
     const resolve = this.pendingRequestResolveMap.get(response.requestId);
-    if (resolve) {
+    if(resolve) {
       resolve(response.status);
       this.pendingRequestResolveMap.delete(response.requestId);
     }
