@@ -16,6 +16,7 @@
 
 #include "meet_clients/internal/curl_connector.h"
 
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <utility>
@@ -82,6 +83,10 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
                                 "application/json;charset=UTF-8");
   curl_request.SetRequestHeader("Authorization",
                                 absl::StrCat("Bearer ", access_token));
+  const char* quota_project = std::getenv("GMEET_PROJECT_ID");
+  if (quota_project != nullptr && quota_project[0] != '\0') {
+    curl_request.SetRequestHeader("x-goog-user-project", quota_project);
+  }
   if (ca_cert_path_.has_value()) {
     curl_request.SetCaCertPath(*ca_cert_path_);
   }
