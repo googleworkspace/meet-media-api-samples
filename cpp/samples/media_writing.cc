@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "absl/types/span.h"
 #include "meet_clients/samples/output_writer_interface.h"
 #include "api/video/video_frame_buffer.h"
 
@@ -57,23 +58,30 @@ void WriteYuv420(const webrtc::I420BufferInterface& i420,
   // Write Y plane (luma plane).
   const uint8_t* y_plane = i420.DataY();
   int y_stride = i420.StrideY();
+  absl::Span<const uint8_t> y_span(y_plane, y_stride * height);
   for (int i = 0; i < height; ++i) {
-    writer.Write(reinterpret_cast<const char*>(y_plane + i * y_stride), width);
+    writer.Write(reinterpret_cast<const char*>(
+                     y_span.subspan(i * y_stride, width).data()),
+                 width);
   }
 
   // Write U plane (first chroma plane).
   const uint8_t* u_plane = i420.DataU();
   int u_stride = i420.StrideU();
+  absl::Span<const uint8_t> u_span(u_plane, u_stride * chroma_height);
   for (int i = 0; i < chroma_height; ++i) {
-    writer.Write(reinterpret_cast<const char*>(u_plane + i * u_stride),
+    writer.Write(reinterpret_cast<const char*>(
+                     u_span.subspan(i * u_stride, chroma_width).data()),
                  chroma_width);
   }
 
   // Write V plane (second chroma plane).
   const uint8_t* v_plane = i420.DataV();
   int v_stride = i420.StrideV();
+  absl::Span<const uint8_t> v_span(v_plane, v_stride * chroma_height);
   for (int i = 0; i < chroma_height; ++i) {
-    writer.Write(reinterpret_cast<const char*>(v_plane + i * v_stride),
+    writer.Write(reinterpret_cast<const char*>(
+                     v_span.subspan(i * v_stride, chroma_width).data()),
                  chroma_width);
   }
 }

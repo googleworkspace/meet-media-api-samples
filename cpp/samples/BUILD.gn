@@ -214,5 +214,6 @@ rtc_library("media_writing") {
   deps = [
     ":output_writer_interface",
     "../../api/video:video_frame",
+    "//third_party/abseil-cpp/absl/types:span",
   ]
 }
