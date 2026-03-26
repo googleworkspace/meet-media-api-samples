@@ -27,7 +27,6 @@ import {InternalMediaEntry, InternalMeetStreamTrack} from './internal_types';
  * Implementation of InternalMeetStreamTrack.
  */
 export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
-  private readonly reader: ReadableStreamDefaultReader;
   videoSsrc?: number;
 
   constructor(
@@ -35,20 +34,7 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     readonly mediaEntry: SubscribableDelegate<MediaEntry | undefined>,
     private readonly meetStreamTrack: MeetStreamTrack,
     private readonly internalMediaEntryMap: Map<MediaEntry, InternalMediaEntry>,
-  ) {
-    const mediaStreamTrack = meetStreamTrack.mediaStreamTrack;
-    let mediaStreamTrackProcessor;
-    if (mediaStreamTrack.kind === 'audio') {
-      mediaStreamTrackProcessor = new MediaStreamTrackProcessor({
-        track: mediaStreamTrack as MediaStreamAudioTrack,
-      });
-    } else {
-      mediaStreamTrackProcessor = new MediaStreamTrackProcessor({
-        track: mediaStreamTrack as MediaStreamVideoTrack,
-      });
-    }
-    this.reader = mediaStreamTrackProcessor.readable.getReader();
-  }
+  ) {}
 
   async maybeAssignMediaEntryOnFrame(
     mediaEntry: MediaEntry,
@@ -62,17 +48,25 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     ) {
       return;
     }
-    // Loop through the frames until media entry is assigned by either this
+
+    // Loop through until media entry is assigned by either this
     // meet stream track or another meet stream track.
+    // Instead of using MediaStreamTrackProcessor which consumes the track,
+    // we poll the synchronization sources which is non-intrusive.
     while (!this.mediaEntryTrackAssigned(mediaEntry, kind)) {
-      const frame = await this.reader.read();
-      if (frame.done) break;
       if (kind === 'audio') {
         await this.onAudioFrame(mediaEntry);
       } else if (kind === 'video') {
         this.onVideoFrame(mediaEntry);
       }
-      frame.value.close();
+
+      // If already assigned, no need to wait or loop further.
+      if (this.mediaEntryTrackAssigned(mediaEntry, kind)) {
+        break;
+      }
+
+      // Wait for a short duration before checking again.
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     return;
   }

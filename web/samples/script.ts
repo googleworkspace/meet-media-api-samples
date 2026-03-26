@@ -19,9 +19,12 @@ import {MeetConnectionState} from '../types/enums';
 import {MeetStreamTrack} from '../types/mediatypes';
 import {MeetSessionStatus} from '../types/meetmediaapiclient';
 
+let requestedVideoStreamCount = 0;
+
 // Function maps session status to strings. If the session is joined, we go
 // ahead and request a layout.
 async function handleSessionChange(status: MeetSessionStatus) {
+  console.log('handleSessionChange:', status);
   let statusString;
   switch (status.connectionState) {
     case MeetConnectionState.WAITING:
@@ -31,8 +34,13 @@ async function handleSessionChange(status: MeetSessionStatus) {
       statusString = 'JOINED';
       // tslint:disable-next-line:no-any
       const client = (window as any).client;
-      const mediaLayout = client.createMediaLayout({width: 500, height: 500});
-      const response = await client.applyLayout([{mediaLayout}]);
+      const layouts = [];
+      for (let i = 0; i < requestedVideoStreamCount; i++) {
+        layouts.push({
+          mediaLayout: client.createMediaLayout({width: 500, height: 500}),
+        });
+      }
+      const response = await client.applyLayout(layouts);
       console.log(response);
       break;
     case MeetConnectionState.DISCONNECTED:
@@ -86,6 +94,7 @@ function handleStreamChange(meetStreamTracks: MeetStreamTrack[]) {
       const videoIdString = `video-${videoId}`;
       const videoElement = document.getElementById(videoIdString);
       (videoElement! as HTMLVideoElement).srcObject = mediaStream;
+      (videoElement! as HTMLVideoElement).play();
       trackIdToElementId.set(meetStreamTrack.mediaStreamTrack.id, videoId);
     } else if (meetStreamTrack.mediaStreamTrack.kind === 'audio') {
       const elementId = trackIdToElementId.get(
@@ -112,6 +121,7 @@ function handleStreamChange(meetStreamTracks: MeetStreamTrack[]) {
       const audioIdString = `audio-${audioId}`;
       const audioElement = document.getElementById(audioIdString);
       (audioElement! as HTMLAudioElement).srcObject = mediaStream;
+      (audioElement! as HTMLAudioElement).play();
       trackIdToElementId.set(meetStreamTrack.mediaStreamTrack.id, audioId);
     }
   });
@@ -131,6 +141,7 @@ export function createClient(
   enableAudioStreams: boolean,
   accessToken: string,
 ) {
+  requestedVideoStreamCount = numberOfVideoStreams;
   const client = new MeetMediaApiClientImpl({
     meetingSpaceId,
     numberOfVideoStreams,
@@ -141,7 +152,6 @@ export function createClient(
   (window as any).client = client;
   client.sessionStatus.subscribe(handleSessionChange);
   client.meetStreamTracks.subscribe(handleStreamChange);
-  console.log('Media API Client created.');
 }
 
 /**
