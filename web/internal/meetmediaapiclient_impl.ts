@@ -423,6 +423,11 @@ export class MeetMediaApiClientImpl implements MeetMediaApiClient {
         'You must connect to a meeting with video before applying a layout',
       );
     }
+
+    if (requests.length === 0) {
+      throw new Error('At least one media layout request must be provided');
+    }
+
     requests.forEach((request) => {
       if (!request.mediaLayout) {
         throw new Error('The request must include a media layout');
@@ -433,7 +438,16 @@ export class MeetMediaApiClientImpl implements MeetMediaApiClient {
         );
       }
     });
-    return this.videoAssignmentChannelHandler.sendRequests(requests);
+
+    const finalRequests = [...requests];
+    const lastRequest = requests[requests.length - 1];
+    while (
+      finalRequests.length < this.requiredConfiguration.numberOfVideoStreams
+    ) {
+      finalRequests.push(lastRequest);
+    }
+
+    return this.videoAssignmentChannelHandler.sendRequests(finalRequests);
   }
 
   createMediaLayout(canvasDimensions: CanvasDimensions): MediaLayout {

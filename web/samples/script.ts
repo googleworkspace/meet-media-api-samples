@@ -34,13 +34,8 @@ async function handleSessionChange(status: MeetSessionStatus) {
       statusString = 'JOINED';
       // tslint:disable-next-line:no-any
       const client = (window as any).client;
-      const layouts = [];
-      for (let i = 0; i < requestedVideoStreamCount; i++) {
-        layouts.push({
-          mediaLayout: client.createMediaLayout({width: 500, height: 500}),
-        });
-      }
-      const response = await client.applyLayout(layouts);
+      const mediaLayout = client.createMediaLayout({width: 500, height: 500});
+      const response = await client.applyLayout([{mediaLayout}]);
       console.log(response);
       break;
     case MeetConnectionState.DISCONNECTED:
