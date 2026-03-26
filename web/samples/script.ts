@@ -19,8 +19,6 @@ import {MeetConnectionState} from '../types/enums';
 import {MeetStreamTrack} from '../types/mediatypes';
 import {MeetSessionStatus} from '../types/meetmediaapiclient';
 
-let requestedVideoStreamCount = 0;
-
 // Function maps session status to strings. If the session is joined, we go
 // ahead and request a layout.
 async function handleSessionChange(status: MeetSessionStatus) {
@@ -136,7 +134,6 @@ export function createClient(
   enableAudioStreams: boolean,
   accessToken: string,
 ) {
-  requestedVideoStreamCount = numberOfVideoStreams;
   const client = new MeetMediaApiClientImpl({
     meetingSpaceId,
     numberOfVideoStreams,
