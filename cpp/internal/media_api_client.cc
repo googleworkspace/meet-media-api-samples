@@ -80,7 +80,8 @@ class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
 absl::Status MediaApiClient::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
     absl::string_view access_token, std::optional<int> connection_timeout_ms,
-    std::optional<int> request_timeout_ms) {
+    std::optional<int> request_timeout_ms,
+    std::optional<int> confirmation_timeout_ms) {
   {
     absl::MutexLock lock(mutex_);
     if (state_ != State::kReady) {
@@ -92,37 +93,33 @@ absl::Status MediaApiClient::ConnectActiveConference(
   }
   VLOG(1) << "Client switched to connecting state.";
 
-  client_thread_->PostTask(SafeTask(alive_flag_, [&,
-                                                  join_endpoint = std::string(
-                                                      join_endpoint),
-                                                  conference_id = std::string(
-                                                      conference_id),
-                                                  access_token =
-                                                      std::string(access_token),
-                                                  connection_timeout_ms =
-                                                      connection_timeout_ms,
-                                                  request_timeout_ms =
-                                                      request_timeout_ms]() {
-    absl::Status connect_status = conference_peer_connection_->Connect(
-        join_endpoint, conference_id, access_token, connection_timeout_ms,
-        request_timeout_ms);
-    if (!connect_status.ok()) {
-      MaybeDisconnect(connect_status);
-      return;
-    }
+  client_thread_->PostTask(SafeTask(
+      alive_flag_, [&, join_endpoint = std::string(join_endpoint),
+                    conference_id = std::string(conference_id),
+                    access_token = std::string(access_token),
+                    connection_timeout_ms = connection_timeout_ms,
+                    request_timeout_ms = request_timeout_ms,
+                    confirmation_timeout_ms = confirmation_timeout_ms]() {
+        absl::Status connect_status = conference_peer_connection_->Connect(
+            join_endpoint, conference_id, access_token, connection_timeout_ms,
+            request_timeout_ms, confirmation_timeout_ms);
+        if (!connect_status.ok()) {
+          MaybeDisconnect(connect_status);
+          return;
+        }
 
-    {
-      absl::MutexLock lock(mutex_);
-      if (state_ != State::kConnecting) {
-        LOG(WARNING)
-            << "Client in " << StateToString(state_)
-            << " state instead of connecting state after starting connection.";
-        return;
-      }
-      state_ = State::kJoining;
-    }
-    VLOG(1) << "Client switched to joining state.";
-  }));
+        {
+          absl::MutexLock lock(mutex_);
+          if (state_ != State::kConnecting) {
+            LOG(WARNING) << "Client in " << StateToString(state_)
+                         << " state instead of connecting state after starting "
+                            "connection.";
+            return;
+          }
+          state_ = State::kJoining;
+        }
+        VLOG(1) << "Client switched to joining state.";
+      }));
 
   return absl::OkStatus();
 }

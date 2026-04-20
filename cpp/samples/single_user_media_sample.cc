@@ -152,7 +152,8 @@ int main(int argc, char** argv) {
       meet_api_url, meeting_space_id, oauth_token, /*connection_timeout_ms=*/
       std::make_optional(absl::GetFlag(FLAGS_connection_timeout_ms)),
       /*request_timeout_ms=*/
-      std::make_optional(absl::GetFlag(FLAGS_request_timeout_ms)));
+      std::make_optional(absl::GetFlag(FLAGS_request_timeout_ms)),
+      /*confirmation_timeout_ms=*/std::nullopt);
   if (!connect_status.ok()) {
     LOG(ERROR) << "Failed to connect to meeting space: " << connect_status;
     return EXIT_FAILURE;

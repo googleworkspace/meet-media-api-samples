@@ -115,6 +115,7 @@ TEST(ConferenceAudioTrackTest, CallsObserverWithAudioFrameFromLoudestSpeaker) {
   EXPECT_TRUE(received_frame->is_from_loudest_speaker);
   EXPECT_EQ(received_frame->contributing_source, 111);
   EXPECT_EQ(received_frame->synchronization_source, 333);
+  EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, std::nullopt);
 }
 
 TEST(ConferenceAudioTrackTest,
@@ -171,6 +172,64 @@ TEST(ConferenceAudioTrackTest,
   EXPECT_FALSE(received_frame->is_from_loudest_speaker);
   EXPECT_EQ(received_frame->contributing_source, 111);
   EXPECT_EQ(received_frame->synchronization_source, 333);
+  EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, std::nullopt);
+}
+
+TEST(ConferenceAudioTrackTest,
+     CallsObserverWithAudioFrameWithAbsoluteCaptureTimestamp) {
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+      new webrtc::MockRtpReceiver());
+  webrtc::RtpSource csrc_rtp_source_1(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/111, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource csrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/222, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/333, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/444, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>{
+          std::move(csrc_rtp_source_1), std::move(csrc_rtp_source_2),
+          std::move(ssrc_rtp_source), std::move(ssrc_rtp_source_2)}));
+  MockFunction<void(AudioFrame)> mock_function;
+  std::optional<AudioFrame> received_frame;
+  EXPECT_CALL(mock_function, Call)
+      .WillOnce([&received_frame](AudioFrame frame) {
+        received_frame = std::move(frame);
+      });
+  ConferenceAudioTrack audio_track("mid", mock_receiver,
+                                   mock_function.AsStdFunction());
+  int16_t pcm_data[2 * 100];
+
+  audio_track.OnData(pcm_data,
+                     /*bits_per_sample=*/16,
+                     /*sample_rate=*/48000,
+                     /*number_of_channels=*/2,
+                     /*number_of_frames=*/100,
+                     /*absolute_capture_timestamp_ms=*/12345);
+
+  ASSERT_TRUE(received_frame.has_value());
+  EXPECT_THAT(received_frame->pcm16, SizeIs(100 * 2));
+  EXPECT_EQ(received_frame->bits_per_sample, 16);
+  EXPECT_EQ(received_frame->sample_rate, 48000);
+  EXPECT_EQ(received_frame->number_of_channels, 2);
+  EXPECT_EQ(received_frame->number_of_frames, 100);
+  EXPECT_FALSE(received_frame->is_from_loudest_speaker);
+  EXPECT_EQ(received_frame->contributing_source, 111);
+  EXPECT_EQ(received_frame->synchronization_source, 333);
+  EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, 12345);
 }
 
 TEST(ConferenceAudioTrackTest, LogsErrorWithUnsupportedBitsPerSample) {

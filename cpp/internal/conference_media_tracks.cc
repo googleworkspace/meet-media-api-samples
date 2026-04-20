@@ -99,14 +99,16 @@ void ConferenceAudioTrack::OnData(
   // where there are `number_of_channels * number_of_frames` audio frames.
   absl::Span<const int16_t> pcm_data_span =
       absl::MakeConstSpan(pcm_data, number_of_channels * number_of_frames);
-  callback_(AudioFrame{.pcm16 = std::move(pcm_data_span),
-                       .bits_per_sample = bits_per_sample,
-                       .sample_rate = sample_rate,
-                       .number_of_channels = number_of_channels,
-                       .number_of_frames = number_of_frames,
-                       .is_from_loudest_speaker = is_from_loudest_speaker,
-                       .contributing_source = most_recent_csrc.value(),
-                       .synchronization_source = most_recent_ssrc.value()});
+  callback_(AudioFrame{
+      .pcm16 = std::move(pcm_data_span),
+      .bits_per_sample = bits_per_sample,
+      .sample_rate = sample_rate,
+      .number_of_channels = number_of_channels,
+      .number_of_frames = number_of_frames,
+      .is_from_loudest_speaker = is_from_loudest_speaker,
+      .contributing_source = most_recent_csrc.value(),
+      .synchronization_source = most_recent_ssrc.value(),
+      .absolute_capture_timestamp_ms = absolute_capture_timestamp_ms});
 }
 
 void ConferenceVideoTrack::OnFrame(const webrtc::VideoFrame& frame) {
