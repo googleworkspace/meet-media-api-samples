@@ -17,6 +17,7 @@
 #include "meet_clients/internal/conference_peer_connection.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -147,9 +148,9 @@ absl::Status ConferencePeerConnection::Connect(absl::string_view join_endpoint,
   }
 
   absl::StatusOr<std::string> remote_description =
-      http_connector_->ConnectActiveConference(join_endpoint, conference_id,
-                                               access_token,
-                                               local_description.value());
+      http_connector_->ConnectActiveConference(
+          join_endpoint, conference_id, access_token, local_description.value(),
+          std::nullopt, std::nullopt);
   if (!remote_description.ok()) {
     return remote_description.status();
   }

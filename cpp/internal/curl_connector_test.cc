@@ -123,6 +123,37 @@ TEST(CurlConnectorTest, ReturnsResponse) {
   EXPECT_EQ(response.value(), "some sdp answer");
 }
 
+TEST(CurlConnectorTest, SetsTimeouts) {
+  nlohmann::basic_json<> response_body;
+  response_body["answer"] = "some sdp answer";
+  auto mock_curl_api = std::make_unique<MockCurlApiWrapper>();
+  EXPECT_CALL(*mock_curl_api, EasySetOptPtr(_, CURLOPT_WRITEDATA, _))
+      .WillOnce([&response_body](CURL* curl, CURLoption option, void* value) {
+        absl::Cord curl_response(response_body.dump());
+        absl::Cord* str_response = reinterpret_cast<absl::Cord*>(value);
+        *str_response = curl_response;
+        return CURLE_OK;
+      });
+  EXPECT_CALL(*mock_curl_api, EasySetOptPtr(_, CURLOPT_HTTPHEADER, _))
+      .WillOnce(
+          [](CURL* curl, CURLoption option, void* value) { return CURLE_OK; });
+  EXPECT_CALL(*mock_curl_api, EasySetOptInt(_, _, _))
+      .WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(*mock_curl_api, EasySetOptInt(_, CURLOPT_CONNECTTIMEOUT_MS, 1000))
+      .WillOnce(Return(CURLE_OK));
+  EXPECT_CALL(*mock_curl_api, EasySetOptInt(_, CURLOPT_TIMEOUT_MS, 2000))
+      .WillOnce(Return(CURLE_OK));
+  CurlConnector curl_connector(std::move(mock_curl_api));
+
+  absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
+      "https://meet.googleapis.com", "abcdefg", "bearer_token",
+      "some sdp offer", /*connection_timeout_ms=*/1000,
+      /*request_timeout_ms=*/2000);
+
+  ASSERT_TRUE(response.ok());
+  EXPECT_EQ(response.value(), "some sdp answer");
+}
+
 struct StatusCodeTestParams {
   std::string status_str;
   absl::StatusCode status_code;

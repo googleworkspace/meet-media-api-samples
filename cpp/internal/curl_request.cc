@@ -145,6 +145,26 @@ absl::Status CurlRequest::Send() {
     }
   }
 
+  if (request_parameters_.connection_timeout_ms > 0) {
+    if (absl::Status opt_status = CheckOk(
+            curl_api_.EasySetOptInt(curl, CURLOPT_CONNECTTIMEOUT_MS,
+                                    request_parameters_.connection_timeout_ms),
+            "connection timeout");
+        !opt_status.ok()) {
+      return opt_status;
+    }
+  }
+
+  if (request_parameters_.request_timeout_ms > 0) {
+    if (absl::Status opt_status = CheckOk(
+            curl_api_.EasySetOptInt(curl, CURLOPT_TIMEOUT_MS,
+                                    request_parameters_.request_timeout_ms),
+            "request timeout");
+        !opt_status.ok()) {
+      return opt_status;
+    }
+  }
+
   CURLcode send_result = curl_api_.EasyPerform(curl);
   if (send_result != CURLE_OK) {
     return absl::InternalError(absl::StrCat("Curl failed easy perform: ",

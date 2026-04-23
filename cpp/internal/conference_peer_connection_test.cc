@@ -17,6 +17,7 @@
 #include "meet_clients/internal/conference_peer_connection.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -79,7 +80,9 @@ class MockHttpConnector : public HttpConnectorInterface {
   MOCK_METHOD(absl::StatusOr<std::string>, ConnectActiveConference,
               (absl::string_view join_endpoint, absl::string_view conference_id,
                absl::string_view access_token,
-               absl::string_view local_description),
+               absl::string_view local_description,
+               std::optional<int> connection_timeout_ms,
+               std::optional<int> request_timeout_ms),
               (override));
 };
 
@@ -105,7 +108,7 @@ TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
   auto http_connector = std::make_unique<MockHttpConnector>();
   EXPECT_CALL(*http_connector,
               ConnectActiveConference("join-endpoint", "conference-id",
-                                      "access-token", kWebRtcOffer))
+                                      "access-token", kWebRtcOffer, _, _))
       .WillOnce(Return(kWebRtcAnswer));
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(
@@ -176,7 +179,7 @@ TEST(ConferencePeerConnectionTest, ConnectFailsWhenHttpConnectorFails) {
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
-  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _))
+  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _))
       .WillOnce(Return(absl::InternalError("http-connector-error")));
   ConferencePeerConnection conference_peer_connection(
       CreateSignalingThread(), std::move(http_connector));
@@ -203,7 +206,7 @@ TEST(ConferencePeerConnectionTest,
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
-  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _))
+  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _))
       .WillOnce(Return(kWebRtcAnswer));
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(

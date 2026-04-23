@@ -119,6 +119,12 @@ class CurlRequest {
   void SetCaCertPath(absl::string_view ca_cert_path) {
     ca_cert_path_ = std::string(ca_cert_path);
   }
+  void SetConnectionTimeout(int timeout_ms) {
+    request_parameters_.connection_timeout_ms = timeout_ms;
+  }
+  void SetRequestTimeout(int timeout_ms) {
+    request_parameters_.request_timeout_ms = timeout_ms;
+  }
 
  private:
   static CURLoption RequestMethodToCurlOption(Method method) {
@@ -138,6 +144,8 @@ class CurlRequest {
     std::string body;
     absl::flat_hash_map<std::string, std::string> headers;
     CURLoption request_method = CURLOPT_POST;
+    int connection_timeout_ms = 0;
+    int request_timeout_ms = 0;
   };
 
   absl::Cord response_data_;
