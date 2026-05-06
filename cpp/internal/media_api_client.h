@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -96,9 +97,10 @@ class MediaApiClient : public MediaApiClientInterface {
     conference_peer_connection_->Close();
   }
 
-  absl::Status ConnectActiveConference(absl::string_view join_endpoint,
-                                       absl::string_view conference_id,
-                                       absl::string_view access_token) override;
+  absl::Status ConnectActiveConference(
+      absl::string_view join_endpoint, absl::string_view conference_id,
+      absl::string_view access_token, std::optional<int> connection_timeout_ms,
+      std::optional<int> request_timeout_ms) override;
   absl::Status LeaveConference(int64_t request_id) override;
   absl::Status SendRequest(const MessageToServer& request) override;
 

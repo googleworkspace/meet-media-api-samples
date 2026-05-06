@@ -93,7 +93,9 @@ class MockConferencePeerConnection : public ConferencePeerConnectionInterface {
 
   MOCK_METHOD(absl::Status, Connect,
               (absl::string_view join_endpoint, absl::string_view conference_id,
-               absl::string_view access_token),
+               absl::string_view access_token,
+               std::optional<int> connection_timeout_ms,
+               std::optional<int> request_timeout_ms),
               (override));
   MOCK_METHOD(void, Close, (), (override));
   MOCK_METHOD(void, SetTrackSignaledCallback, (TrackSignaledCallback callback),
@@ -131,7 +133,7 @@ TEST(MediaApiClientTest, ConnectActiveConferenceSucceeds) {
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   absl::Notification connect_called_notification;
   EXPECT_CALL(*peer_connection,
-              Connect("join_endpoint", "conference_id", "access_token"))
+              Connect("join_endpoint", "conference_id", "access_token", _, _))
       .WillOnce([&connect_called_notification] {
         connect_called_notification.Notify();
         return absl::OkStatus();
@@ -142,7 +144,9 @@ TEST(MediaApiClientTest, ConnectActiveConferenceSucceeds) {
                         CreateConferenceDataChannels());
 
   absl::Status status = client.ConnectActiveConference(
-      "join_endpoint", "conference_id", "access_token");
+      "join_endpoint", "conference_id", "access_token",
+      /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
   connect_called_notification.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_TRUE(status.ok());
@@ -162,7 +166,7 @@ TEST(MediaApiClientTest,
       });
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   EXPECT_CALL(*peer_connection,
-              Connect("join_endpoint", "conference_id", "access_token"))
+              Connect("join_endpoint", "conference_id", "access_token", _, _))
       .WillOnce([] { return absl::InternalError("Failed to connect."); });
   MediaApiClient client(CreateThread("client_thread"),
                         CreateThread("worker_thread"), std::move(observer),
@@ -170,7 +174,9 @@ TEST(MediaApiClientTest,
                         CreateConferenceDataChannels());
 
   absl::Status connect_status = client.ConnectActiveConference(
-      "join_endpoint", "conference_id", "access_token");
+      "join_endpoint", "conference_id", "access_token",
+      /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
   disconnected_notification.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_TRUE(connect_status.ok());
@@ -189,7 +195,7 @@ TEST(MediaApiClientTest,
       webrtc::make_ref_counted<MockMediaApiClientObserver>(),
       std::move(peer_connection), CreateConferenceDataChannels());
   EXPECT_CALL(*peer_connection_ptr,
-              Connect("join_endpoint", "conference_id", "access_token"))
+              Connect("join_endpoint", "conference_id", "access_token", _, _))
       .WillOnce([&client] {
         // Disconnect the client before the connection completes, changing the
         // client's state.
@@ -209,7 +215,9 @@ TEST(MediaApiClientTest,
   log.StartCapturingLogs();
 
   (void)client.ConnectActiveConference("join_endpoint", "conference_id",
-                                       "access_token");
+                                       "access_token",
+                                       /*connection_timeout_ms=*/std::nullopt,
+                                       /*request_timeout_ms=*/std::nullopt);
 
   EXPECT_TRUE(
       log_notification.WaitForNotificationWithTimeout(absl::Seconds(1)));
@@ -299,7 +307,7 @@ TEST(MediaApiClientTest,
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   absl::Notification connect_called_notification;
   ON_CALL(*peer_connection,
-          Connect("join_endpoint", "conference_id", "access_token"))
+          Connect("join_endpoint", "conference_id", "access_token", _, _))
       .WillByDefault([&connect_called_notification] {
         connect_called_notification.Notify();
         return absl::OkStatus();
@@ -324,7 +332,9 @@ TEST(MediaApiClientTest,
           .video_assignment = std::make_unique<MockConferenceDataChannel>(),
       });
   (void)client.ConnectActiveConference("join_endpoint", "conference_id",
-                                       "access_token");
+                                       "access_token",
+                                       /*connection_timeout_ms=*/std::nullopt,
+                                       /*request_timeout_ms=*/std::nullopt);
   ASSERT_TRUE(connect_called_notification.WaitForNotificationWithTimeout(
       absl::Seconds(1)));
 

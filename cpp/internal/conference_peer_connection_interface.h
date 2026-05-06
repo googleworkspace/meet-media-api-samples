@@ -17,6 +17,8 @@
 #ifndef CPP_INTERNAL_CONFERENCE_PEER_CONNECTION_INTERFACE_H_
 #define CPP_INTERNAL_CONFERENCE_PEER_CONNECTION_INTERFACE_H_
 
+#include <optional>
+
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -45,7 +47,9 @@ class ConferencePeerConnectionInterface {
   // conference peer connection connects or fails to connect.
   virtual absl::Status Connect(absl::string_view join_endpoint,
                                absl::string_view conference_id,
-                               absl::string_view access_token) = 0;
+                               absl::string_view access_token,
+                               std::optional<int> connection_timeout_ms,
+                               std::optional<int> request_timeout_ms) = 0;
 
   // Closes the conference peer connection, preventing any further callbacks.
   virtual void Close() = 0;

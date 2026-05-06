@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -65,6 +66,12 @@ ABSL_FLAG(absl::Duration, segment_gap_threshold, absl::Seconds(1),
           "that this gap, they will be considered part of the same segment. A "
           "larger gap will result in fewer, sparser segments. A smaller gap "
           "will result in more, denser segments.");
+
+ABSL_FLAG(int, request_timeout_ms, 5000,
+          "The timeout for requests to the Meet API.");
+
+ABSL_FLAG(int, connection_timeout_ms, 5000,
+          "The timeout for the initial connection to the Meet API.");
 
 namespace {
 
@@ -158,7 +165,11 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Created MediaApiClient";
 
   if (absl::Status connect_status = client->ConnectActiveConference(
-          meet_api_url, conference_id, oauth_token);
+          meet_api_url, conference_id, oauth_token,
+          /*connection_timeout_ms=*/
+          std::make_optional(absl::GetFlag(FLAGS_connection_timeout_ms)),
+          /*request_timeout_ms=*/
+          std::make_optional(absl::GetFlag(FLAGS_request_timeout_ms)));
       !connect_status.ok()) {
     LOG(ERROR) << "Failed to connect to meeting space: " << connect_status;
     return EXIT_FAILURE;
