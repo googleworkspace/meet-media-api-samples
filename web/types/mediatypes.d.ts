@@ -69,6 +69,11 @@ export interface MediaEntry {
    */
   readonly audioMeetStreamTrack: Subscribable<MeetStreamTrack | undefined>;
   /**
+   * Whether audio from this media entry is from the loudest speaker.
+   * This is only relevant if audioMeetStreamTrack is present.
+   */
+  readonly isLoudestSpeaker: Subscribable<boolean>;
+  /**
    * The session ID of the media entry.
    *
    * Format is
