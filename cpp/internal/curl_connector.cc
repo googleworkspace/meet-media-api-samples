@@ -17,6 +17,7 @@
 #include "meet_clients/internal/curl_connector.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -70,7 +71,9 @@ absl::StatusCode GetStatusCodeFromString(absl::string_view status_str) {
 
 absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
-    absl::string_view access_token, absl::string_view sdp_offer) {
+    absl::string_view access_token, absl::string_view sdp_offer,
+    std::optional<int> connection_timeout_ms,
+    std::optional<int> request_timeout_ms) {
   std::string full_join_endpoint = absl::StrCat(
       join_endpoint, "/spaces/", conference_id, ":connectActiveConference");
 
@@ -82,6 +85,14 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
                                 "application/json;charset=UTF-8");
   curl_request.SetRequestHeader("Authorization",
                                 absl::StrCat("Bearer ", access_token));
+
+  if (connection_timeout_ms.has_value()) {
+    curl_request.SetConnectionTimeout(*connection_timeout_ms);
+  }
+  if (request_timeout_ms.has_value()) {
+    curl_request.SetRequestTimeout(*request_timeout_ms);
+  }
+
   if (ca_cert_path_.has_value()) {
     curl_request.SetCaCertPath(*ca_cert_path_);
   }

@@ -48,6 +48,7 @@ export interface InternalMediaEntry {
   readonly audioMeetStreamTrack: SubscribableDelegate<
     MeetStreamTrack | undefined
   >;
+  readonly isLoudestSpeaker: SubscribableDelegate<boolean>;
   readonly participant: SubscribableDelegate<Participant | undefined>;
 }
 

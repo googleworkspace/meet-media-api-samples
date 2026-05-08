@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -36,11 +37,9 @@
 #include "meet_clients/internal/conference_media_tracks.h"
 #include "meet_clients/internal/stats_request_from_report.h"
 #include "meet_clients/internal/variant_utils.h"
-#include "api/create_peerconnection_factory.h"
 #include "api/make_ref_counted.h"
 #include "api/media_stream_interface.h"
 #include "api/media_types.h"
-#include "api/peer_connection_interface.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
@@ -77,7 +76,8 @@ class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
 
 absl::Status MediaApiClient::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
-    absl::string_view access_token) {
+    absl::string_view access_token, std::optional<int> connection_timeout_ms,
+    std::optional<int> request_timeout_ms) {
   {
     absl::MutexLock lock(mutex_);
     if (state_ != State::kReady) {
@@ -94,10 +94,15 @@ absl::Status MediaApiClient::ConnectActiveConference(
                                                       join_endpoint),
                                                   conference_id = std::string(
                                                       conference_id),
-                                                  access_token = std::string(
-                                                      access_token)]() {
+                                                  access_token =
+                                                      std::string(access_token),
+                                                  connection_timeout_ms =
+                                                      connection_timeout_ms,
+                                                  request_timeout_ms =
+                                                      request_timeout_ms]() {
     absl::Status connect_status = conference_peer_connection_->Connect(
-        join_endpoint, conference_id, access_token);
+        join_endpoint, conference_id, access_token, connection_timeout_ms,
+        request_timeout_ms);
     if (!connect_status.ok()) {
       MaybeDisconnect(connect_status);
       return;

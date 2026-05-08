@@ -17,6 +17,7 @@
 
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -58,6 +59,12 @@ ABSL_FLAG(absl::Duration, join_timeout, absl::Minutes(2),
           "join via the Meet UI before the app can join. Therefore, wait for "
           "a reasonable amount of time for the participant to complete this "
           "step.");
+
+ABSL_FLAG(int, request_timeout_ms, 5000,
+          "The timeout for requests to the Meet API.");
+
+ABSL_FLAG(int, connection_timeout_ms, 5000,
+          "The timeout for the initial connection to the Meet API.");
 
 namespace {
 
@@ -139,7 +146,10 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Created MediaApiClient";
 
   absl::Status connect_status = client->ConnectActiveConference(
-      meet_api_url, meeting_space_id, oauth_token);
+      meet_api_url, meeting_space_id, oauth_token, /*connection_timeout_ms=*/
+      std::make_optional(absl::GetFlag(FLAGS_connection_timeout_ms)),
+      /*request_timeout_ms=*/
+      std::make_optional(absl::GetFlag(FLAGS_request_timeout_ms)));
   if (!connect_status.ok()) {
     LOG(ERROR) << "Failed to connect to meeting space: " << connect_status;
     return EXIT_FAILURE;

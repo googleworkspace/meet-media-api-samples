@@ -17,6 +17,7 @@
 #include "meet_clients/internal/media_api_client_factory.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -52,7 +53,9 @@ class MockHttpConnector : public HttpConnectorInterface {
  public:
   MOCK_METHOD(absl::StatusOr<std::string>, ConnectActiveConference,
               (absl::string_view join_endpoint, absl::string_view conference_id,
-               absl::string_view access_token, absl::string_view sdp_offer),
+               absl::string_view access_token, absl::string_view sdp_offer,
+               std::optional<int> connection_timeout_ms,
+               std::optional<int> request_timeout_ms),
               (override));
 };
 

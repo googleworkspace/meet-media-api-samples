@@ -336,5 +336,49 @@ TEST(CurlRequestTest, ReusedRequestReturnsError) {
                         "another curl request"));
 }
 
+TEST(CurlRequestTest, ConnectionTimeoutIsSet) {
+  MockCurlApiWrapper mock_curl_api;
+  EXPECT_CALL(mock_curl_api, EasySetOptPtr).WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptInt(_, CURLOPT_POST, _))
+      .WillOnce(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptInt(_, CURLOPT_CONNECTTIMEOUT_MS, 1000))
+      .WillOnce(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptStr).WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptCallback)
+      .WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasyPerform).WillOnce(Return(CURLE_OK));
+
+  CurlRequest request(mock_curl_api);
+  request.SetRequestUrl("www.this_is_sparta.com");
+  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
+  request.SetRequestHeader("Content-Type", "application/json");
+  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  request.SetConnectionTimeout(1000);
+
+  EXPECT_OK(request.Send());
+}
+
+TEST(CurlRequestTest, RequestTimeoutIsSet) {
+  MockCurlApiWrapper mock_curl_api;
+  EXPECT_CALL(mock_curl_api, EasySetOptPtr).WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptInt(_, CURLOPT_POST, _))
+      .WillOnce(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptInt(_, CURLOPT_TIMEOUT_MS, 2000))
+      .WillOnce(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptStr).WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasySetOptCallback)
+      .WillRepeatedly(Return(CURLE_OK));
+  EXPECT_CALL(mock_curl_api, EasyPerform).WillOnce(Return(CURLE_OK));
+
+  CurlRequest request(mock_curl_api);
+  request.SetRequestUrl("www.this_is_sparta.com");
+  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
+  request.SetRequestHeader("Content-Type", "application/json");
+  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  request.SetRequestTimeout(2000);
+
+  EXPECT_OK(request.Send());
+}
+
 }  // namespace
 }  // namespace meet

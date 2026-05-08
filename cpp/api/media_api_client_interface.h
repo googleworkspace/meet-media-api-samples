@@ -61,6 +61,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <variant>
 
 #include "absl/status/status.h"
@@ -251,7 +252,8 @@ class MediaApiClientInterface {
   /// expected that the URL is well-formed.
   virtual absl::Status ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,
-      absl::string_view access_token) = 0;
+      absl::string_view access_token, std::optional<int> connection_timeout_ms,
+      std::optional<int> request_timeout_ms) = 0;
 
   /// Convenience method for sending a `SessionControlChannelFromClient` request
   /// with a `LeaveRequest` to Meet servers. This tells the server that the

@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -190,7 +191,9 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
   // connection is disconnected after this method returns OK.
   absl::Status Connect(absl::string_view join_endpoint,
                        absl::string_view conference_id,
-                       absl::string_view access_token) override;
+                       absl::string_view access_token,
+                       std::optional<int> connection_timeout_ms,
+                       std::optional<int> request_timeout_ms) override;
 
   void Close() override {
     VLOG(1) << "ConferencePeerConnection::Close called.";

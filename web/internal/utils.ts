@@ -84,6 +84,7 @@ export function createMediaEntry({
   const videoMeetStreamTrackDelegate = new SubscribableDelegate<
     MeetStreamTrack | undefined
   >(videoMeetStreamTrack);
+  const isLoudestSpeakerDelegate = new SubscribableDelegate<boolean>(false);
 
   const mediaEntry: MediaEntry = {
     participant: participantDelegate.getSubscribable(),
@@ -94,6 +95,7 @@ export function createMediaEntry({
     mediaLayout: mediaLayoutDelegate.getSubscribable(),
     audioMeetStreamTrack: audioMeetStreamTrackDelegate.getSubscribable(),
     videoMeetStreamTrack: videoMeetStreamTrackDelegate.getSubscribable(),
+    isLoudestSpeaker: isLoudestSpeakerDelegate.getSubscribable(),
     sessionName,
     session,
   };
@@ -106,6 +108,7 @@ export function createMediaEntry({
     mediaLayout: mediaLayoutDelegate,
     audioMeetStreamTrack: audioMeetStreamTrackDelegate,
     videoMeetStreamTrack: videoMeetStreamTrackDelegate,
+    isLoudestSpeaker: isLoudestSpeakerDelegate,
     participant: participantDelegate,
     videoSsrc,
     audioCsrc,

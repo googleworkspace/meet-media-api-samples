@@ -23,6 +23,8 @@ import {SubscribableDelegate} from './subscribable_impl';
 
 import {InternalMediaEntry, InternalMeetStreamTrack} from './internal_types';
 
+const LOUDEST_SPEAKER_CSRC = 42;
+
 /**
  * Implementation of InternalMeetStreamTrack.
  */
@@ -75,11 +77,17 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     const internalMediaEntry = this.internalMediaEntryMap.get(mediaEntry);
     const contributingSources: RTCRtpContributingSource[] =
       this.receiver.getContributingSources();
-    for (const contributingSource of contributingSources) {
-      if (contributingSource.source === internalMediaEntry!.audioCsrc) {
-        internalMediaEntry!.audioMeetStreamTrack.set(this.meetStreamTrack);
-        this.mediaEntry.set(mediaEntry);
-      }
+    const isLoudestSpeaker = contributingSources.some(
+      ({source}) => source === LOUDEST_SPEAKER_CSRC,
+    );
+    const hasParticipantCsrc = contributingSources.some(
+      ({source}) => source === internalMediaEntry!.audioCsrc,
+    );
+
+    if (hasParticipantCsrc) {
+      internalMediaEntry!.audioMeetStreamTrack.set(this.meetStreamTrack);
+      this.mediaEntry.set(mediaEntry);
+      internalMediaEntry!.isLoudestSpeaker.set(isLoudestSpeaker);
     }
   }
 

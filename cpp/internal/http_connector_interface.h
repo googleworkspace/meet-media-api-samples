@@ -17,6 +17,7 @@
 #ifndef CPP_INTERNAL_HTTP_CONNECTOR_INTERFACE_H_
 #define CPP_INTERNAL_HTTP_CONNECTOR_INTERFACE_H_
 
+#include <optional>
 #include <string>
 
 #include "absl/status/statusor.h"
@@ -35,7 +36,9 @@ class HttpConnectorInterface {
   // returns the response, or an error if the request fails.
   virtual absl::StatusOr<std::string> ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,
-      absl::string_view access_token, absl::string_view sdp_offer) = 0;
+      absl::string_view access_token, absl::string_view sdp_offer,
+      std::optional<int> connection_timeout_ms,
+      std::optional<int> request_timeout_ms) = 0;
 };
 
 }  // namespace meet
