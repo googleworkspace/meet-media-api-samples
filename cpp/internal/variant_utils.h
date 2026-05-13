@@ -16,6 +16,9 @@
 
 #ifndef CPP_INTERNAL_VARIANT_UTILS_H_
 #define CPP_INTERNAL_VARIANT_UTILS_H_
+#include "absl/base/nullability.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

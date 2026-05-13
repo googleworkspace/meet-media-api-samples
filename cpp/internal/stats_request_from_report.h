@@ -20,11 +20,14 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "meet_clients/api/media_stats_resource.h"
 #include "api/scoped_refptr.h"
 #include "api/stats/rtc_stats_report.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

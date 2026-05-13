@@ -21,12 +21,15 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "api/make_ref_counted.h"
 #include "api/units/time_delta.h"
 #include "modules/audio_device/include/mock_audio_transport.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

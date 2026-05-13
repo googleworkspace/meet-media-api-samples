@@ -22,11 +22,13 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/scoped_refptr.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
 namespace media_api_samples {
 
 AudioTestData CreateAudioTestData(int num_samples) {
@@ -35,8 +37,19 @@ AudioTestData CreateAudioTestData(int num_samples) {
     pcm16[i] = i;
   }
 
-  return AudioTestData{.frame = meet::AudioFrame{.pcm16 = pcm16},
-                       .pcm16 = std::move(pcm16)};
+  return AudioTestData{
+      .frame =
+          meet::AudioFrame{
+              .pcm16 = pcm16,
+              .bits_per_sample = 16,
+              .sample_rate = 48000,
+              .number_of_channels = 1,
+              .number_of_frames = static_cast<size_t>(num_samples),
+              .is_from_loudest_speaker = false,
+              .contributing_source = 0,
+              .synchronization_source = 0,
+          },
+      .pcm16 = std::move(pcm16)};
 }
 
 VideoTestData CreateVideoTestData(int width, int height) {
@@ -93,9 +106,12 @@ VideoTestData CreateVideoTestData(int width, int height) {
   builder.set_video_frame_buffer(buffer);
   auto webrtc_frame = std::make_unique<webrtc::VideoFrame>(builder.build());
 
-  return VideoTestData{.meet_frame = meet::VideoFrame{.frame = *webrtc_frame},
-                       .yuv_data = std::move(output_data),
-                       .webrtc_frame = std::move(webrtc_frame)};
+  return VideoTestData{
+      .meet_frame = meet::VideoFrame{.frame = *webrtc_frame,
+                                     .contributing_source = 0,
+                                     .synchronization_source = 0},
+      .yuv_data = std::move(output_data),
+      .webrtc_frame = std::move(webrtc_frame)};
 }
 
 }  // namespace media_api_samples

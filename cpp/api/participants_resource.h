@@ -22,6 +22,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace meet {
 
 /// Signed in user type. Always has a unique ID and display name.

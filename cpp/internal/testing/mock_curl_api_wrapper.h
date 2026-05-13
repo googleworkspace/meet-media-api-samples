@@ -21,8 +21,11 @@
 #include <string>
 
 #include "gmock/gmock.h"
+#include "absl/base/nullability.h"
 #include <curl/curl.h>
 #include "meet_clients/internal/curl_request.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

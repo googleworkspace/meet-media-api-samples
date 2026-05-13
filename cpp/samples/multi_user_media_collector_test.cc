@@ -29,6 +29,7 @@
 #include "gtest/gtest.h"
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
+#include "absl/base/nullability.h"
 #include "absl/log/globals.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -41,6 +42,8 @@
 #include "meet_clients/samples/testing/mock_resource_manager.h"
 #include "api/make_ref_counted.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 namespace {

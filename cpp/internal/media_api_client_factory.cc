@@ -19,6 +19,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -54,6 +55,8 @@
 #include "api/video_codecs/video_encoder_factory_template.h"
 #include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

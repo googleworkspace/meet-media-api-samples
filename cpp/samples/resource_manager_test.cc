@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -26,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -33,6 +35,8 @@
 #include "meet_clients/api/media_entries_resource.h"
 #include "meet_clients/api/participants_resource.h"
 #include "meet_clients/samples/testing/mock_output_writer.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 namespace {
@@ -61,16 +65,23 @@ TEST(ResourceManagerTest, OnParticipantResourceUpdateLogsEvents) {
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key =
                                   "participants/signed_in_user_participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/signed_in_user",
                                       .display_name =
                                           "signed_in_user_display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   resource_manager.OnParticipantResourceUpdate(
@@ -81,16 +92,22 @@ TEST(ResourceManagerTest, OnParticipantResourceUpdateLogsEvents) {
                       .id = 234,
                       .participant =
                           meet::Participant{
+                              .participant_id = 2,
+                              .name = std::nullopt,
                               .participant_key =
                                   "participants/anonymous_user_participant_key",
+                              .type = meet::Participant::Type::kAnonymousUser,
+                              .signed_in_user = std::nullopt,
                               .anonymous_user =
                                   meet::AnonymousUser{
                                       .display_name =
                                           "anonymous_user_display_name",
                                   },
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(200));
   resource_manager.OnParticipantResourceUpdate(
@@ -101,8 +118,13 @@ TEST(ResourceManagerTest, OnParticipantResourceUpdateLogsEvents) {
                       .id = 345,
                       .participant =
                           meet::Participant{
+                              .participant_id = 3,
+                              .name = std::nullopt,
                               .participant_key =
                                   "participants/phone_user_participant_key",
+                              .type = meet::Participant::Type::kPhoneUser,
+                              .signed_in_user = std::nullopt,
+                              .anonymous_user = std::nullopt,
                               .phone_user =
                                   meet::PhoneUser{
                                       .display_name = "phone_user_display_name",
@@ -110,6 +132,7 @@ TEST(ResourceManagerTest, OnParticipantResourceUpdateLogsEvents) {
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(300));
 
@@ -145,6 +168,7 @@ TEST(ResourceManagerTest, OnParticipantResourceUpdateLogsDeletedEvents) {
 
   resource_manager.OnParticipantResourceUpdate(
       meet::ParticipantsChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::ParticipantDeletedResource{
@@ -179,8 +203,10 @@ TEST(ResourceManagerTest, OnMediaEntriesResourceUpdateLogsEvents) {
                       .id = 123,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key =
                                   "participants/signed_in_user_participant_key",
+                              .session = std::nullopt,
                               .session_name = "participants/"
                                               "signed_in_user_participant_key/"
                                               "participantSessions/"
@@ -192,6 +218,7 @@ TEST(ResourceManagerTest, OnMediaEntriesResourceUpdateLogsEvents) {
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 
@@ -219,6 +246,7 @@ TEST(ResourceManagerTest, OnMediaEntriesResourceUpdateLogsDeletedEvents) {
 
   resource_manager.OnMediaEntriesResourceUpdate(
       meet::MediaEntriesChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::MediaEntriesDeletedResource{
@@ -247,6 +275,7 @@ TEST(ResourceManagerTest, DeletingParticipantThatDoesNotExistLogsWarning) {
 
   resource_manager.OnParticipantResourceUpdate(
       meet::ParticipantsChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::ParticipantDeletedResource{
@@ -269,6 +298,7 @@ TEST(ResourceManagerTest, DeletingMediaEntryThatDoesNotExistLogsWarning) {
 
   resource_manager.OnMediaEntriesResourceUpdate(
       meet::MediaEntriesChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::MediaEntriesDeletedResource{
@@ -295,8 +325,10 @@ TEST(ResourceManagerTest, ParticipantResourceUpdateWithNoParticipantLogsError) {
               {
                   meet::ParticipantResourceSnapshot{
                       .id = 123,
+                      .participant = std::nullopt,
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -317,9 +349,19 @@ TEST(ResourceManagerTest,
               {
                   meet::ParticipantResourceSnapshot{
                       .id = 123,
-                      .participant = meet::Participant{},
+                      .participant =
+                          meet::Participant{
+                              .participant_id = 123,
+                              .name = std::nullopt,
+                              .participant_key = std::nullopt,
+                              .type = meet::Participant::Type::kSignedInUser,
+                              .signed_in_user = std::nullopt,
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
+                          },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -343,10 +385,17 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 123,
+                              .name = std::nullopt,
                               .participant_key = "malformed_participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
+                              .signed_in_user = std::nullopt,
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -368,10 +417,17 @@ TEST(ResourceManagerTest, ParticipantResourceUpdateWithNoUserLogsError) {
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 123,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
+                              .signed_in_user = std::nullopt,
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -391,8 +447,10 @@ TEST(ResourceManagerTest, MediaEntriesResourceUpdateWithNoMediaEntryLogsError) {
               {
                   meet::MediaEntriesResourceSnapshot{
                       .id = 123,
+                      .media_entry = std::nullopt,
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -416,11 +474,16 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key =
                                   "participants/signed_in_user_participant_key",
+                              .session = std::nullopt,
+                              .session_name = std::nullopt,
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -445,13 +508,17 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key =
                                   "participants/signed_in_user_participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "malformed_participant_session_name",
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -474,12 +541,17 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
+                              .participant_key = std::nullopt,
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -503,13 +575,17 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "malformed_participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 }
@@ -527,14 +603,21 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/display_name",
                                       .display_name = "display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   resource_manager.OnMediaEntriesResourceUpdate(
@@ -545,7 +628,9 @@ TEST(ResourceManagerTest,
                       .id = 234,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
@@ -554,6 +639,7 @@ TEST(ResourceManagerTest,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 
@@ -578,14 +664,21 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/display_name",
                                       .display_name = "display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   resource_manager.OnMediaEntriesResourceUpdate(
@@ -596,7 +689,9 @@ TEST(ResourceManagerTest,
                       .id = 234,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
@@ -605,6 +700,7 @@ TEST(ResourceManagerTest,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 
@@ -627,14 +723,21 @@ TEST(ResourceManagerTest, GetOutputFileIdentifierWithNoMediaEntryReturnsError) {
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/display_name",
                                       .display_name = "display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 
@@ -658,14 +761,18 @@ TEST(ResourceManagerTest,
                       .id = 234,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
                               .audio_csrc = 111,
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
 
@@ -690,14 +797,21 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/display_name",
                                       .display_name = "display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   resource_manager.OnMediaEntriesResourceUpdate(
@@ -708,19 +822,24 @@ TEST(ResourceManagerTest,
                       .id = 234,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
                               .audio_csrc = 111,
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   // Delete the media entry.
   resource_manager.OnMediaEntriesResourceUpdate(
       meet::MediaEntriesChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::MediaEntriesDeletedResource{
@@ -753,14 +872,21 @@ TEST(ResourceManagerTest,
                       .id = 123,
                       .participant =
                           meet::Participant{
+                              .participant_id = 1,
+                              .name = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .type = meet::Participant::Type::kSignedInUser,
                               .signed_in_user =
                                   meet::SignedInUser{
+                                      .user = "users/display_name",
                                       .display_name = "display_name",
                                   },
+                              .anonymous_user = std::nullopt,
+                              .phone_user = std::nullopt,
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   resource_manager.OnMediaEntriesResourceUpdate(
@@ -771,19 +897,24 @@ TEST(ResourceManagerTest,
                       .id = 234,
                       .media_entry =
                           meet::MediaEntry{
+                              .participant = std::nullopt,
                               .participant_key = "participants/participant_key",
+                              .session = std::nullopt,
                               .session_name =
                                   "participants/participant_key/"
                                   "participantSessions/session_name",
                               .audio_csrc = 111,
+                              .video_csrcs = {},
                           },
                   },
               },
+          .deleted_resources = {},
       },
       absl::FromUnixSeconds(100));
   // Delete the participant.
   resource_manager.OnParticipantResourceUpdate(
       meet::ParticipantsChannelToClient{
+          .resources = {},
           .deleted_resources =
               {
                   meet::ParticipantDeletedResource{

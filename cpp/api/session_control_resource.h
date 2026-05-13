@@ -21,7 +21,10 @@
 #include <optional>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

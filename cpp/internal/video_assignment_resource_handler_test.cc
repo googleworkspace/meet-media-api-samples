@@ -23,12 +23,15 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/session_control_resource.h"
 #include "meet_clients/api/video_assignment_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -308,8 +311,11 @@ TEST(VideoAssignmentResourceHandlerTest, UnexpectedCanvasesReturnsErrorStatus) {
 }
 
 TEST(VideoAssignmentResourceHandlerTest, ParsesClientRequestId) {
-  VideoAssignmentChannelFromClient resource_request;
-  resource_request.request.request_id = 1;
+  VideoAssignmentChannelFromClient resource_request{
+      .request = {
+          .request_id = 1,
+          .set_video_assignment_request = std::nullopt,
+      }};
   VideoAssignmentResourceHandler handler;
 
   absl::StatusOr<std::string> status_or_json_request =
@@ -325,8 +331,11 @@ TEST(VideoAssignmentResourceHandlerTest, ParsesClientRequestId) {
 }
 
 TEST(VideoAssignmentResourceHandlerTest, NoClientRequestIdReturnsErrorStatus) {
-  VideoAssignmentChannelFromClient resource_request;
-  resource_request.request.request_id = 0;
+  VideoAssignmentChannelFromClient resource_request{
+      .request = {
+          .request_id = 0,
+          .set_video_assignment_request = std::nullopt,
+      }};
 
   VideoAssignmentResourceHandler handler;
 
@@ -339,10 +348,16 @@ TEST(VideoAssignmentResourceHandlerTest, NoClientRequestIdReturnsErrorStatus) {
 
 TEST(VideoAssignmentResourceHandlerTest,
      ParsesClientLayoutModelLabelAndDefaultMaxVideoResolution) {
-  VideoAssignmentChannelFromClient resource_request;
-  resource_request.request.request_id = 1;
-  resource_request.request.set_video_assignment_request = {
-      .layout_model = {.label = "the answer to life is 42"}};
+  VideoAssignmentChannelFromClient resource_request{
+      .request = {
+          .request_id = 1,
+          .set_video_assignment_request =
+              SetVideoAssignmentRequest{
+                  .layout_model = {.label = "the answer to life is 42",
+                                   .canvases = {}},
+                  .video_resolution = {},
+              },
+      }};
 
   VideoAssignmentResourceHandler handler;
 
@@ -375,12 +390,16 @@ TEST(VideoAssignmentResourceHandlerTest, ParsesClientLayoutModelWithCanvases) {
   VideoCanvas canvas2 = {.id = 2,
                          .dimensions = {.height = 200, .width = 200},
                          .assignment_protocol = kRelevant};
-  VideoAssignmentChannelFromClient resource_request;
-  resource_request.request.request_id = 1;
-  resource_request.request.set_video_assignment_request = {
-      .layout_model = {.label = "the answer to life is 42",
-                       .canvases = {canvas1, canvas2}},
-  };
+  VideoAssignmentChannelFromClient resource_request{
+      .request = {
+          .request_id = 1,
+          .set_video_assignment_request =
+              SetVideoAssignmentRequest{
+                  .layout_model = {.label = "the answer to life is 42",
+                                   .canvases = {canvas1, canvas2}},
+                  .video_resolution = {},
+              },
+      }};
 
   VideoAssignmentResourceHandler handler;
 
@@ -425,14 +444,19 @@ TEST(VideoAssignmentResourceHandlerTest, ParsesClientLayoutModelWithCanvases) {
 }
 
 TEST(VideoAssignmentResourceHandlerTest, MissingCanvasIdReturnsErrorStatus) {
-  VideoAssignmentChannelFromClient resource_request;
-  resource_request.request.request_id = 1;
-  resource_request.request.set_video_assignment_request = {
-      .layout_model = {.label = "the answer to life is 42",
-                       .canvases = {{.dimensions = {.height = 100,
-                                                    .width = 100},
-                                     .assignment_protocol = kDirect}}},
-  };
+  VideoAssignmentChannelFromClient resource_request{
+      .request = {
+          .request_id = 1,
+          .set_video_assignment_request =
+              SetVideoAssignmentRequest{
+                  .layout_model = {.label = "the answer to life is 42",
+                                   .canvases = {{.dimensions = {.height = 100,
+                                                                .width = 100},
+                                                 .assignment_protocol =
+                                                     kDirect}}},
+                  .video_resolution = {},
+              },
+      }};
 
   VideoAssignmentResourceHandler handler;
 
@@ -447,7 +471,10 @@ TEST(VideoAssignmentResourceHandlerTest,
      StringifyWrongRequestTypeReturnsErrorStatus) {
   absl::StatusOr<std::string> json_request =
       VideoAssignmentResourceHandler().StringifyRequest(
-          SessionControlChannelFromClient());
+          SessionControlChannelFromClient{.request = {
+                                              .request_id = 1,
+                                              .leave_request = std::nullopt,
+                                          }});
   ASSERT_FALSE(json_request.ok());
   EXPECT_EQ(json_request.status().code(), absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(json_request.status().message(),

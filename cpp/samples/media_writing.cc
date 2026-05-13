@@ -19,9 +19,12 @@
 #include <cstdint>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/types/span.h"
 #include "meet_clients/samples/output_writer_interface.h"
 #include "api/video/video_frame_buffer.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 

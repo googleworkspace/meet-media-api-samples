@@ -17,13 +17,17 @@
 #include "meet_clients/internal/curl_request.h"
 
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include <curl/curl.h>
 #include "meet_clients/internal/testing/mock_curl_api_wrapper.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -35,11 +39,10 @@ using ::testing::StrEq;
 TEST(CurlRequestTest, FailureToInitEasyCurlReturnsError) {
   MockCurlApiWrapper mock_curl_api;
   EXPECT_CALL(mock_curl_api, EasyInit()).WillOnce(Return(nullptr));
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -54,10 +57,10 @@ TEST(CurlRequestTest, FailureToSetCurlHeaderReturnsError) {
         return CURLE_UNKNOWN_OPTION;
       });
 
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -74,12 +77,11 @@ TEST(CurlRequestTest, FailureToSetCurlMethodReturnsError) {
         EXPECT_EQ(option, CURLOPT_UPLOAD);
         return CURLE_UNKNOWN_OPTION;
       });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
   request.SetRequestMethod(CurlRequest::Method::kPut);
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
 
   absl::Status request_status = request.Send();
 
@@ -104,11 +106,10 @@ TEST(CurlRequestTest, FailureToSetCurlUrlReturnsError) {
             EXPECT_EQ(value, url);
             return CURLE_UNKNOWN_OPTION;
           });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl(url);
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, url,
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -129,11 +130,9 @@ TEST(CurlRequestTest, FailureToSetCurlRequestBodyReturnsError) {
             EXPECT_EQ(value, body);
             return CURLE_UNKNOWN_OPTION;
           });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody(body);
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com", body,
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -149,11 +148,10 @@ TEST(CurlRequestTest, FailureToSetCurlWriteFunctionReturnsError) {
   EXPECT_CALL(mock_curl_api, EasySetOptStr).WillRepeatedly(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasySetOptCallback(_, CURLOPT_WRITEFUNCTION, _))
       .WillOnce(Return((CURLE_UNKNOWN_OPTION)));
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -172,11 +170,10 @@ TEST(CurlRequestTest, FailureToSetCurlWriteDataReturnsError) {
       .WillOnce(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasySetOptPtr(_, CURLOPT_WRITEDATA, _))
       .WillOnce(Return((CURLE_UNKNOWN_OPTION)));
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -197,12 +194,11 @@ TEST(CurlRequestTest, FailureToSetCurlCaCertReturnsError) {
       .WillOnce(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasySetOptStr(_, CURLOPT_CAINFO, _))
       .WillOnce(Return(CURLE_UNKNOWN_OPTION));
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
-  request.SetCaCertPath("some/path/to/ca/cert");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
+  request.SetCaCertPath("some/path");
 
   absl::Status request_status = request.Send();
 
@@ -223,11 +219,10 @@ TEST(CurlRequestTest, FailureToPerformCurlRequestReturnsError) {
       .WillOnce(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasyPerform)
       .WillOnce(Return(CURLE_UNKNOWN_OPTION));
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -241,8 +236,14 @@ TEST(CurlRequestTest, ResponseDataStoresResponse) {
   EXPECT_CALL(mock_curl_api, EasySetOptPtr(_, CURLOPT_HTTPHEADER, _))
       .WillOnce([](CURL* curl, CURLoption option, void* value) {
         auto headers_list = static_cast<struct curl_slist*>(value);
-        EXPECT_THAT(headers_list->data,
-                    StrEq("Authorization: Bearer iliketurtles"));
+        std::vector<std::string> headers;
+        while (headers_list != nullptr) {
+          headers.push_back(headers_list->data);
+          headers_list = headers_list->next;
+        }
+        EXPECT_THAT(headers, testing::UnorderedElementsAre(
+                                 "Authorization: Bearer iliketurtles",
+                                 "Content-Type: application/json"));
         return CURLE_OK;
       });
   EXPECT_CALL(mock_curl_api, EasySetOptInt).WillOnce(Return(CURLE_OK));
@@ -258,10 +259,10 @@ TEST(CurlRequestTest, ResponseDataStoresResponse) {
         *str_response = response;
         return CURLE_OK;
       });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
 
   absl::Status request_status = request.Send();
 
@@ -274,8 +275,14 @@ TEST(CurlRequestTest, CurlCaCertPathIsSet) {
   EXPECT_CALL(mock_curl_api, EasySetOptPtr(_, CURLOPT_HTTPHEADER, _))
       .WillOnce([](CURL* curl, CURLoption option, void* value) {
         auto headers_list = static_cast<struct curl_slist*>(value);
-        EXPECT_THAT(headers_list->data,
-                    StrEq("Authorization: Bearer iliketurtles"));
+        std::vector<std::string> headers;
+        while (headers_list != nullptr) {
+          headers.push_back(headers_list->data);
+          headers_list = headers_list->next;
+        }
+        EXPECT_THAT(headers, testing::UnorderedElementsAre(
+                                 "Authorization: Bearer iliketurtles",
+                                 "Content-Type: application/json"));
         return CURLE_OK;
       });
   EXPECT_CALL(mock_curl_api, EasySetOptInt).WillOnce(Return(CURLE_OK));
@@ -293,11 +300,11 @@ TEST(CurlRequestTest, CurlCaCertPathIsSet) {
         *str_response = response;
         return CURLE_OK;
       });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
-  request.SetCaCertPath("some/path/to/ca/cert");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
+  request.SetCaCertPath("some/path");
 
   absl::Status request_status = request.Send();
 
@@ -321,11 +328,11 @@ TEST(CurlRequestTest, ReusedRequestReturnsError) {
         *str_response = response;
         return CURLE_OK;
       });
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
+
   EXPECT_EQ(request.Send(), absl::OkStatus());
 
   absl::Status second_request_status = request.Send();
@@ -348,11 +355,11 @@ TEST(CurlRequestTest, ConnectionTimeoutIsSet) {
       .WillRepeatedly(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasyPerform).WillOnce(Return(CURLE_OK));
 
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
+
   request.SetConnectionTimeout(1000);
 
   EXPECT_OK(request.Send());
@@ -370,11 +377,11 @@ TEST(CurlRequestTest, RequestTimeoutIsSet) {
       .WillRepeatedly(Return(CURLE_OK));
   EXPECT_CALL(mock_curl_api, EasyPerform).WillOnce(Return(CURLE_OK));
 
-  CurlRequest request(mock_curl_api);
-  request.SetRequestUrl("www.this_is_sparta.com");
-  request.SetRequestHeader("Authorization", "Bearer iliketurtles");
-  request.SetRequestHeader("Content-Type", "application/json");
-  request.SetRequestBody("{\"offer\": \"some random sdp offer\"}");
+  CurlRequest request(mock_curl_api, "www.this_is_sparta.com",
+                      "{\"offer\": \"some random sdp offer\"}",
+                      {{"Authorization", "Bearer iliketurtles"},
+                       {"Content-Type", "application/json"}});
+
   request.SetRequestTimeout(2000);
 
   EXPECT_OK(request.Send());

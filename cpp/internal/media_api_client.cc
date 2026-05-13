@@ -24,6 +24,7 @@
 #include <utility>
 #include <variant>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -49,6 +50,8 @@
 #include "api/units/time_delta.h"
 #include "api/video/video_source_interface.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

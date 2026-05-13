@@ -22,10 +22,13 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "meet_clients/internal/curl_request.h"
 #include "meet_clients/internal/http_connector_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 
@@ -39,8 +42,8 @@ class CurlConnector : public HttpConnectorInterface {
   absl::StatusOr<std::string> ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,
       absl::string_view access_token, absl::string_view sdp_offer,
-      std::optional<int> connection_timeout_ms = std::nullopt,
-      std::optional<int> request_timeout_ms = std::nullopt) override;
+      std::optional<int> connection_timeout_ms,
+      std::optional<int> request_timeout_ms) override;
 
   // Sets the path to the CA certificate file to be used by curl.
   //

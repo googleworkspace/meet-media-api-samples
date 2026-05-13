@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/cleanup/cleanup.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -29,6 +30,8 @@
 #include <curl/curl.h>
 #include <curl/curl.h>
 #include <curl/easy.h>
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

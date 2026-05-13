@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/log.h"
@@ -28,6 +29,8 @@
 #include "api/stats/attribute.h"
 #include "api/stats/rtc_stats.h"
 #include "api/stats/rtc_stats_report.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 
@@ -38,9 +41,11 @@ MediaStatsChannelFromClient StatsRequestFromReport(
         allowlist) {
   VLOG(1) << "StatsRequestFromReport: " << report->ToJson();
 
-  MediaStatsChannelFromClient request;
-  request.request.request_id = stats_request_id;
-  request.request.upload_media_stats = UploadMediaStatsRequest();
+  auto request = MediaStatsChannelFromClient{
+      .request = {
+          .request_id = stats_request_id,
+          .upload_media_stats = UploadMediaStatsRequest{.sections = {}},
+      }};
 
   for (const webrtc::RTCStats& report_section : *report) {
     auto it = allowlist.find(report_section.type());
@@ -49,9 +54,11 @@ MediaStatsChannelFromClient StatsRequestFromReport(
     }
     absl::flat_hash_set<std::string> allowed_attributes = it->second;
 
-    MediaStatsSection request_section;
-    request_section.id = report_section.id();
-    request_section.type = report_section.type();
+    auto request_section = MediaStatsSection{
+        .type = report_section.type(),
+        .id = report_section.id(),
+        .values = {},
+    };
     for (const webrtc::Attribute& attribute : report_section.Attributes()) {
       if (attribute.has_value() &&
           allowed_attributes.contains(attribute.name())) {

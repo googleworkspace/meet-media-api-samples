@@ -19,10 +19,14 @@
 
 #include <string>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/internal/resource_handler_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

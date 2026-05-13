@@ -21,29 +21,30 @@
 #include <memory>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/video/video_frame.h"
 
-// TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
-// to a version that supports it.
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 
 struct AudioTestData {
   // The input frame that is sent to the media collector.
-  meet::AudioFrame frame;
+  meet::AudioFrame frame ABSL_REQUIRE_EXPLICIT_INIT;
   // The expected content that should be written to the output writer.
-  std::vector<int16_t> pcm16;
+  std::vector<int16_t> pcm16 ABSL_REQUIRE_EXPLICIT_INIT;
 };
 
 struct VideoTestData {
   // The input frame that is sent to the media collector.
-  meet::VideoFrame meet_frame;
+  meet::VideoFrame meet_frame ABSL_REQUIRE_EXPLICIT_INIT;
   // The expected content that should be written to the output writer.
-  std::vector<char> yuv_data;
+  std::vector<char> yuv_data ABSL_REQUIRE_EXPLICIT_INIT;
   // A reference to this object is stored in `meet_frame`. Therefore, this field
   // keeps the object alive until the `meet_frame` is no longer needed.
-  std::unique_ptr<webrtc::VideoFrame> webrtc_frame;
+  std::unique_ptr<webrtc::VideoFrame> webrtc_frame ABSL_REQUIRE_EXPLICIT_INIT;
 };
 
 // Creates input audio and video frames, and the expected output for those

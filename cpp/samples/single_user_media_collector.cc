@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/strings/str_cat.h"
@@ -31,8 +32,7 @@
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/thread.h"
 
-// TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
-// to a version that supports it.
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 

@@ -17,6 +17,7 @@
 #include "meet_clients/internal/conference_data_channel.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
@@ -25,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -37,6 +39,8 @@
 #include "api/rtc_error.h"
 #include "api/scoped_refptr.h"
 #include "api/test/mock_data_channel.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -77,8 +81,11 @@ TEST(ConferenceDataChannelTest, SendRequestSucceeds) {
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
 
-  absl::Status status =
-      conference_data_channel.SendRequest(SessionControlChannelFromClient());
+  absl::Status status = conference_data_channel.SendRequest(
+      SessionControlChannelFromClient{.request = {
+                                          .request_id = 1,
+                                          .leave_request = LeaveRequest(),
+                                      }});
 
   EXPECT_OK(status);
   EXPECT_THAT(sent_message, StrEq("test-request"));
@@ -93,8 +100,11 @@ TEST(ConferenceDataChannelTest, SendRequestFailsWhenParsingFails) {
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
 
-  absl::Status status =
-      conference_data_channel.SendRequest(SessionControlChannelFromClient());
+  absl::Status status = conference_data_channel.SendRequest(
+      SessionControlChannelFromClient{.request = {
+                                          .request_id = 1,
+                                          .leave_request = LeaveRequest(),
+                                      }});
 
   EXPECT_THAT(status, StatusIs(absl::StatusCode::kInternal, "test-error"));
 }
@@ -120,8 +130,11 @@ TEST(ConferenceDataChannelTest, SendRequestLogsErrorWhenTransmissionFails) {
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
 
-  absl::Status status =
-      conference_data_channel.SendRequest(SessionControlChannelFromClient());
+  absl::Status status = conference_data_channel.SendRequest(
+      SessionControlChannelFromClient{.request = {
+                                          .request_id = 1,
+                                          .leave_request = LeaveRequest(),
+                                      }});
 
   EXPECT_OK(status);
   EXPECT_THAT(message, HasSubstr("test-error"));
@@ -145,7 +158,15 @@ TEST(ConferenceDataChannelTest,
 TEST(ConferenceDataChannelTest, ReceivingUpdateSucceeds) {
   auto resource_handler = std::make_unique<MockResourceHandler>();
   EXPECT_CALL(*resource_handler, ParseUpdate(_))
-      .WillOnce(Return(SessionControlChannelToClient()));
+      .WillOnce(Return(SessionControlChannelToClient{
+          .response =
+              SessionControlResponse{
+                  .request_id = 42,
+                  .status = absl::OkStatus(),
+                  .leave_response = LeaveResponse(),
+              },
+          .resources = {},
+      }));
   auto data_channel = webrtc::MockDataChannelInterface::Create();
   webrtc::DataChannelObserver* observer;
   EXPECT_CALL(*data_channel, RegisterObserver(_))
@@ -154,7 +175,10 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateSucceeds) {
       });
   ConferenceDataChannel conference_data_channel(std::move(resource_handler),
                                                 std::move(data_channel));
-  MessageFromServer received_update;
+  MessageFromServer received_update = SessionControlChannelToClient{
+      .response = std::nullopt,
+      .resources = {},
+  };
   MockFunction<void(MessageFromServer)> mock_function;
   EXPECT_CALL(mock_function, Call)
       .WillOnce([&received_update](MessageFromServer update) {

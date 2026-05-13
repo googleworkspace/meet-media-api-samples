@@ -17,11 +17,13 @@
 #include "meet_clients/internal/video_assignment_resource_handler.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -30,6 +32,8 @@
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/video_assignment_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -59,11 +63,18 @@ absl::StatusOr<MessageFromServer> VideoAssignmentResourceHandler::ParseUpdate(
         "Invalid ", kVideoAssignmentResourceName, " json format: ", update));
   }
 
-  VideoAssignmentChannelToClient video_assignment_update;
+  VideoAssignmentChannelToClient video_assignment_update{
+      .response = std::nullopt,
+      .resources = {},
+  };
   // Response
   if (const Json* response_field = FindOrNull(json_resource_update, "response");
       response_field != nullptr) {
-    VideoAssignmentResponse response;
+    VideoAssignmentResponse response{
+        .request_id = 0,
+        .status = absl::OkStatus(),
+        .set_assignment = std::nullopt,
+    };
 
     // Response.requestId
     if (const Json* request_id_field = FindOrNull(*response_field, "requestId");
@@ -116,13 +127,19 @@ absl::StatusOr<MessageFromServer> VideoAssignmentResourceHandler::ParseUpdate(
     std::vector<VideoAssignmentResourceSnapshot>& resources =
         video_assignment_update.resources;
     for (const Json& resource : *resources_field) {
-      VideoAssignmentResourceSnapshot snapshot;
+      VideoAssignmentResourceSnapshot snapshot{
+          .id = 0,
+          .assignment = std::nullopt,
+      };
 
       // Resources.resourceSnapshot.assignment
       if (const Json* assignment_field =
               FindOrNull(resource, "videoAssignment");
           assignment_field != nullptr) {
-        VideoAssignment assignment;
+        VideoAssignment assignment{
+            .label = "",
+            .canvases = {},
+        };
 
         // Resources.resourceSnapshot.assignment.label
         if (const Json* label_field = FindOrNull(*assignment_field, "label");

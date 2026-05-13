@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -30,6 +31,8 @@
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/media_entries_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -54,7 +57,10 @@ absl::StatusOr<MessageFromServer> MediaEntriesResourceHandler::ParseUpdate(
         "Invalid media entries resource update json format: ", update));
   }
 
-  MediaEntriesChannelToClient media_entries_update;
+  MediaEntriesChannelToClient media_entries_update{
+      .resources = {},
+      .deleted_resources = {},
+  };
   // Resources
   if (const Json* resources_field =
           FindOrNull(json_resource_update, "resources");
@@ -70,7 +76,10 @@ absl::StatusOr<MessageFromServer> MediaEntriesResourceHandler::ParseUpdate(
         media_entries_update.resources;
     for (const Json& resource : *resources_field) {
       // Resources.resourceSnapshot
-      MediaEntriesResourceSnapshot snapshot;
+      MediaEntriesResourceSnapshot snapshot{
+          .id = 0,
+          .media_entry = std::nullopt,
+      };
 
       // Resources.resourceSnapshot.id
       if (const Json* id_field = FindOrNull(resource, "id");
@@ -83,7 +92,18 @@ absl::StatusOr<MessageFromServer> MediaEntriesResourceHandler::ParseUpdate(
       // Resources.resourceSnapshot.mediaEntry
       if (const Json* media_entry_field = FindOrNull(resource, "mediaEntry");
           media_entry_field != nullptr) {
-        MediaEntry media_entry;
+        MediaEntry media_entry{
+            .participant = std::nullopt,
+            .participant_key = std::nullopt,
+            .session = std::nullopt,
+            .session_name = std::nullopt,
+            .audio_csrc = 0,
+            .video_csrcs = {},
+            .presenter = false,
+            .screenshare = false,
+            .audio_muted = false,
+            .video_muted = false,
+        };
 
         // Resources.resourceSnapshot.mediaEntry.participant
         if (const Json* participant_field =
@@ -199,7 +219,10 @@ absl::StatusOr<MessageFromServer> MediaEntriesResourceHandler::ParseUpdate(
         media_entries_update.deleted_resources;
     for (const Json& deleted_resource : *deleted_resources_field) {
       // deletedResources.deletedResource
-      MediaEntriesDeletedResource deleted_entry;
+      MediaEntriesDeletedResource deleted_entry{
+          .id = 0,
+          .media_entry = std::nullopt,
+      };
 
       // deletedResources.deletedResource.id
       if (const Json* id_field = FindOrNull(deleted_resource, "id");

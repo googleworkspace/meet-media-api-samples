@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/statusor.h"
 #include "meet_clients/api/media_api_client_factory_interface.h"
@@ -28,6 +29,8 @@
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

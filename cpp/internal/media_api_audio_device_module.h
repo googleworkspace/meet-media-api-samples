@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "api/audio/audio_device.h"
 #include "api/audio/audio_device_defines.h"
 #include "api/scoped_refptr.h"
@@ -29,6 +30,8 @@
 #include "api/units/time_delta.h"
 #include "modules/audio_device/include/audio_device_default.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

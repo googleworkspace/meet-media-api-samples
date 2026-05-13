@@ -17,18 +17,22 @@
 #include "meet_clients/internal/curl_connector.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include <curl/curl.h>
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/internal/testing/mock_curl_api_wrapper.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -85,7 +89,9 @@ TEST(CurlConnectorTest, PopulatesRequest) {
 
   curl_connector
       .ConnectActiveConference("https://meet.googleapis.com", "abcdefg",
-                               "bearer_token", "some sdp offer")
+                               "bearer_token", "some sdp offer",
+                               /*connection_timeout_ms=*/std::nullopt,
+                               /*request_timeout_ms=*/std::nullopt)
       .IgnoreError();
 
   EXPECT_EQ(populated_option, CURLOPT_POST);
@@ -117,7 +123,8 @@ TEST(CurlConnectorTest, ReturnsResponse) {
 
   absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
-      "some sdp offer");
+      "some sdp offer", /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
 
   ASSERT_TRUE(response.ok());
   EXPECT_EQ(response.value(), "some sdp answer");
@@ -182,7 +189,8 @@ TEST_P(CurlConnectorStatusCodeTest, ReturnsErrorFromResponse) {
 
   absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
-      "some sdp offer");
+      "some sdp offer", /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(response, StatusIs(params.status_code,
                                  AllOf(HasSubstr(params.status_str),
@@ -237,7 +245,8 @@ TEST(CurlConnectorTest,
 
   absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
-      "some sdp offer");
+      "some sdp offer", /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(response, StatusIs(absl::StatusCode::kUnknown,
                                  StrEq(response_body.dump())));
@@ -261,7 +270,8 @@ TEST(CurlConnectorTest, ReturnsErrorWhenResponseIsEmpty) {
 
   absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
-      "some sdp offer");
+      "some sdp offer", /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
 
   ASSERT_FALSE(response.ok());
   EXPECT_THAT(response.status().message(),
@@ -284,7 +294,8 @@ TEST(CurlConnectorTest, ReturnsErrorWhenResponseIsNotJson) {
 
   absl::StatusOr<std::string> response = curl_connector.ConnectActiveConference(
       "https://meet.googleapis.com", "abcdefg", "bearer_token",
-      "some sdp offer");
+      "some sdp offer", /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt);
 
   ASSERT_FALSE(response.ok());
   EXPECT_THAT(response.status().message(),

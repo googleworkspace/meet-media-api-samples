@@ -31,12 +31,16 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include <curl/curl.h>
 #include <curl/curl.h>
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 
@@ -99,7 +103,12 @@ class CurlRequest {
     kPut,
   };
 
-  explicit CurlRequest(CurlApiWrapper& curl_api) : curl_api_(curl_api) {}
+  explicit CurlRequest(CurlApiWrapper& curl_api, std::string url,
+                       std::string body,
+                       absl::flat_hash_map<std::string, std::string> headers)
+      : request_parameters_(
+            {std::move(url), std::move(body), std::move(headers)}),
+        curl_api_(curl_api) {}
 
   absl::Status Send();
 
@@ -140,9 +149,10 @@ class CurlRequest {
   }
 
   struct RequestParameters {
-    std::string url;
-    std::string body;
-    absl::flat_hash_map<std::string, std::string> headers;
+    std::string url ABSL_REQUIRE_EXPLICIT_INIT;
+    std::string body ABSL_REQUIRE_EXPLICIT_INIT;
+    absl::flat_hash_map<std::string, std::string> headers
+        ABSL_REQUIRE_EXPLICIT_INIT;
     CURLoption request_method = CURLOPT_POST;
     int connection_timeout_ms = 0;
     int request_timeout_ms = 0;

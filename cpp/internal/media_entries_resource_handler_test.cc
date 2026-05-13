@@ -20,10 +20,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/media_entries_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

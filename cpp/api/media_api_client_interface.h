@@ -64,6 +64,7 @@
 #include <optional>
 #include <variant>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -76,6 +77,8 @@
 #include "api/ref_count.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_frame.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

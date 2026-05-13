@@ -20,8 +20,11 @@
 #include <ios>
 #include <memory>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/strings/string_view.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 

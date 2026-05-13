@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
@@ -30,6 +31,8 @@
 #include "api/rtp_packet_infos.h"
 #include "api/transport/rtp/rtp_source.h"
 #include "api/video/video_frame.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

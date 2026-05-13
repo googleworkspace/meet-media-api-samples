@@ -21,12 +21,14 @@
 #include <string>
 
 #include "gmock/gmock.h"
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "meet_clients/api/media_entries_resource.h"
 #include "meet_clients/api/participants_resource.h"
 #include "meet_clients/samples/resource_manager_interface.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
 namespace media_api_samples {
 
 class MockResourceManager : public ResourceManagerInterface {

@@ -17,6 +17,10 @@
 #ifndef CPP_INTERNAL_TESTING_SDP_CONSTANTS_H_
 #define CPP_INTERNAL_TESTING_SDP_CONSTANTS_H_
 
+#include "absl/base/nullability.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace meet {
 
 // A valid, parseable SDP offer.

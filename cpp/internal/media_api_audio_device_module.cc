@@ -21,12 +21,15 @@
 #include <cstdint>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "api/audio/audio_device_defines.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

@@ -17,9 +17,12 @@
 #ifndef CPP_INTERNAL_CONFERENCE_DATA_CHANNEL_INTERFACE_H_
 #define CPP_INTERNAL_CONFERENCE_DATA_CHANNEL_INTERFACE_H_
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "meet_clients/api/media_api_client_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

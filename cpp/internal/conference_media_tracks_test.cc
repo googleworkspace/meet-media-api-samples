@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
+#include "absl/base/nullability.h"
 #include "absl/log/globals.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/rtp_packet_info.h"
@@ -36,6 +37,8 @@
 #include "api/units/timestamp.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {

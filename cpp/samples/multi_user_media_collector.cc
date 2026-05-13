@@ -23,6 +23,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/strings/str_format.h"
@@ -35,6 +36,8 @@
 #include "meet_clients/samples/media_writing.h"
 #include "api/scoped_refptr.h"
 #include "api/video/video_frame_buffer.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 namespace {
@@ -113,10 +116,12 @@ void MultiUserMediaCollector::HandleAudioData(std::vector<int16_t> samples,
     }
 
     std::string file_identifier = std::move(file_identifier_status).value();
-    auto new_audio_segment = std::make_unique<AudioSegment>(
-        output_writer_provider_(absl::StrFormat(
+    auto new_audio_segment = std::make_unique<AudioSegment>(AudioSegment{
+        .writer = output_writer_provider_(absl::StrFormat(
             kTmpAudioFormat, output_file_prefix_, file_identifier)),
-        std::move(file_identifier), received_time, received_time);
+        .file_identifier = std::move(file_identifier),
+        .first_frame_time = received_time,
+        .last_frame_time = received_time});
     audio_segment = new_audio_segment.get();
     audio_segments_[contributing_source] = std::move(new_audio_segment);
   }
@@ -184,10 +189,13 @@ void MultiUserMediaCollector::HandleVideoData(
     std::string video_segment_name =
         absl::StrFormat(kTmpVideoFormat, output_file_prefix_, file_identifier,
                         buffer->width(), buffer->height());
-    auto new_video_segment = std::make_unique<VideoSegment>(
-        output_writer_provider_(std::move(video_segment_name)),
-        std::move(file_identifier), buffer->width(), buffer->height(),
-        received_time, received_time);
+    auto new_video_segment = std::make_unique<VideoSegment>(VideoSegment{
+        .writer = output_writer_provider_(std::move(video_segment_name)),
+        .file_identifier = std::move(file_identifier),
+        .width = buffer->width(),
+        .height = buffer->height(),
+        .first_frame_time = received_time,
+        .last_frame_time = received_time});
     video_segment = new_video_segment.get();
     video_segments_[contributing_source] = std::move(new_video_segment);
   }

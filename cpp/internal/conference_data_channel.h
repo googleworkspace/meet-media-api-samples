@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "meet_clients/api/media_api_client_interface.h"
@@ -28,6 +29,8 @@
 #include "meet_clients/internal/resource_handler_interface.h"
 #include "api/data_channel_interface.h"
 #include "api/scoped_refptr.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

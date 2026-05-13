@@ -25,6 +25,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/base/thread_annotations.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
@@ -40,17 +42,24 @@
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "rtc_base/thread.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace meet {
 
 class MediaApiClient : public MediaApiClientInterface {
  public:
   // Container for data channels used by the client.
   struct ConferenceDataChannels {
-    std::unique_ptr<ConferenceDataChannelInterface> media_entries;
-    std::unique_ptr<ConferenceDataChannelInterface> media_stats;
-    std::unique_ptr<ConferenceDataChannelInterface> participants;
-    std::unique_ptr<ConferenceDataChannelInterface> session_control;
-    std::unique_ptr<ConferenceDataChannelInterface> video_assignment;
+    std::unique_ptr<ConferenceDataChannelInterface> media_entries
+        ABSL_REQUIRE_EXPLICIT_INIT;
+    std::unique_ptr<ConferenceDataChannelInterface> media_stats
+        ABSL_REQUIRE_EXPLICIT_INIT;
+    std::unique_ptr<ConferenceDataChannelInterface> participants
+        ABSL_REQUIRE_EXPLICIT_INIT;
+    std::unique_ptr<ConferenceDataChannelInterface> session_control
+        ABSL_REQUIRE_EXPLICIT_INIT;
+    std::unique_ptr<ConferenceDataChannelInterface> video_assignment
+        ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   MediaApiClient(
@@ -60,7 +69,8 @@ class MediaApiClient : public MediaApiClientInterface {
       std::unique_ptr<ConferencePeerConnectionInterface>
           conference_peer_connection,
       ConferenceDataChannels data_channels)
-      : client_thread_(std::move(client_thread)),
+      : stats_config_({.stats_request_id = 0, .allowlist = {}}),
+        client_thread_(std::move(client_thread)),
         worker_thread_(std::move(worker_thread)),
         observer_(std::move(observer)),
         conference_peer_connection_(std::move(conference_peer_connection)),
@@ -115,7 +125,7 @@ class MediaApiClient : public MediaApiClientInterface {
     //
     // This client implementation uses a simple incrementing counter to generate
     // IDs.
-    int64_t stats_request_id;
+    int64_t stats_request_id ABSL_REQUIRE_EXPLICIT_INIT;
     // Interval between stats requests.
     //
     // An interval of 0 indicates that stats collection is disabled.
@@ -126,8 +136,8 @@ class MediaApiClient : public MediaApiClientInterface {
     // `MediaStatsChannelFromClient` resource requests.
     //
     // Provided to client by `MediaStatsChannelToClient` resource update.
-    absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>>
-        allowlist;
+    absl::flat_hash_map<std::string, absl::flat_hash_set<std::string>> allowlist
+        ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   std::string StateToString(State state) {

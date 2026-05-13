@@ -24,6 +24,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
@@ -31,6 +33,8 @@
 #include "meet_clients/api/participants_resource.h"
 #include "meet_clients/samples/output_writer_interface.h"
 #include "meet_clients/samples/resource_manager_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 
@@ -44,7 +48,12 @@ class ResourceManager : public ResourceManagerInterface {
  public:
   explicit ResourceManager(
       std::unique_ptr<OutputWriterInterface> event_log_file)
-      : event_log_file_(std::move(event_log_file)) {}
+      : event_log_file_(std::move(event_log_file)),
+        participants_by_key_(),
+        media_entries_by_session_name_(),
+        media_entries_by_csrc_(),
+        participants_by_id_(),
+        media_entries_by_id_() {}
 
   void OnParticipantResourceUpdate(
       const meet::ParticipantsChannelToClient& update,
@@ -77,9 +86,9 @@ class ResourceManager : public ResourceManagerInterface {
   // A participant is identified by its key. There may be multiple media entries
   // associated with a single participant.
   struct Participant {
-    ParticipantKey participant_key;
-    ParticipantId participant_id;
-    std::string display_name;
+    ParticipantKey participant_key ABSL_REQUIRE_EXPLICIT_INIT;
+    ParticipantId participant_id ABSL_REQUIRE_EXPLICIT_INIT;
+    std::string display_name ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   // A media entry is identified by its participant session name. A media entry
@@ -87,11 +96,11 @@ class ResourceManager : public ResourceManagerInterface {
   //
   // A media entry may have multiple contributing sources.
   struct MediaEntry {
-    ParticipantSessionName participant_session_name;
-    ParticipantKey participant_key;
-    MediaEntryId media_entry_id;
-    ContributingSource audio_csrc = 0;
-    std::vector<ContributingSource> video_csrcs;
+    ParticipantSessionName participant_session_name ABSL_REQUIRE_EXPLICIT_INIT;
+    ParticipantKey participant_key ABSL_REQUIRE_EXPLICIT_INIT;
+    MediaEntryId media_entry_id ABSL_REQUIRE_EXPLICIT_INIT;
+    ContributingSource audio_csrc ABSL_REQUIRE_EXPLICIT_INIT;
+    std::vector<ContributingSource> video_csrcs ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   // Parses the participant key value from the participant resource.

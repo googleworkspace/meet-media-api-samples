@@ -22,6 +22,9 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace meet {
 
 struct MediaEntry {

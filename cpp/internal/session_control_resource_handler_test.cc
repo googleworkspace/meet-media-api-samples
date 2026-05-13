@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/match.h"
@@ -30,6 +31,8 @@
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/media_stats_resource.h"
 #include "meet_clients/api/session_control_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -236,8 +239,11 @@ TEST(SessionControlResourceHandlerTest,
 }
 
 TEST(SessionControlResourceHandlerTest, ParsesClientRequestId) {
-  SessionControlChannelFromClient resource_request;
-  resource_request.request.request_id = 42;
+  SessionControlChannelFromClient resource_request{
+      .request = {
+          .request_id = 42,
+          .leave_request = std::nullopt,
+      }};
   SessionControlResourceHandler handler;
 
   absl::StatusOr<std::string> status_or_json_request =
@@ -253,7 +259,11 @@ TEST(SessionControlResourceHandlerTest, ParsesClientRequestId) {
 }
 
 TEST(SessionControlResourceHandlerTest, ParseLeaveRequest) {
-  SessionControlChannelFromClient resource_request;
+  SessionControlChannelFromClient resource_request{
+      .request = {
+          .request_id = 42,
+          .leave_request = LeaveRequest(),
+      }};
   resource_request.request.request_id = 42;
   resource_request.request.leave_request = LeaveRequest();
   SessionControlResourceHandler handler;
@@ -272,8 +282,11 @@ TEST(SessionControlResourceHandlerTest, ParseLeaveRequest) {
 }
 
 TEST(SessionControlResourceHandlerTest, NoClientRequestIdReturnsErrorStatus) {
-  SessionControlChannelFromClient resource_request;
-  resource_request.request.request_id = 0;
+  SessionControlChannelFromClient resource_request{
+      .request = {
+          .request_id = 0,
+          .leave_request = LeaveRequest(),
+      }};
 
   SessionControlResourceHandler handler;
 
@@ -289,7 +302,9 @@ TEST(SessionControlResourceHandlerTest,
      StringifyWrongRequestTypeReturnsErrorStatus) {
   absl::StatusOr<std::string> json_request =
       SessionControlResourceHandler().StringifyRequest(
-          MediaStatsChannelFromClient());
+          MediaStatsChannelFromClient{
+              .request = {.request_id = 1,
+                          .upload_media_stats = std::nullopt}});
   ASSERT_FALSE(json_request.ok());
   EXPECT_EQ(json_request.status().code(), absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(json_request.status().message(),

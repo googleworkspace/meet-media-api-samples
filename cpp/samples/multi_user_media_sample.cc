@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/flags/usage.h"
@@ -35,6 +36,8 @@
 #include "meet_clients/samples/multi_user_media_collector.h"
 #include "api/make_ref_counted.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 ABSL_FLAG(std::string, output_file_prefix, "/tmp/test_output_",
           "Directory and file prefix where files will be written. Files will "

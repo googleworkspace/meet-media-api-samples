@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -31,6 +32,7 @@
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/participants_resource.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
 namespace meet {
 namespace {
 using Json = ::nlohmann::json;
@@ -58,7 +60,10 @@ absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
         "Invalid ", kParticipantsResourceName, " json format: ", update));
   }
 
-  ParticipantsChannelToClient participants_update;
+  ParticipantsChannelToClient participants_update{
+      .resources = {},
+      .deleted_resources = {},
+  };
   // Resources
   if (const Json* resources_field =
           FindOrNull(json_resource_update, "resources");
@@ -73,7 +78,10 @@ absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
         participants_update.resources;
     for (const Json& resource_field : *resources_field) {
       // Resources.resourceSnapshot
-      ParticipantResourceSnapshot resource;
+      ParticipantResourceSnapshot resource{
+          .id = 0,
+          .participant = std::nullopt,
+      };
 
       // Resources.resourceSnapshot.id
       if (const Json* id_field = FindOrNull(resource_field, "id");
@@ -87,7 +95,15 @@ absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
       if (const Json* participant_field =
               FindOrNull(resource_field, "participant");
           participant_field != nullptr) {
-        Participant participant;
+        Participant participant{
+            .participant_id = 0,
+            .name = std::nullopt,
+            .participant_key = std::nullopt,
+            .type = Participant::Type::kSignedInUser,
+            .signed_in_user = std::nullopt,
+            .anonymous_user = std::nullopt,
+            .phone_user = std::nullopt,
+        };
 
         // Resources.resourceSnapshot.participant.participantId
         if (const Json* id_field =
@@ -114,7 +130,7 @@ absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
             signed_in_user_field != nullptr) {
           participant.type = Participant::Type::kSignedInUser;
 
-          SignedInUser signed_in_user;
+          SignedInUser signed_in_user{.user = "", .display_name = ""};
 
           // Resources.resourceSnapshot.participant.signedInUser.user
           if (const Json* user_field =
@@ -186,7 +202,10 @@ absl::StatusOr<MessageFromServer> ParticipantsResourceHandler::ParseUpdate(
         participants_update.deleted_resources;
     for (const Json& deleted_resource_field : *deleted_resources_field) {
       // DeletedResources.deletedResource
-      ParticipantDeletedResource deleted_resource;
+      ParticipantDeletedResource deleted_resource{
+          .id = 0,
+          .participant = std::nullopt,
+      };
 
       // DeletedResources.deletedResource.id
       if (const Json* id_field = FindOrNull(deleted_resource_field, "id");

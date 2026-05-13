@@ -24,6 +24,7 @@
 #include <utility>
 #include <variant>
 
+#include "absl/base/nullability.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/types/optional.h"
 #include "meet_clients/api/media_api_client_interface.h"
@@ -32,6 +33,8 @@
 #include "api/scoped_refptr.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 // Meet uses this magic number to indicate the loudest speaker.

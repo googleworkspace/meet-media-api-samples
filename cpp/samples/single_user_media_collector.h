@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -39,8 +40,7 @@
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/thread.h"
 
-// TODO: Add ABSL_POINTERS_DEFAULT_NONNULL once absl can be bumped
-// to a version that supports it.
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 
@@ -145,10 +145,10 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
 
  private:
   struct VideoSegment {
-    int segment_number;
-    int width;
-    int height;
-    std::unique_ptr<OutputWriterInterface> writer;
+    int segment_number ABSL_REQUIRE_EXPLICIT_INIT;
+    int width ABSL_REQUIRE_EXPLICIT_INIT;
+    int height ABSL_REQUIRE_EXPLICIT_INIT;
+    std::unique_ptr<OutputWriterInterface> writer ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   void HandleAudioBuffer(std::vector<int16_t> pcm16);

@@ -27,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/attributes.h"
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
@@ -45,9 +47,7 @@
 #include "api/video/video_frame_buffer.h"
 #include "rtc_base/thread.h"
 
-// TODO: Add ABSL_POINTERS_DEFAULT_NONNULL and
-// ABSL_REQUIRE_EXPLICIT_INIT once absl can be bumped to a version that supports
-// it.
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 
@@ -95,34 +95,36 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
                           absl::Duration segment_gap_threshold,
                           std::unique_ptr<webrtc::Thread> collector_thread)
       : output_file_prefix_(output_file_prefix),
+        output_writer_provider_([](absl::string_view file_name) {
+          std::ofstream file(std::string(file_name), std::ios::binary |
+                                                         std::ios::out |
+                                                         std::ios::trunc);
+          if (file.is_open()) {
+            LOG(INFO) << "Opened file: " << file_name;
+          } else {
+            // Files should normally open successfully.
+            //
+            // Potential causes for failure include:
+            // - The parent directory does not exist.
+            // - The system is out of disk space.
+            //
+            // If a file cannot be opened, the sample will still run, but
+            // written data will be lost.
+            LOG(ERROR) << "Failed to open file: " << file_name;
+          }
+          return std::make_unique<OutputFile>(std::move(file));
+        }),
+        segment_renamer_([](absl::string_view tmp_file_name,
+                            absl::string_view finished_file_name) {
+          std::rename(tmp_file_name.data(), finished_file_name.data());
+        }),
         segment_gap_threshold_(segment_gap_threshold),
-        collector_thread_(std::move(collector_thread)) {
-    output_writer_provider_ = [](absl::string_view file_name) {
-      std::ofstream file(std::string(file_name),
-                         std::ios::binary | std::ios::out | std::ios::trunc);
-      if (file.is_open()) {
-        LOG(INFO) << "Opened file: " << file_name;
-      } else {
-        // Files should normally open successfully.
-        //
-        // Potential causes for failure include:
-        // - The parent directory does not exist.
-        // - The system is out of disk space.
-        //
-        // If a file cannot be opened, the sample will still run, but written
-        // data will be lost.
-        LOG(ERROR) << "Failed to open file: " << file_name;
-      }
-      return std::make_unique<OutputFile>(std::move(file));
-    };
-    segment_renamer_ = [](absl::string_view tmp_file_name,
-                          absl::string_view finished_file_name) {
-      std::rename(tmp_file_name.data(), finished_file_name.data());
-    };
-    resource_manager_ =
-        std::make_unique<ResourceManager>(output_writer_provider_(
-            absl::StrCat(output_file_prefix_, "event_log.csv")));
-  }
+        audio_segments_(),
+        video_segments_(),
+        resource_manager_(
+            std::make_unique<ResourceManager>(output_writer_provider_(
+                absl::StrCat(output_file_prefix_, "event_log.csv")))),
+        collector_thread_(std::move(collector_thread)) {}
 
   // Constructor that allows injecting dependencies for testing.
   MultiUserMediaCollector(
@@ -135,6 +137,8 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
         output_writer_provider_(std::move(output_writer_provider)),
         segment_renamer_(std::move(segment_renamer)),
         segment_gap_threshold_(segment_gap_threshold),
+        audio_segments_(),
+        video_segments_(),
         resource_manager_(std::move(resource_manager)),
         collector_thread_(std::move(collector_thread)) {}
 
@@ -206,18 +210,18 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
   // 3. For video segments, segments also end when a frame is received that has
   //    a different resolution than the current segment.
   struct AudioSegment {
-    std::unique_ptr<OutputWriterInterface> writer;
-    std::string file_identifier;
-    absl::Time first_frame_time;
-    absl::Time last_frame_time;
+    std::unique_ptr<OutputWriterInterface> writer ABSL_REQUIRE_EXPLICIT_INIT;
+    std::string file_identifier ABSL_REQUIRE_EXPLICIT_INIT;
+    absl::Time first_frame_time ABSL_REQUIRE_EXPLICIT_INIT;
+    absl::Time last_frame_time ABSL_REQUIRE_EXPLICIT_INIT;
   };
   struct VideoSegment {
-    std::unique_ptr<OutputWriterInterface> writer;
-    std::string file_identifier;
-    int width = 0;
-    int height = 0;
-    absl::Time first_frame_time;
-    absl::Time last_frame_time;
+    std::unique_ptr<OutputWriterInterface> writer ABSL_REQUIRE_EXPLICIT_INIT;
+    std::string file_identifier ABSL_REQUIRE_EXPLICIT_INIT;
+    int width ABSL_REQUIRE_EXPLICIT_INIT;
+    int height ABSL_REQUIRE_EXPLICIT_INIT;
+    absl::Time first_frame_time ABSL_REQUIRE_EXPLICIT_INIT;
+    absl::Time last_frame_time ABSL_REQUIRE_EXPLICIT_INIT;
   };
 
   void HandleAudioData(std::vector<int16_t> samples,
@@ -244,7 +248,6 @@ class MultiUserMediaCollector : public meet::MediaApiClientObserverInterface {
   // that source.
   //
   // Values in these maps are never null.
-  // TODO: Remove comment once nullability annotations are added.
   absl::flat_hash_map<ContributingSource, std::unique_ptr<AudioSegment>>
       audio_segments_;
   absl::flat_hash_map<ContributingSource, std::unique_ptr<VideoSegment>>

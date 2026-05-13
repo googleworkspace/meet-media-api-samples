@@ -23,6 +23,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -31,6 +32,8 @@
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/session_control_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -87,11 +90,18 @@ absl::StatusOr<MessageFromServer> SessionControlResourceHandler::ParseUpdate(
         "Invalid ", kSessionControlResourceName, " json format: ", update));
   }
 
-  SessionControlChannelToClient session_control_update;
+  SessionControlChannelToClient session_control_update = {
+      .response = std::nullopt,
+      .resources = {},
+  };
   // Response
   if (const Json* response_field = FindOrNull(json_resource_update, "response");
       response_field != nullptr) {
-    session_control_update.response = SessionControlResponse();
+    session_control_update.response = SessionControlResponse{
+        .request_id = 0,
+        .status = absl::OkStatus(),
+        .leave_response = LeaveResponse(),
+    };
     // Response.requestId
     if (const Json* request_id_field = FindOrNull(*response_field, "requestId");
         request_id_field != nullptr) {
@@ -140,7 +150,11 @@ absl::StatusOr<MessageFromServer> SessionControlResourceHandler::ParseUpdate(
     std::vector<SessionControlResourceSnapshot> resources;
     for (const Json& resource : *resources_field) {
       // Resources.resourceSnapshot
-      SessionControlResourceSnapshot snapshot;
+      SessionControlResourceSnapshot snapshot{
+          .id = 0,
+          .session_status =
+              {SessionStatus::ConferenceConnectionState::kUnknown},
+      };
 
       // Resources.resourceSnapshot.sessionStatus
       if (const Json* session_status_field =

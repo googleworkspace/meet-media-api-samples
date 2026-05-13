@@ -20,10 +20,13 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "meet_clients/api/media_entries_resource.h"
 #include "meet_clients/api/participants_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 

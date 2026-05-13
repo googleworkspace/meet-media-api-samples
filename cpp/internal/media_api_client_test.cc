@@ -28,6 +28,7 @@
 #include "gtest/gtest.h"
 #include "testing/base/public/mock-log.h"
 #include "absl/base/log_severity.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/notification.h"
@@ -63,6 +64,8 @@
 #include "api/video/video_sink_interface.h"
 #include "api/video/video_source_interface.h"
 #include "rtc_base/thread.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -258,7 +261,10 @@ TEST(MediaApiClientTest, HandlesPeerConnectionDisconnected) {
 
 TEST(MediaApiClientTest, CallsObserverOnMessageFromServer) {
   auto observer = webrtc::make_ref_counted<MockMediaApiClientObserver>();
-  MessageFromServer received_resource_update;
+  MessageFromServer received_resource_update = SessionControlChannelToClient{
+      .response = std::nullopt,
+      .resources = {},
+  };
   absl::Notification resource_update_notification;
   EXPECT_CALL(*observer, OnMessageFromServer)
       .WillOnce([&received_resource_update, &resource_update_notification](
@@ -287,7 +293,14 @@ TEST(MediaApiClientTest, CallsObserverOnMessageFromServer) {
       });
 
   resource_update_callback(SessionControlChannelToClient{
-      .response = SessionControlResponse({.request_id = 7})});
+      .response =
+          SessionControlResponse{
+              .request_id = 7,
+              .status = absl::OkStatus(),
+              .leave_response = LeaveResponse(),
+          },
+      .resources = {},
+  });
 
   ASSERT_TRUE(resource_update_notification.WaitForNotificationWithTimeout(
       absl::Seconds(1)));
@@ -340,8 +353,10 @@ TEST(MediaApiClientTest,
 
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state =
                           SessionStatus::ConferenceConnectionState::kJoined}}}};
@@ -387,8 +402,10 @@ TEST(MediaApiClientTest,
   log.StartCapturingLogs();
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state =
                           SessionStatus::ConferenceConnectionState::kJoined}}}};
@@ -432,8 +449,10 @@ TEST(MediaApiClientTest, DisconnectsAfterReceivingDisconnectedSessionStatus) {
 
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
@@ -480,16 +499,20 @@ TEST(MediaApiClientTest, DisconnectingTwiceLogsWarning) {
   log.StartCapturingLogs();
   SessionControlChannelToClient session_control_update1 =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
   resource_update_callback(std::move(session_control_update1));
   SessionControlChannelToClient session_control_update2 =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
@@ -534,8 +557,10 @@ TEST(MediaApiClientTest, DisconnectingClosesConferencePeerConnection) {
 
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
@@ -601,6 +626,7 @@ TEST(MediaApiClientTest, StartsSendingStatsRequestsAfterReceivingStatsUpdate) {
       });
 
   MediaStatsChannelToClient media_stats_update = MediaStatsChannelToClient{
+      .response = std::nullopt,
       .resources =
           std::vector<MediaStatsResourceSnapshot>{MediaStatsResourceSnapshot{
               .configuration = MediaStatsConfiguration{
@@ -615,8 +641,10 @@ TEST(MediaApiClientTest, StartsSendingStatsRequestsAfterReceivingStatsUpdate) {
   // Disconnect the client to stop stats collection.
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
@@ -688,7 +716,8 @@ TEST(MediaApiClientTest, SendMediaStatsRequestReturnsError) {
       });
 
   absl::Status status = client.SendRequest(MediaStatsChannelFromClient{
-      .request = MediaStatsRequest{.request_id = 123}});
+      .request = MediaStatsRequest{.request_id = 123,
+                                   .upload_media_stats = std::nullopt}});
 
   EXPECT_THAT(
       status,
@@ -701,7 +730,8 @@ TEST(MediaApiClientTest, SendMediaStatsRequestReturnsError) {
 TEST(MediaApiClientTest, SendSessionControlRequestSucceeds) {
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  MessageToServer received_resource_request;
+  MessageToServer received_resource_request = SessionControlChannelFromClient{
+      .request = {.request_id = 0, .leave_request = std::nullopt}};
   EXPECT_CALL(*session_control_data_channel, SendRequest)
       .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
@@ -720,7 +750,8 @@ TEST(MediaApiClientTest, SendSessionControlRequestSucceeds) {
       });
 
   absl::Status status = client.SendRequest(SessionControlChannelFromClient{
-      .request = SessionControlRequest{.request_id = 123}});
+      .request = SessionControlRequest{.request_id = 123,
+                                       .leave_request = std::nullopt}});
 
   EXPECT_OK(status);
   ASSERT_TRUE(std::holds_alternative<SessionControlChannelFromClient>(
@@ -733,7 +764,8 @@ TEST(MediaApiClientTest, SendSessionControlRequestSucceeds) {
 TEST(MediaApiClientTest, SendVideoAssignmentRequestSucceeds) {
   auto video_assignment_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  MessageToServer received_resource_request;
+  MessageToServer received_resource_request = SessionControlChannelFromClient{
+      .request = {.request_id = 0, .leave_request = std::nullopt}};
   EXPECT_CALL(*video_assignment_data_channel, SendRequest)
       .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
@@ -752,7 +784,8 @@ TEST(MediaApiClientTest, SendVideoAssignmentRequestSucceeds) {
       });
 
   absl::Status status = client.SendRequest(VideoAssignmentChannelFromClient{
-      .request = VideoAssignmentRequest{.request_id = 123}});
+      .request = VideoAssignmentRequest{
+          .request_id = 123, .set_video_assignment_request = std::nullopt}});
 
   EXPECT_OK(status);
   ASSERT_TRUE(std::holds_alternative<VideoAssignmentChannelFromClient>(
@@ -788,7 +821,8 @@ TEST(MediaApiClientTest, SendRequestLogsWarningIfClientNotJoined) {
       });
   log.StartCapturingLogs();
   absl::Status status = client.SendRequest(VideoAssignmentChannelFromClient{
-      .request = VideoAssignmentRequest{.request_id = 123}});
+      .request = VideoAssignmentRequest{
+          .request_id = 123, .set_video_assignment_request = std::nullopt}});
 
   EXPECT_THAT(message,
               "SendRequest called while client is in ready state instead of "
@@ -799,7 +833,8 @@ TEST(MediaApiClientTest, SendRequestLogsWarningIfClientNotJoined) {
 TEST(MediaApiClientTest, LeaveConferenceSendsLeaveRequest) {
   auto session_control_data_channel =
       std::make_unique<MockConferenceDataChannel>();
-  MessageToServer received_resource_request;
+  MessageToServer received_resource_request = SessionControlChannelFromClient{
+      .request = {.request_id = 0, .leave_request = std::nullopt}};
   EXPECT_CALL(*session_control_data_channel, SendRequest)
       .WillOnce([&received_resource_request](MessageToServer request) {
         received_resource_request = std::move(request);
@@ -903,8 +938,10 @@ TEST(MediaApiClientTest, LeaveConferenceFailsIfDisconnected) {
       });
   SessionControlChannelToClient session_control_update =
       SessionControlChannelToClient{
+          .response = std::nullopt,
           .resources = std::vector<SessionControlResourceSnapshot>{
               SessionControlResourceSnapshot{
+                  .id = 0,
                   .session_status = SessionStatus{
                       .connection_state = SessionStatus::
                           ConferenceConnectionState::kDisconnected}}}};
@@ -960,7 +997,16 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
   ON_CALL(*mock_transceiver, receiver).WillByDefault(Return(mock_receiver));
   // Observer.
   auto observer = webrtc::make_ref_counted<MockMediaApiClientObserver>();
-  AudioFrame received_frame;
+  AudioFrame received_frame = {
+      .pcm16 = {},
+      .bits_per_sample = 0,
+      .sample_rate = 0,
+      .number_of_channels = 0,
+      .number_of_frames = 0,
+      .is_from_loudest_speaker = false,
+      .contributing_source = 0,
+      .synchronization_source = 0,
+  };
   EXPECT_CALL(*observer, OnAudioFrame)
       .WillOnce([&received_frame](AudioFrame frame) {
         received_frame = std::move(frame);

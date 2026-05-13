@@ -17,11 +17,13 @@
 #include "meet_clients/internal/media_stats_resource_handler.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/log/log.h"
@@ -32,6 +34,8 @@
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/media_stats_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -59,11 +63,18 @@ absl::StatusOr<MessageFromServer> MediaStatsResourceHandler::ParseUpdate(
                                             " json format: ", update));
   }
 
-  MediaStatsChannelToClient media_stats_update;
+  MediaStatsChannelToClient media_stats_update{
+      .response = std::nullopt,
+      .resources = {},
+  };
   // Response
   if (const Json* response_field = FindOrNull(json_resource_update, "response");
       response_field != nullptr) {
-    MediaStatsResponse response;
+    MediaStatsResponse response{
+        .request_id = 0,
+        .status = absl::OkStatus(),
+        .upload_media_stats = std::nullopt,
+    };
 
     // Response.requestId
     const Json* request_id_field = FindOrNull(*response_field, "requestId");
@@ -131,7 +142,14 @@ absl::StatusOr<MessageFromServer> MediaStatsResourceHandler::ParseUpdate(
     std::vector<MediaStatsResourceSnapshot> resources;
 
     const Json& resource_field = resources_field->at(0);
-    MediaStatsResourceSnapshot snapshot;
+    MediaStatsResourceSnapshot snapshot{
+        .id = 0,
+        .configuration =
+            MediaStatsConfiguration{
+                .upload_interval_seconds = 0,
+                .allowlist = {},
+            },
+    };
 
     // Resources.resourceSnapshot.configuration
     const Json* configuration_field =

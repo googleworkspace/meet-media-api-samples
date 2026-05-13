@@ -20,8 +20,11 @@
 #include <optional>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

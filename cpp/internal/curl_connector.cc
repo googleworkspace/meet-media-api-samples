@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -28,6 +29,8 @@
 #include "absl/strings/string_view.h"
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/internal/curl_request.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -79,12 +82,17 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
 
   VLOG(1) << "Connecting to " << full_join_endpoint;
 
-  CurlRequest curl_request(*curl_api_wrapper_);
-  curl_request.SetRequestUrl(std::move(full_join_endpoint));
-  curl_request.SetRequestHeader("Content-Type",
-                                "application/json;charset=UTF-8");
-  curl_request.SetRequestHeader("Authorization",
-                                absl::StrCat("Bearer ", access_token));
+  nlohmann::basic_json<> offer_json;
+  offer_json["offer"] = sdp_offer;
+  std::string offer_json_string = offer_json.dump();
+
+  VLOG(1) << "Join request offer: " << offer_json_string;
+
+  CurlRequest curl_request(
+      *curl_api_wrapper_, std::move(full_join_endpoint),
+      std::string(offer_json_string),
+      {{"Content-Type", "application/json;charset=UTF-8"},
+       {"Authorization", absl::StrCat("Bearer ", access_token)}});
 
   if (connection_timeout_ms.has_value()) {
     curl_request.SetConnectionTimeout(*connection_timeout_ms);
@@ -96,13 +104,6 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
   if (ca_cert_path_.has_value()) {
     curl_request.SetCaCertPath(*ca_cert_path_);
   }
-
-  nlohmann::basic_json<> offer_json;
-  offer_json["offer"] = sdp_offer;
-  std::string offer_json_string = offer_json.dump();
-
-  VLOG(1) << "Join request offer: " << offer_json_string;
-  curl_request.SetRequestBody(std::move(offer_json_string));
 
   absl::Status response_status = curl_request.Send();
   if (!response_status.ok()) {

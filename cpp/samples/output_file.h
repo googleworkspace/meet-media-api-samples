@@ -21,7 +21,10 @@
 #include <ios>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "meet_clients/samples/output_writer_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace media_api_samples {
 

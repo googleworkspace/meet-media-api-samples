@@ -18,8 +18,11 @@
 #define CPP_INTERNAL_TESTING_MOCK_MEDIA_API_CLIENT_OBSERVER_H_
 
 #include "gmock/gmock.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "meet_clients/api/media_api_client_interface.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
@@ -35,6 +36,7 @@
 #include "meet_clients/api/media_entries_resource.h"
 #include "meet_clients/api/participants_resource.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
 namespace media_api_samples {
 namespace {
 

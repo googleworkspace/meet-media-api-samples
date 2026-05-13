@@ -19,9 +19,12 @@
 
 #include <memory>
 
+#include "absl/base/nullability.h"
 #include "absl/status/statusor.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/scoped_refptr.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 

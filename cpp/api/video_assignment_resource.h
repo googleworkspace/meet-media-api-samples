@@ -22,7 +22,10 @@
 #include <string>
 #include <vector>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 
@@ -88,7 +91,7 @@ struct SetVideoAssignmentRequest {
 struct VideoAssignmentRequest {
   /// A unique client-generated identifier for this request. Different requests
   /// must never have the same request ID.
-  int64_t request_id = 0;
+  int64_t request_id;
 
   std::optional<SetVideoAssignmentRequest> set_video_assignment_request;
 };
@@ -103,7 +106,7 @@ struct VideoAssignmentResponse {
   struct SetVideoAssignmentResponse {};
 
   /// The request ID in the request this is the response to.
-  int64_t request_id = 0;
+  int64_t request_id;
   /// The response status for this request. This should be used by clients to
   /// determine the RPC result.
   absl::Status status;

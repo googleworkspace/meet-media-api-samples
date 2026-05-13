@@ -16,17 +16,21 @@
 
 #include "meet_clients/internal/media_stats_resource_handler.h"
 
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "third_party/icu/source/tools/toolutil/json-json.hpp"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/api/media_stats_resource.h"
 #include "meet_clients/api/session_control_resource.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 namespace {
@@ -395,7 +399,10 @@ TEST(MediaStatsResourceHandlerTest, ParsesClientRequest) {
 TEST(MediaStatsResourceHandlerTest, NoClientRequestIdReturnsErrorStatus) {
   absl::StatusOr<std::string> json_request =
       MediaStatsResourceHandler().StringifyRequest(
-          MediaStatsChannelFromClient());
+          MediaStatsChannelFromClient{.request = MediaStatsRequest{
+                                          .request_id = 0,
+                                          .upload_media_stats = std::nullopt,
+                                      }});
   ASSERT_FALSE(json_request.ok());
   EXPECT_EQ(json_request.status().code(), absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(json_request.status().message(),
@@ -406,7 +413,10 @@ TEST(MediaStatsResourceHandlerTest,
      StringifyWrongRequestTypeReturnsErrorStatus) {
   absl::StatusOr<std::string> json_request =
       MediaStatsResourceHandler().StringifyRequest(
-          SessionControlChannelFromClient());
+          SessionControlChannelFromClient{.request = SessionControlRequest{
+                                              .request_id = 1,
+                                              .leave_request = std::nullopt,
+                                          }});
   ASSERT_FALSE(json_request.ok());
   EXPECT_EQ(json_request.status().code(), absl::StatusCode::kInvalidArgument);
   EXPECT_THAT(json_request.status().message(),

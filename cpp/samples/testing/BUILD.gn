@@ -21,9 +21,11 @@ rtc_library("media_data") {
     "media_data.h",
   ]
   deps = [
-    "../../api:media_api_client_interface",
-    "../../../api:scoped_refptr",
     "../../../api/video:video_frame",
+    "../../../api:scoped_refptr",
+    "../../api:media_api_client_interface",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:nullability",
   ]
 }
 
@@ -31,8 +33,9 @@ rtc_library("mock_output_writer") {
   testonly = true
   sources = [ "mock_output_writer.h" ]
   deps = [
-    "..:output_writer_interface",
     "../../../test:test_support",
+    "..:output_writer_interface",
+    "//third_party/abseil-cpp/absl/base:nullability",
   ]
 }
 
@@ -40,11 +43,12 @@ rtc_library("mock_resource_manager") {
   testonly = true
   sources = [ "mock_resource_manager.h" ]
   deps = [
-    "..:resource_manager_interface",
+    "../../../test:test_support",
     "../../api:media_entries_resource",
     "../../api:participants_resource",
+    "..:resource_manager_interface",
+    "//third_party/abseil-cpp/absl/base:nullability",
     "//third_party/abseil-cpp/absl/status:statusor",
     "//third_party/abseil-cpp/absl/time",
-    "../../../test:test_support",
   ]
 }

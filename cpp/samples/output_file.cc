@@ -18,6 +18,10 @@
 
 #include <ios>
 
+#include "absl/base/nullability.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace media_api_samples {
 
 void OutputFile::Write(const char* content, std::streamsize size) {
