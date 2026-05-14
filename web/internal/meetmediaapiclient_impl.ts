@@ -62,12 +62,32 @@ const MAXIMUM_VIDEO_STREAMS = 3;
  * Implementation of MeetMediaApiClient.
  */
 export class MeetMediaApiClientImpl implements MeetMediaApiClient {
-  // Public properties
+  /**
+   * The status of the session. Subscribable to changes in the session status.
+   */
   readonly sessionStatus: Subscribable<MeetSessionStatus>;
+  /**
+   * The Meet stream tracks in the meeting. Subscribable to changes in the Meet
+   * stream track collection.
+   */
   readonly meetStreamTracks: Subscribable<MeetStreamTrack[]>;
+  /**
+   * The media entries in the meeting. Subscribable to changes in the media
+   * entry collection.
+   */
   readonly mediaEntries: Subscribable<MediaEntry[]>;
+  /**
+   * The participants in the meeting. Subscribable to changes in the
+   * participant collection.
+   */
   readonly participants: Subscribable<Participant[]>;
+  /**
+   * The presenter in the meeting. Subscribable to changes in the presenter.
+   */
   readonly presenter: Subscribable<MediaEntry | undefined>;
+  /**
+   * The screenshare in the meeting. Subscribable to changes in the screenshare.
+   */
   readonly screenshare: Subscribable<MediaEntry | undefined>;
 
   // Private properties
