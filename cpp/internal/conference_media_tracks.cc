@@ -39,7 +39,7 @@ namespace meet {
 void ConferenceAudioTrack::OnData(
     const void* audio_data, int bits_per_sample, int sample_rate,
     size_t number_of_channels, size_t number_of_frames,
-    absl::optional<int64_t> absolute_capture_timestamp_ms) {
+    std::optional<int64_t> absolute_capture_timestamp_ms) {
   if (bits_per_sample != 16) {
     LOG(ERROR) << "Unsupported bits per sample: " << bits_per_sample
                << ". Expected 16.";
