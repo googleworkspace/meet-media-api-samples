@@ -154,14 +154,12 @@ TEST(ConferencePeerConnectionTest,
      ConnectFailsWhenSettingLocalDescriptionFails) {
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
   EXPECT_CALL(*peer_connection, SetLocalDescription(_))
-      .WillOnce(
-          [&](webrtc::scoped_refptr<
-              webrtc::SetLocalDescriptionObserverInterface>
-                  observer) {
-            observer->OnSetLocalDescriptionComplete(
-                webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
-                                 "local-description-error"));
-          });
+      .WillOnce([&](webrtc::scoped_refptr<
+                    webrtc::SetLocalDescriptionObserverInterface>
+                        observer) {
+        observer->OnSetLocalDescriptionComplete(webrtc::RTCError(
+            webrtc::RTCErrorType::INTERNAL_ERROR, "local-description-error"));
+      });
   ConferencePeerConnection conference_peer_connection(
       CreateSignalingThread(), std::make_unique<MockHttpConnector>());
   conference_peer_connection.SetPeerConnection(std::move(peer_connection));
@@ -244,10 +242,10 @@ TEST(ConferencePeerConnectionTest,
 
 TEST(ConferencePeerConnectionTest,
      ClosesPeerConnectionWhenConferencePeerConnectionIsClosed) {
+  absl::Notification notification;
   ConferencePeerConnection conference_peer_connection(
       CreateSignalingThread(), std::make_unique<MockHttpConnector>());
   auto peer_connection = webrtc::make_ref_counted<MockPeerConnection>();
-  absl::Notification notification;
   EXPECT_CALL(*peer_connection, Close())
       .Times(2)
       .WillRepeatedly([&notification]() {
