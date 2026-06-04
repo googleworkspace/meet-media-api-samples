@@ -451,7 +451,6 @@ rtc_test("media_api_client_test") {
 rtc_test("media_api_client_factory_test") {
   sources = [ "media_api_client_factory_test.cc" ]
   deps = [
-    "../../api:libjingle_peerconnection_api",
     "../../api:make_ref_counted",
     "../../api:mock_data_channel",
     "../../api:mock_peer_connection_factory_interface",
