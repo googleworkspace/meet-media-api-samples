@@ -382,20 +382,24 @@ export class MediaEntriesChannelHandler {
       internalMeetStreamTrack,
     ] of this.internalMeetStreamTrackMap.entries()) {
       // Only audio tracks are assigned here.
-      if (meetStreamTrack.mediaStreamTrack.kind !== 'audio') continue;
-      const receiver = internalMeetStreamTrack.receiver;
-      const contributingSources: RTCRtpContributingSource[] =
-        receiver.getContributingSources();
-      for (const contributingSource of contributingSources) {
-        if (contributingSource.source === internalMediaEntry.audioCsrc) {
-          internalMediaEntry.audioMeetStreamTrack.set(meetStreamTrack);
-          internalMeetStreamTrack.mediaEntry.set(mediaEntry);
-          return;
+      if (
+        meetStreamTrack.mediaStreamTrack.kind === 'audio' &&
+        !meetStreamTrack.mediaEntry.get()
+      ) {
+        const receiver = internalMeetStreamTrack.receiver;
+        const contributingSources: RTCRtpContributingSource[] =
+          receiver.getContributingSources();
+        for (const contributingSource of contributingSources) {
+          if (contributingSource.source === internalMediaEntry.audioCsrc) {
+            internalMediaEntry.audioMeetStreamTrack.set(meetStreamTrack);
+            internalMeetStreamTrack.mediaEntry.set(mediaEntry);
+            return;
+          }
         }
+        // If Audio Csrc is not found in contributing sources, fall back to
+        // polling frames for assignment.
+        internalMeetStreamTrack.maybeAssignMediaEntryOnFrame(mediaEntry, 'audio');
       }
-      // If Audio Csrc is not found in contributing sources, fall back to
-      // polling frames for assignment.
-      internalMeetStreamTrack.maybeAssignMediaEntryOnFrame(mediaEntry, 'audio');
     }
   }
 }
