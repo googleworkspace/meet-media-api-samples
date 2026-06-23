@@ -548,7 +548,6 @@ rtc_test("stats_request_from_report_test") {
     "../../api/units:timestamp",
     "../../api:rtc_stats_api",
     "../../api:scoped_refptr",
-    "../../stats:rtc_stats",
     "../../test:test_support",
     "../api:media_stats_resource",
     ":stats_request_from_report",
