@@ -307,7 +307,10 @@ export class VideoAssignmentChannelHandler {
   private assignVideoMeetStreamTrack(mediaEntry: MediaEntry) {
     for (const [meetStreamTrack, internalMeetStreamTrack] of this
       .internalMeetStreamTrackMap) {
-      if (meetStreamTrack.mediaStreamTrack.kind === 'video') {
+      if (
+        meetStreamTrack.mediaStreamTrack.kind === 'video' &&
+        !meetStreamTrack.mediaEntry.get()
+      ) {
         internalMeetStreamTrack.maybeAssignMediaEntryOnFrame(
           mediaEntry,
           'video',

@@ -22,6 +22,7 @@ import {MeetSessionStatus} from '../types/meetmediaapiclient';
 // Function maps session status to strings. If the session is joined, we go
 // ahead and request a layout.
 async function handleSessionChange(status: MeetSessionStatus) {
+  console.log('handleSessionChange:', status);
   let statusString;
   switch (status.connectionState) {
     case MeetConnectionState.WAITING:
@@ -86,6 +87,7 @@ function handleStreamChange(meetStreamTracks: MeetStreamTrack[]) {
       const videoIdString = `video-${videoId}`;
       const videoElement = document.getElementById(videoIdString);
       (videoElement! as HTMLVideoElement).srcObject = mediaStream;
+      (videoElement! as HTMLVideoElement).play();
       trackIdToElementId.set(meetStreamTrack.mediaStreamTrack.id, videoId);
     } else if (meetStreamTrack.mediaStreamTrack.kind === 'audio') {
       const elementId = trackIdToElementId.get(
@@ -112,6 +114,7 @@ function handleStreamChange(meetStreamTracks: MeetStreamTrack[]) {
       const audioIdString = `audio-${audioId}`;
       const audioElement = document.getElementById(audioIdString);
       (audioElement! as HTMLAudioElement).srcObject = mediaStream;
+      (audioElement! as HTMLAudioElement).play();
       trackIdToElementId.set(meetStreamTrack.mediaStreamTrack.id, audioId);
     }
   });
@@ -141,7 +144,6 @@ export function createClient(
   (window as any).client = client;
   client.sessionStatus.subscribe(handleSessionChange);
   client.meetStreamTracks.subscribe(handleStreamChange);
-  console.log('Media API Client created.');
 }
 
 /**
