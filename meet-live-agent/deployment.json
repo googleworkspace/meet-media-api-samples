@@ -1,0 +1,21 @@
+{
+  "addOns": {
+    "common": {
+      "name": "Meet Live Agent",
+      "logoUrl": "https://developers.google.com/chat/images/quickstart-app-avatar.png"
+    },
+    "meet": {
+      "web": {
+        "logoUrl": "https://developers.google.com/chat/images/quickstart-app-avatar.png",
+        "addOnOrigins": [
+          "https://YOUR_CLOUD_RUN_URL"
+        ],
+        "sidePanelUrl": "https://YOUR_CLOUD_RUN_URL",
+        "darkModeLogoUrl": "https://developers.google.com/chat/images/quickstart-app-avatar.png"
+      }
+    },
+    "httpOptions": {
+      "granularOauthPermissionSupport": "OPT_IN"
+    }
+  }
+}
