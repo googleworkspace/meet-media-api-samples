@@ -48,7 +48,6 @@ export interface InternalMediaEntry {
   readonly audioMeetStreamTrack: SubscribableDelegate<
     MeetStreamTrack | undefined
   >;
-  readonly isLoudestSpeaker: SubscribableDelegate<boolean>;
   readonly participant: SubscribableDelegate<Participant | undefined>;
 }
 
@@ -69,7 +68,7 @@ export interface InternalMediaLayout {
 export interface InternalMeetStreamTrack {
   readonly mediaEntry: SubscribableDelegate<MediaEntry | undefined>;
   readonly receiver: RTCRtpReceiver;
-  videoSsrc?: number;
+  readonly videoSsrc?: number;
   maybeAssignMediaEntryOnFrame: (
     mediaEntry: MediaEntry,
     kind: 'audio' | 'video',

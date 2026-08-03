@@ -23,14 +23,11 @@ import {SubscribableDelegate} from './subscribable_impl';
 
 import {InternalMediaEntry, InternalMeetStreamTrack} from './internal_types';
 
-const LOUDEST_SPEAKER_CSRC = 42;
-
 /**
  * Implementation of InternalMeetStreamTrack.
  */
 export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
   private readonly reader: ReadableStreamDefaultReader;
-  videoSsrc?: number;
 
   constructor(
     readonly receiver: RTCRtpReceiver,
@@ -59,7 +56,7 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     // Only want to check the media entry if it has the correct csrc type
     // for this meet stream track.
     if (
-      !this.mediaStreamTrackSrcPresent(mediaEntry) ||
+      !this.mediaStreamTrackCrscTypePresent(mediaEntry) ||
       this.meetStreamTrack.mediaStreamTrack.kind !== kind
     ) {
       return;
@@ -71,8 +68,16 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
       if (frame.done) break;
       if (kind === 'audio') {
         await this.onAudioFrame(mediaEntry);
-      } else if (kind === 'video') {
-        this.onVideoFrame(mediaEntry);
+      } else {
+        const internalMediaEntry = this.internalMediaEntryMap.get(mediaEntry);
+        const synchronizationSources: RTCRtpSynchronizationSource[] =
+          this.receiver.getSynchronizationSources();
+        for (const synchronizationSource of synchronizationSources) {
+          if (synchronizationSource.source === internalMediaEntry!.videoSsrc) {
+            internalMediaEntry!.videoMeetStreamTrack.set(this.meetStreamTrack);
+            this.mediaEntry.set(mediaEntry);
+          }
+        }
       }
       frame.value.close();
     }
@@ -83,32 +88,12 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     const internalMediaEntry = this.internalMediaEntryMap.get(mediaEntry);
     const contributingSources: RTCRtpContributingSource[] =
       this.receiver.getContributingSources();
-    const isLoudestSpeaker = contributingSources.some(
-      ({source}) => source === LOUDEST_SPEAKER_CSRC,
-    );
-    const hasParticipantCsrc = contributingSources.some(
-      ({source}) => source === internalMediaEntry!.audioCsrc,
-    );
-
-    if (hasParticipantCsrc) {
-      internalMediaEntry!.audioMeetStreamTrack.set(this.meetStreamTrack);
-      this.mediaEntry.set(mediaEntry);
-      internalMediaEntry!.isLoudestSpeaker.set(isLoudestSpeaker);
-    }
-  }
-
-  private onVideoFrame(mediaEntry: MediaEntry): void {
-    const internalMediaEntry = this.internalMediaEntryMap.get(mediaEntry);
-    const synchronizationSources: RTCRtpSynchronizationSource[] =
-      this.receiver.getSynchronizationSources();
-    for (const syncSource of synchronizationSources) {
-      if (syncSource.source === internalMediaEntry!.videoSsrc) {
-        this.videoSsrc = syncSource.source;
-        internalMediaEntry!.videoMeetStreamTrack.set(this.meetStreamTrack);
+    for (const contributingSource of contributingSources) {
+      if (contributingSource.source === internalMediaEntry!.audioCsrc) {
+        internalMediaEntry!.audioMeetStreamTrack.set(this.meetStreamTrack);
         this.mediaEntry.set(mediaEntry);
       }
     }
-    return;
   }
 
   private mediaEntryTrackAssigned(
@@ -124,7 +109,7 @@ export class InternalMeetStreamTrackImpl implements InternalMeetStreamTrack {
     return false;
   }
 
-  private mediaStreamTrackSrcPresent(mediaEntry: MediaEntry): boolean {
+  private mediaStreamTrackCrscTypePresent(mediaEntry: MediaEntry): boolean {
     const internalMediaEntry = this.internalMediaEntryMap.get(mediaEntry);
     if (this.meetStreamTrack.mediaStreamTrack.kind === 'audio') {
       return !!internalMediaEntry?.audioCsrc;
