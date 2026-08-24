@@ -595,5 +595,24 @@ TEST(MediaApiClientFactoryTest,
                        "error"));
 }
 
+TEST(MediaApiClientFactoryTest,
+     ConstructorWithHttpConnectorProviderInstantiatesSuccessfully) {
+  MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
+    return std::make_unique<MockHttpConnector>();
+  };
+  MediaApiClientFactory factory(std::move(http_connector_provider));
+
+  absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
+      media_api_client_status = factory.CreateMediaApiClient(
+          MediaApiClientConfiguration{
+              .receiving_video_stream_count = 4,
+              .enable_audio_streams = true,
+          },
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
+
+  EXPECT_THAT(media_api_client_status,
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 }  // namespace
 }  // namespace meet
