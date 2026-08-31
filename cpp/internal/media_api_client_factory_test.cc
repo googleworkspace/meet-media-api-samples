@@ -58,7 +58,8 @@ class MockHttpConnector : public HttpConnectorInterface {
               (absl::string_view join_endpoint, absl::string_view conference_id,
                absl::string_view access_token, absl::string_view sdp_offer,
                std::optional<int> connection_timeout_ms,
-               std::optional<int> request_timeout_ms),
+               std::optional<int> request_timeout_ms,
+               std::optional<int> confirmation_timeout_ms),
               (override));
 };
 
@@ -593,6 +594,25 @@ TEST(MediaApiClientFactoryTest,
               StatusIs(absl::StatusCode::kInternal,
                        "Failed to create video assignment data channel: test "
                        "error"));
+}
+
+TEST(MediaApiClientFactoryTest,
+     ConstructorWithHttpConnectorProviderInstantiatesSuccessfully) {
+  MediaApiClientFactory::HttpConnectorProvider http_connector_provider = []() {
+    return std::make_unique<MockHttpConnector>();
+  };
+  MediaApiClientFactory factory(std::move(http_connector_provider));
+
+  absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
+      media_api_client_status = factory.CreateMediaApiClient(
+          MediaApiClientConfiguration{
+              .receiving_video_stream_count = 4,
+              .enable_audio_streams = true,
+          },
+          webrtc::make_ref_counted<MockMediaApiClientObserver>());
+
+  EXPECT_THAT(media_api_client_status,
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 }  // namespace

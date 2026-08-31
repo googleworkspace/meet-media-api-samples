@@ -85,7 +85,8 @@ class MockHttpConnector : public HttpConnectorInterface {
                absl::string_view access_token,
                absl::string_view local_description,
                std::optional<int> connection_timeout_ms,
-               std::optional<int> request_timeout_ms),
+               std::optional<int> request_timeout_ms,
+               std::optional<int> confirmation_timeout_ms),
               (override));
 };
 
@@ -111,7 +112,7 @@ TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
   auto http_connector = std::make_unique<MockHttpConnector>();
   EXPECT_CALL(*http_connector,
               ConnectActiveConference("join-endpoint", "conference-id",
-                                      "access-token", kWebRtcOffer, _, _))
+                                      "access-token", kWebRtcOffer, _, _, _))
       .WillOnce(Return(kWebRtcAnswer));
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(
@@ -132,7 +133,8 @@ TEST(ConferencePeerConnectionTest, ConnectSucceeds) {
   absl::Status connect_status = conference_peer_connection.Connect(
       "join-endpoint", "conference-id", "access-token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_TRUE(connect_status.ok());
 }
@@ -144,7 +146,8 @@ TEST(ConferencePeerConnectionTest, ConnectFailsWithNullPeerConnection) {
   absl::Status connect_status = conference_peer_connection.Connect(
       "join-endpoint", "conference-id", "access-token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(connect_status, StatusIs(absl::StatusCode::kInternal,
                                        "Peer connection is null."));
@@ -167,7 +170,8 @@ TEST(ConferencePeerConnectionTest,
   absl::Status connect_status = conference_peer_connection.Connect(
       "join-endpoint", "conference-id", "access-token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(connect_status, StatusIs(absl::StatusCode::kInternal,
                                        HasSubstr("local-description-error")));
@@ -186,7 +190,7 @@ TEST(ConferencePeerConnectionTest, ConnectFailsWhenHttpConnectorFails) {
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
-  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _))
+  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _, _))
       .WillOnce(Return(absl::InternalError("http-connector-error")));
   ConferencePeerConnection conference_peer_connection(
       CreateSignalingThread(), std::move(http_connector));
@@ -195,7 +199,8 @@ TEST(ConferencePeerConnectionTest, ConnectFailsWhenHttpConnectorFails) {
   absl::Status connect_status = conference_peer_connection.Connect(
       "join-endpoint", "conference-id", "access-token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(connect_status, StatusIs(absl::StatusCode::kInternal,
                                        HasSubstr("http-connector-error")));
@@ -215,7 +220,7 @@ TEST(ConferencePeerConnectionTest,
   EXPECT_CALL(*peer_connection, local_description())
       .WillOnce(Return(answer_description.get()));
   auto http_connector = std::make_unique<MockHttpConnector>();
-  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _))
+  EXPECT_CALL(*http_connector, ConnectActiveConference(_, _, _, _, _, _, _))
       .WillOnce(Return(kWebRtcAnswer));
   EXPECT_CALL(*peer_connection, SetRemoteDescription(_, _))
       .WillOnce(
@@ -234,7 +239,8 @@ TEST(ConferencePeerConnectionTest,
   absl::Status connect_status = conference_peer_connection.Connect(
       "join-endpoint", "conference-id", "access-token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_THAT(connect_status, StatusIs(absl::StatusCode::kInternal,
                                        HasSubstr("remote-description-error")));

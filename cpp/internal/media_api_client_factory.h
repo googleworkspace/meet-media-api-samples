@@ -45,6 +45,12 @@ class MediaApiClientFactory : public MediaApiClientFactoryInterface {
   // Default constructor that builds clients with real dependencies.
   MediaApiClientFactory();
 
+  // Constructor with custom HttpConnectorProvider and default WebRTC factory.
+  explicit MediaApiClientFactory(HttpConnectorProvider http_connector_provider)
+      : MediaApiClientFactory() {
+    http_connector_provider_ = std::move(http_connector_provider);
+  }
+
   // Constructor with dependency providers, useful for testing.
   explicit MediaApiClientFactory(
       PeerConnectionFactoryProvider peer_connection_factory_provider,

@@ -524,6 +524,7 @@ rtc_test("curl_connector_test") {
     "//third_party/abseil-cpp/absl/base:nullability",
     "//third_party/abseil-cpp/absl/status:statusor",
     "//third_party/abseil-cpp/absl/strings:cord",
+    "//third_party/abseil-cpp/absl/strings:string_view",
     "//third_party/curl",
     "//third_party/jsoncpp",
   ]
