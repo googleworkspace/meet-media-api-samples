@@ -137,7 +137,8 @@ void ConferencePeerConnection::OnTrack(
 absl::Status ConferencePeerConnection::Connect(
     absl::string_view join_endpoint, absl::string_view conference_id,
     absl::string_view access_token, std::optional<int> connection_timeout_ms,
-    std::optional<int> request_timeout_ms) {
+    std::optional<int> request_timeout_ms,
+    std::optional<int> confirmation_timeout_ms) {
   if (peer_connection_ == nullptr) {
     return absl::InternalError("Peer connection is null.");
   }
@@ -154,7 +155,7 @@ absl::Status ConferencePeerConnection::Connect(
   absl::StatusOr<std::string> remote_description =
       http_connector_->ConnectActiveConference(
           join_endpoint, conference_id, access_token, local_description.value(),
-          connection_timeout_ms, request_timeout_ms);
+          connection_timeout_ms, request_timeout_ms, confirmation_timeout_ms);
   if (!remote_description.ok()) {
     return remote_description.status();
   }

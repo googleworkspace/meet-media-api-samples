@@ -52,7 +52,8 @@ class ConferencePeerConnectionInterface {
                                absl::string_view conference_id,
                                absl::string_view access_token,
                                std::optional<int> connection_timeout_ms,
-                               std::optional<int> request_timeout_ms) = 0;
+                               std::optional<int> request_timeout_ms,
+                               std::optional<int> confirmation_timeout_ms) = 0;
 
   // Closes the conference peer connection, preventing any further callbacks.
   virtual void Close() = 0;
