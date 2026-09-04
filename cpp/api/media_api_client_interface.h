@@ -256,7 +256,20 @@ class MediaApiClientInterface {
   virtual absl::Status ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,
       absl::string_view access_token, std::optional<int> connection_timeout_ms,
-      std::optional<int> request_timeout_ms) = 0;
+      std::optional<int> request_timeout_ms,
+      std::optional<int> confirmation_timeout_ms) = 0;
+
+  // Overlead for `ConnectActiveConference` that does not set the confirmation
+  /// timeout, using the default value instead.
+  absl::Status ConnectActiveConference(absl::string_view join_endpoint,
+                                       absl::string_view conference_id,
+                                       absl::string_view access_token,
+                                       std::optional<int> connection_timeout_ms,
+                                       std::optional<int> request_timeout_ms) {
+    return ConnectActiveConference(join_endpoint, conference_id, access_token,
+                                   connection_timeout_ms, request_timeout_ms,
+                                   /*confirmation_timeout_ms=*/std::nullopt);
+  }
 
   /// Convenience method for sending a `SessionControlChannelFromClient` request
   /// with a `LeaveRequest` to Meet servers. This tells the server that the

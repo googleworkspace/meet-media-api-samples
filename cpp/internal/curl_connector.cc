@@ -76,21 +76,27 @@ absl::StatusOr<std::string> CurlConnector::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
     absl::string_view access_token, absl::string_view sdp_offer,
     std::optional<int> connection_timeout_ms,
-    std::optional<int> request_timeout_ms) {
+    std::optional<int> request_timeout_ms,
+    std::optional<int> confirmation_timeout_ms) {
   std::string full_join_endpoint = absl::StrCat(
       join_endpoint, "/spaces/", conference_id, ":connectActiveConference");
 
   VLOG(1) << "Connecting to " << full_join_endpoint;
 
-  nlohmann::basic_json<> offer_json;
-  offer_json["offer"] = sdp_offer;
-  std::string offer_json_string = offer_json.dump();
+  nlohmann::basic_json<> request_json;
+  request_json["offer"] = sdp_offer;
+  if (confirmation_timeout_ms.has_value()) {
+    request_json["config"]["confirmation_timeout"] =
+        absl::StrCat(*confirmation_timeout_ms / 1000.0, "s");
+  }
 
-  VLOG(1) << "Join request offer: " << offer_json_string;
+  std::string request_json_string = request_json.dump();
+
+  VLOG(1) << "Join request: " << request_json_string;
 
   CurlRequest curl_request(
       *curl_api_wrapper_, std::move(full_join_endpoint),
-      std::string(offer_json_string),
+      std::string(request_json_string),
       {{"Content-Type", "application/json;charset=UTF-8"},
        {"Authorization", absl::StrCat("Bearer ", access_token)}});
 
