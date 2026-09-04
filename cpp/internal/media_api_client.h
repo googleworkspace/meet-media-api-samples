@@ -110,7 +110,8 @@ class MediaApiClient : public MediaApiClientInterface {
   absl::Status ConnectActiveConference(
       absl::string_view join_endpoint, absl::string_view conference_id,
       absl::string_view access_token, std::optional<int> connection_timeout_ms,
-      std::optional<int> request_timeout_ms) override;
+      std::optional<int> request_timeout_ms,
+      std::optional<int> confirmation_timeout_ms) override;
   absl::Status LeaveConference(int64_t request_id) override;
   absl::Status SendRequest(const MessageToServer& request) override;
 

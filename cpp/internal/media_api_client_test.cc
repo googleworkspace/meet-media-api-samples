@@ -98,7 +98,8 @@ class MockConferencePeerConnection : public ConferencePeerConnectionInterface {
               (absl::string_view join_endpoint, absl::string_view conference_id,
                absl::string_view access_token,
                std::optional<int> connection_timeout_ms,
-               std::optional<int> request_timeout_ms),
+               std::optional<int> request_timeout_ms,
+               std::optional<int> confirmation_timeout_ms),
               (override));
   MOCK_METHOD(void, Close, (), (override));
   MOCK_METHOD(void, SetTrackSignaledCallback, (TrackSignaledCallback callback),
@@ -135,8 +136,8 @@ TEST(MediaApiClientTest, ConnectActiveConferenceSucceeds) {
   EXPECT_CALL(*observer, OnDisconnected).Times(0);
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   absl::Notification connect_called_notification;
-  EXPECT_CALL(*peer_connection,
-              Connect("join_endpoint", "conference_id", "access_token", _, _))
+  EXPECT_CALL(*peer_connection, Connect("join_endpoint", "conference_id",
+                                        "access_token", _, _, _))
       .WillOnce([&connect_called_notification] {
         connect_called_notification.Notify();
         return absl::OkStatus();
@@ -149,7 +150,8 @@ TEST(MediaApiClientTest, ConnectActiveConferenceSucceeds) {
   absl::Status status = client.ConnectActiveConference(
       "join_endpoint", "conference_id", "access_token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
   connect_called_notification.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_TRUE(status.ok());
@@ -168,8 +170,8 @@ TEST(MediaApiClientTest,
         disconnected_notification.Notify();
       });
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
-  EXPECT_CALL(*peer_connection,
-              Connect("join_endpoint", "conference_id", "access_token", _, _))
+  EXPECT_CALL(*peer_connection, Connect("join_endpoint", "conference_id",
+                                        "access_token", _, _, _))
       .WillOnce([] { return absl::InternalError("Failed to connect."); });
   MediaApiClient client(CreateThread("client_thread"),
                         CreateThread("worker_thread"), std::move(observer),
@@ -179,7 +181,8 @@ TEST(MediaApiClientTest,
   absl::Status connect_status = client.ConnectActiveConference(
       "join_endpoint", "conference_id", "access_token",
       /*connection_timeout_ms=*/std::nullopt,
-      /*request_timeout_ms=*/std::nullopt);
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
   disconnected_notification.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_TRUE(connect_status.ok());
@@ -197,8 +200,8 @@ TEST(MediaApiClientTest,
       CreateThread("client_thread"), CreateThread("worker_thread"),
       webrtc::make_ref_counted<MockMediaApiClientObserver>(),
       std::move(peer_connection), CreateConferenceDataChannels());
-  EXPECT_CALL(*peer_connection_ptr,
-              Connect("join_endpoint", "conference_id", "access_token", _, _))
+  EXPECT_CALL(*peer_connection_ptr, Connect("join_endpoint", "conference_id",
+                                            "access_token", _, _, _))
       .WillOnce([&client] {
         // Disconnect the client before the connection completes, changing the
         // client's state.
@@ -217,10 +220,11 @@ TEST(MediaApiClientTest,
           });
   log.StartCapturingLogs();
 
-  (void)client.ConnectActiveConference("join_endpoint", "conference_id",
-                                       "access_token",
-                                       /*connection_timeout_ms=*/std::nullopt,
-                                       /*request_timeout_ms=*/std::nullopt);
+  (void)client.ConnectActiveConference(
+      "join_endpoint", "conference_id", "access_token",
+      /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
 
   EXPECT_TRUE(
       log_notification.WaitForNotificationWithTimeout(absl::Seconds(1)));
@@ -320,7 +324,7 @@ TEST(MediaApiClientTest,
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   absl::Notification connect_called_notification;
   ON_CALL(*peer_connection,
-          Connect("join_endpoint", "conference_id", "access_token", _, _))
+          Connect("join_endpoint", "conference_id", "access_token", _, _, _))
       .WillByDefault([&connect_called_notification] {
         connect_called_notification.Notify();
         return absl::OkStatus();
@@ -344,10 +348,11 @@ TEST(MediaApiClientTest,
           .session_control = std::move(session_control_data_channel),
           .video_assignment = std::make_unique<MockConferenceDataChannel>(),
       });
-  (void)client.ConnectActiveConference("join_endpoint", "conference_id",
-                                       "access_token",
-                                       /*connection_timeout_ms=*/std::nullopt,
-                                       /*request_timeout_ms=*/std::nullopt);
+  (void)client.ConnectActiveConference(
+      "join_endpoint", "conference_id", "access_token",
+      /*connection_timeout_ms=*/std::nullopt,
+      /*request_timeout_ms=*/std::nullopt,
+      /*confirmation_timeout_ms=*/std::nullopt);
   ASSERT_TRUE(connect_called_notification.WaitForNotificationWithTimeout(
       absl::Seconds(1)));
 
@@ -1007,10 +1012,11 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
       .contributing_source = 0,
       .synchronization_source = 0,
   };
-  EXPECT_CALL(*observer, OnAudioFrame)
-      .WillOnce([&received_frame](AudioFrame frame) {
-        received_frame = std::move(frame);
-      });
+  absl::Notification frame_received;
+  EXPECT_CALL(*observer, OnAudioFrame).WillOnce([&](AudioFrame frame) {
+    received_frame = std::move(frame);
+    frame_received.Notify();
+  });
   // Peer connection.
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
   ConferencePeerConnection::TrackSignaledCallback track_signaled_callback;
@@ -1032,6 +1038,7 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
                            /*number_of_channels=*/2,
                            /*number_of_frames=*/100,
                            /*absolute_capture_timestamp_ms=*/std::nullopt);
+  frame_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_THAT(received_frame.pcm16, SizeIs(100 * 2));
   EXPECT_EQ(received_frame.bits_per_sample, 16);

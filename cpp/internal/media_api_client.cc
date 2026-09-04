@@ -80,7 +80,8 @@ class OnRTCStatsCollected : public webrtc::RTCStatsCollectorCallback {
 absl::Status MediaApiClient::ConnectActiveConference(
     absl::string_view join_endpoint, absl::string_view conference_id,
     absl::string_view access_token, std::optional<int> connection_timeout_ms,
-    std::optional<int> request_timeout_ms) {
+    std::optional<int> request_timeout_ms,
+    std::optional<int> confirmation_timeout_ms) {
   {
     absl::MutexLock lock(mutex_);
     if (state_ != State::kReady) {
@@ -92,37 +93,33 @@ absl::Status MediaApiClient::ConnectActiveConference(
   }
   VLOG(1) << "Client switched to connecting state.";
 
-  client_thread_->PostTask(SafeTask(alive_flag_, [&,
-                                                  join_endpoint = std::string(
-                                                      join_endpoint),
-                                                  conference_id = std::string(
-                                                      conference_id),
-                                                  access_token =
-                                                      std::string(access_token),
-                                                  connection_timeout_ms =
-                                                      connection_timeout_ms,
-                                                  request_timeout_ms =
-                                                      request_timeout_ms]() {
-    absl::Status connect_status = conference_peer_connection_->Connect(
-        join_endpoint, conference_id, access_token, connection_timeout_ms,
-        request_timeout_ms);
-    if (!connect_status.ok()) {
-      MaybeDisconnect(connect_status);
-      return;
-    }
+  client_thread_->PostTask(SafeTask(
+      alive_flag_, [&, join_endpoint = std::string(join_endpoint),
+                    conference_id = std::string(conference_id),
+                    access_token = std::string(access_token),
+                    connection_timeout_ms = connection_timeout_ms,
+                    request_timeout_ms = request_timeout_ms,
+                    confirmation_timeout_ms = confirmation_timeout_ms]() {
+        absl::Status connect_status = conference_peer_connection_->Connect(
+            join_endpoint, conference_id, access_token, connection_timeout_ms,
+            request_timeout_ms, confirmation_timeout_ms);
+        if (!connect_status.ok()) {
+          MaybeDisconnect(connect_status);
+          return;
+        }
 
-    {
-      absl::MutexLock lock(mutex_);
-      if (state_ != State::kConnecting) {
-        LOG(WARNING)
-            << "Client in " << StateToString(state_)
-            << " state instead of connecting state after starting connection.";
-        return;
-      }
-      state_ = State::kJoining;
-    }
-    VLOG(1) << "Client switched to joining state.";
-  }));
+        {
+          absl::MutexLock lock(mutex_);
+          if (state_ != State::kConnecting) {
+            LOG(WARNING) << "Client in " << StateToString(state_)
+                         << " state instead of connecting state after starting "
+                            "connection.";
+            return;
+          }
+          state_ = State::kJoining;
+        }
+        VLOG(1) << "Client switched to joining state.";
+      }));
 
   return absl::OkStatus();
 }
@@ -205,7 +202,8 @@ void MediaApiClient::HandleTrackSignaled(
       auto conference_audio_track = std::make_unique<ConferenceAudioTrack>(
           mid, std::move(receiver),
           std::bind_front(&MediaApiClientObserverInterface::OnAudioFrame,
-                          observer_));
+                          observer_),
+          client_thread_.get());
       auto audio_track =
           static_cast<webrtc::AudioTrackInterface*>(receiver_track.get());
       audio_track->AddSink(conference_audio_track.get());
@@ -345,25 +343,35 @@ void MediaApiClient::CollectStats() {
   }
 
   auto callback = webrtc::make_ref_counted<OnRTCStatsCollected>(
-      [this](
-          const webrtc::scoped_refptr<const webrtc::RTCStatsReport> &report) {
-        MediaStatsChannelFromClient request = StatsRequestFromReport(
-            report, stats_config_.stats_request_id, stats_config_.allowlist);
-        stats_config_.stats_request_id++;
-        absl::Status send_status =
-            data_channels_.media_stats->SendRequest(std::move(request));
-        if (!send_status.ok()) {
-          LOG(ERROR) << "Failed to send stats request: " << send_status;
-        }
+      [this, safety = alive_flag_](
+          const webrtc::scoped_refptr<const webrtc::RTCStatsReport>& report) {
+        client_thread_->PostTask(
+            SafeTask(safety, [this, report = std::move(report)]() {
+              {
+                absl::MutexLock lock(mutex_);
+                if (state_ == State::kDisconnected) {
+                  return;
+                }
+              }
+              MediaStatsChannelFromClient request =
+                  StatsRequestFromReport(report, stats_config_.stats_request_id,
+                                         stats_config_.allowlist);
+              stats_config_.stats_request_id++;
+              absl::Status send_status =
+                  data_channels_.media_stats->SendRequest(std::move(request));
+              if (!send_status.ok()) {
+                LOG(ERROR) << "Failed to send stats request: " << send_status;
+              }
 
-        // Periodically collect stats by repeatedly posting a delayed task after
-        // collecting stats.
-        //
-        // Closing the peer connection will cancel any pending and future tasks,
-        // stopping stats collection.
-        client_thread_->PostDelayedTask(
-            [&]() { CollectStats(); },
-            webrtc::TimeDelta::Seconds(stats_config_.upload_interval));
+              // Periodically collect stats by repeatedly posting a delayed task
+              // after collecting stats.
+              //
+              // Closing the peer connection will cancel any pending and future
+              // tasks, stopping stats collection.
+              client_thread_->PostDelayedTask(
+                  SafeTask(alive_flag_, [&]() { CollectStats(); }),
+                  webrtc::TimeDelta::Seconds(stats_config_.upload_interval));
+            }));
       });
   conference_peer_connection_->GetStats(callback.get());
 }

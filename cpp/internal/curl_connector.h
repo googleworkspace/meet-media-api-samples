@@ -43,7 +43,8 @@ class CurlConnector : public HttpConnectorInterface {
       absl::string_view join_endpoint, absl::string_view conference_id,
       absl::string_view access_token, absl::string_view sdp_offer,
       std::optional<int> connection_timeout_ms,
-      std::optional<int> request_timeout_ms) override;
+      std::optional<int> request_timeout_ms,
+      std::optional<int> confirmation_timeout_ms) override;
 
   // Sets the path to the CA certificate file to be used by curl.
   //
