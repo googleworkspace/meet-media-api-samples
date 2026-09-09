@@ -202,8 +202,7 @@ void MediaApiClient::HandleTrackSignaled(
       auto conference_audio_track = std::make_unique<ConferenceAudioTrack>(
           mid, std::move(receiver),
           std::bind_front(&MediaApiClientObserverInterface::OnAudioFrame,
-                          observer_),
-          client_thread_.get());
+                          observer_));
       auto audio_track =
           static_cast<webrtc::AudioTrackInterface*>(receiver_track.get());
       audio_track->AddSink(conference_audio_track.get());

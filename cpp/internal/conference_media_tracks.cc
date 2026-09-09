@@ -24,13 +24,10 @@
 
 #include "absl/base/nullability.h"
 #include "absl/log/log.h"
-#include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/rtp_packet_info.h"
 #include "api/rtp_packet_infos.h"
-#include "api/task_queue/pending_task_safety_flag.h"
-#include "api/transport/rtp/rtp_source.h"
 #include "api/video/video_frame.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
@@ -40,7 +37,8 @@ namespace meet {
 void ConferenceAudioTrack::OnData(
     const void* audio_data, int bits_per_sample, int sample_rate,
     size_t number_of_channels, size_t number_of_frames,
-    std::optional<int64_t> absolute_capture_timestamp_ms) {
+    std::optional<int64_t> absolute_capture_timestamp_ms,
+    const webrtc::RtpPacketInfos& packet_infos) {
   if (bits_per_sample != 16) {
     LOG(ERROR) << "Unsupported bits per sample: " << bits_per_sample
                << ". Expected 16.";
@@ -53,72 +51,63 @@ void ConferenceAudioTrack::OnData(
   // Audio data in PCM format is expected to be stored in a contiguous buffer,
   // where there are `number_of_channels * number_of_frames` audio frames.
   size_t total_samples = number_of_channels * number_of_frames;
-  // Copy the audio data to process it off the audio thread.
-  absl::Span<const int16_t> pcm_span(pcm_data, total_samples);
-  std::vector<int16_t> pcm_copy(pcm_span.begin(), pcm_span.end());
 
-  client_thread_->PostTask(SafeTask(
-      safety_.flag(), [this, pcm_copy = std::move(pcm_copy), bits_per_sample,
-                       sample_rate, number_of_channels, number_of_frames,
-                       absolute_capture_timestamp_ms]() mutable {
-        // Because one track may have multiple contributing sources multiplexed
-        // on it, the receiver maintains an ordered list of contributing sources
-        // and synchronization sources. Sources are in reverse chronological
-        // order (from most recent to oldest).
-        //
-        // The most recent sources should be used for the audio frame that is
-        // currently being processed.
-        std::optional<uint32_t> most_recent_csrc;
-        std::optional<uint32_t> most_recent_ssrc;
-        // Meet sends a contributing source of `kLoudestSpeakerCsrc` to indicate
-        // the loudest speaker. Knowing the loudest speaker can be useful, as it
-        // can be used to determine which participant to prioritize when
-        // rendering audio or video (although other methods may be used as
-        // well).
-        bool is_from_loudest_speaker = false;
-        for (const auto& rtp_source : receiver_->GetSources()) {
-          if (rtp_source.source_type() == webrtc::RtpSourceType::CSRC) {
-            if (rtp_source.source_id() == kLoudestSpeakerCsrc) {
-              is_from_loudest_speaker = true;
-            } else if (!most_recent_csrc.has_value()) {
-              // Take the first CSRC that is not the loudest speaker because
-              // CSRCs are ordered from most recent to oldest.
-              most_recent_csrc = rtp_source.source_id();
-            }
-          } else if (rtp_source.source_type() == webrtc::RtpSourceType::SSRC &&
-                     !most_recent_ssrc.has_value()) {
-            most_recent_ssrc = rtp_source.source_id();
-          }
-        }
+  // Because one track may have multiple contributing sources multiplexed
+  // on it, the receiver maintains an ordered list of contributing sources
+  // and synchronization sources. Sources are in reverse chronological
+  // order (from most recent to oldest).
+  //
+  // The most recent sources should be used for the audio frame that is
+  // currently being processed.
+  std::optional<uint32_t> most_recent_csrc;
+  std::optional<uint32_t> most_recent_ssrc;
+  // Meet sends a contributing source of `kLoudestSpeakerCsrc` to indicate
+  // the loudest speaker. Knowing the loudest speaker can be useful, as it
+  // can be used to determine which participant to prioritize when
+  // rendering audio or video (although other methods may be used as
+  // well).
+  bool is_from_loudest_speaker = false;
+  for (const auto& packet_info : packet_infos) {
+    for (const auto& csrc : packet_info.csrcs()) {
+      if (csrc == kLoudestSpeakerCsrc) {
+        is_from_loudest_speaker = true;
+      } else if (!most_recent_csrc.has_value()) {
+        most_recent_csrc = csrc;
+      }
+    }
+    if (!most_recent_ssrc.has_value()) {
+      most_recent_ssrc = packet_info.ssrc();
+    }
+  }
 
-        if (!most_recent_csrc.has_value() || !most_recent_ssrc.has_value()) {
-          // Before real audio starts flowing, silent audio frames will be
-          // received. These frames will not have a CSRC or SSRC. Because these
-          // frames will be received frequently, log them at a lower level to
-          // avoid cluttering the logs.
-          //
-          // However, this may still happen in error cases, so something should
-          // be logged.
-          if (!most_recent_csrc.has_value()) {
-            VLOG(2) << "AudioFrame is missing CSRC for mid: " << mid_;
-          }
-          if (!most_recent_ssrc.has_value()) {
-            VLOG(2) << "AudioFrame is missing SSRC for mid: " << mid_;
-          }
-          return;
-        }
-        absl::Span<const int16_t> pcm_data_span = absl::MakeConstSpan(pcm_copy);
-        callback_(AudioFrame{
-            .pcm16 = std::move(pcm_data_span),
-            .bits_per_sample = bits_per_sample,
-            .sample_rate = sample_rate,
-            .number_of_channels = number_of_channels,
-            .number_of_frames = number_of_frames,
-            .is_from_loudest_speaker = is_from_loudest_speaker,
-            .contributing_source = most_recent_csrc.value(),
-            .synchronization_source = most_recent_ssrc.value(),
-            .absolute_capture_timestamp_ms = absolute_capture_timestamp_ms});
-      }));
+  if (!most_recent_csrc.has_value() || !most_recent_ssrc.has_value()) {
+    // Before real audio starts flowing, silent audio frames will be
+    // received. These frames will not have a CSRC or SSRC. Because these
+    // frames will be received frequently, log them at a lower level to
+    // avoid cluttering the logs.
+    //
+    // However, this may still happen in error cases, so something should
+    // be logged.
+    if (!most_recent_csrc.has_value()) {
+      VLOG(2) << "AudioFrame is missing CSRC for mid: " << mid_;
+    }
+    if (!most_recent_ssrc.has_value()) {
+      VLOG(2) << "AudioFrame is missing SSRC for mid: " << mid_;
+    }
+    return;
+  }
+  absl::Span<const int16_t> pcm_data_span =
+      absl::MakeConstSpan(pcm_data, total_samples);
+  callback_(AudioFrame{
+      .pcm16 = std::move(pcm_data_span),
+      .bits_per_sample = bits_per_sample,
+      .sample_rate = sample_rate,
+      .number_of_channels = number_of_channels,
+      .number_of_frames = number_of_frames,
+      .is_from_loudest_speaker = is_from_loudest_speaker,
+      .contributing_source = most_recent_csrc.value(),
+      .synchronization_source = most_recent_ssrc.value(),
+      .absolute_capture_timestamp_ms = absolute_capture_timestamp_ms});
 }
 
 void ConferenceVideoTrack::OnFrame(const webrtc::VideoFrame& frame) {

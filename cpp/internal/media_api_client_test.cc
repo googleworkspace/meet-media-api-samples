@@ -45,7 +45,6 @@
 #include "api/make_ref_counted.h"
 #include "api/media_stream_interface.h"
 #include "api/media_types.h"
-#include "api/peer_connection_interface.h"
 #include "api/rtp_headers.h"
 #include "api/rtp_packet_info.h"
 #include "api/rtp_packet_infos.h"
@@ -975,23 +974,13 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
   // Receiver.
   auto mock_receiver = webrtc::scoped_refptr<webrtc::MockRtpReceiver>(
       new webrtc::MockRtpReceiver());
-  webrtc::RtpSource csrc_rtp_source(
-      webrtc::Timestamp::Micros(1234567890),
-      /*source_id=*/123, webrtc::RtpSourceType::CSRC,
-      /*rtp_timestamp=*/1111111,
-      {.audio_level = 100,
-       .absolute_capture_time =
-           webrtc::AbsoluteCaptureTime(1234567890, 1000000000)});
-  webrtc::RtpSource ssrc_rtp_source(
-      webrtc::Timestamp::Micros(1234567890),
-      /*source_id=*/456, webrtc::RtpSourceType::SSRC,
-      /*rtp_timestamp=*/2222222,
-      {.audio_level = 100,
-       .absolute_capture_time =
-           webrtc::AbsoluteCaptureTime(1234567890, 1000000000)});
-  ON_CALL(*mock_receiver, GetSources)
-      .WillByDefault(Return(std::vector<webrtc::RtpSource>{
-          std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
+  webrtc::RtpPacketInfo packet_info = webrtc::RtpPacketInfo(
+      /*ssrc=*/456,
+      /*csrcs=*/{123},
+      /*rtp_timestamp=*/1111111, webrtc::Timestamp::Micros(1234567890));
+  packet_info.set_audio_level(100);
+  packet_info.set_absolute_capture_time(
+      webrtc::AbsoluteCaptureTime(1234567890, 1000000000));
   ON_CALL(*mock_receiver, media_type)
       .WillByDefault(Return(webrtc::MediaType::AUDIO));
   ON_CALL(*mock_receiver, track).WillByDefault(Return(mock_audio_track));
@@ -1012,10 +1001,8 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
       .contributing_source = 0,
       .synchronization_source = 0,
   };
-  absl::Notification frame_received;
   EXPECT_CALL(*observer, OnAudioFrame).WillOnce([&](AudioFrame frame) {
     received_frame = std::move(frame);
-    frame_received.Notify();
   });
   // Peer connection.
   auto peer_connection = std::make_unique<MockConferencePeerConnection>();
@@ -1037,8 +1024,8 @@ TEST(MediaApiClientTest, HandlesSignaledAudioTrack) {
                            /*sample_rate=*/48000,
                            /*number_of_channels=*/2,
                            /*number_of_frames=*/100,
-                           /*absolute_capture_timestamp_ms=*/std::nullopt);
-  frame_received.WaitForNotificationWithTimeout(absl::Seconds(1));
+                           /*absolute_capture_timestamp_ms=*/std::nullopt,
+                           webrtc::RtpPacketInfos({packet_info}));
 
   EXPECT_THAT(received_frame.pcm16, SizeIs(100 * 2));
   EXPECT_EQ(received_frame.bits_per_sample, 16);

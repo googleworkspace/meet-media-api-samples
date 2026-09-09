@@ -31,10 +31,8 @@
 #include "api/media_stream_interface.h"
 #include "api/rtp_receiver_interface.h"
 #include "api/scoped_refptr.h"
-#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_sink_interface.h"
-#include "rtc_base/thread.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
 
@@ -51,27 +49,21 @@ class ConferenceAudioTrack : public webrtc::AudioTrackSinkInterface {
   ConferenceAudioTrack(
       std::string mid,
       webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver,
-      AudioFrameCallback callback, webrtc::Thread* client_thread)
+      AudioFrameCallback callback)
       : mid_(std::move(mid)),
         receiver_(std::move(receiver)),
-        callback_(std::move(callback)),
-        client_thread_(client_thread) {}
-
-  ~ConferenceAudioTrack() {
-    client_thread_->BlockingCall([&]() { safety_.reset(); });
-  }
+        callback_(std::move(callback)) {}
 
   void OnData(const void* audio_data, int bits_per_sample, int sample_rate,
               size_t number_of_channels, size_t number_of_frames,
-              absl::optional<int64_t> absolute_capture_timestamp_ms) override;
+              absl::optional<int64_t> absolute_capture_timestamp_ms,
+              const webrtc::RtpPacketInfos& packet_infos) override;
 
  private:
   // Media line from the SDP offer/answer that identifies this track.
   std::string mid_;
   webrtc::scoped_refptr<webrtc::RtpReceiverInterface> receiver_;
   AudioFrameCallback callback_;
-  webrtc::Thread* client_thread_;
-  webrtc::ScopedTaskSafety safety_;
 };
 
 // Adapter class for webrtc::VideoSinkInterface that converts
