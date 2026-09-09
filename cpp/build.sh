@@ -72,6 +72,9 @@ elif [ ! -d "$WEBRTC_SRC" ]; then
     mkdir -p "$WEBRTC_DIR"
     pushd "$WEBRTC_DIR" > /dev/null
 
+    echo -e "\033[1;34m    🔨  Initializing and bootstrapping depot_tools...\033[0m"
+    update_depot_tools
+
     echo -e "\033[1;34m    ⬇️  Fetching WebRTC (This takes a while, maybe grab a snack 🥨)...\033[0m"
     fetch --nohooks webrtc
 

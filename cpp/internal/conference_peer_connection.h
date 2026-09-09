@@ -196,7 +196,8 @@ class ConferencePeerConnection : public ConferencePeerConnectionInterface,
                        absl::string_view conference_id,
                        absl::string_view access_token,
                        std::optional<int> connection_timeout_ms,
-                       std::optional<int> request_timeout_ms) override;
+                       std::optional<int> request_timeout_ms,
+                       std::optional<int> confirmation_timeout_ms) override;
 
   void Close() override {
     VLOG(1) << "ConferencePeerConnection::Close called.";

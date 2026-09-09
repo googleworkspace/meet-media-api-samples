@@ -1,0 +1,39 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Do Not Merge
+
+on:
+  pull_request:
+    # It is important to include labeled/unlabeled so the check updates instantly
+    # when a repository admin adds or removes the label.
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+# Drop all permissions except the ability to read PR data
+permissions:
+  pull-requests: read
+
+jobs:
+  check-labels:
+    name: Check Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify "do not merge" is not present
+        run: |
+          # Check for common variants of the label
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'do not merge') || contains(github.event.pull_request.labels.*.name, 'do-not-merge') || contains(github.event.pull_request.labels.*.name, 'DO NOT MERGE') }}" == "true" ]]; then
+            echo "::error::This Pull Request is labeled with 'do not merge' and cannot be merged."
+            exit 1
+          fi
+          echo "No blocking labels found."
