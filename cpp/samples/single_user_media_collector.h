@@ -162,13 +162,13 @@ class SingleUserMediaCollector : public meet::MediaApiClientObserverInterface {
   // The audio writer is created when the first audio frame is received. Audio
   // format does not change, so a single writer can be used for all audio
   // frames.
-  /*absl_nullable*/ std::unique_ptr<OutputWriterInterface> audio_writer_;
+  absl_nullable std::unique_ptr<OutputWriterInterface> audio_writer_;
   // The current video segment, or nullptr if no video frames have been received
   // yet.
   //
   // The first video segment is created when the first video frame is received.
   // If the video frame size changes, a new video segment is created.
-  /*absl_nullable*/ std::unique_ptr<VideoSegment> video_segment_;
+  absl_nullable std::unique_ptr<VideoSegment> video_segment_;
 
   absl::Notification join_notification_;
   absl::Notification disconnect_notification_;
