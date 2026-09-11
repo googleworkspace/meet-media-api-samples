@@ -396,11 +396,14 @@ rtc_library("conference_media_tracks") {
     "conference_media_tracks.h",
   ]
   deps = [
+    "../../api/task_queue:pending_task_safety_flag",
+    "../../api/transport/rtp:rtp_source",
     "../../api/video:video_frame",
     "../../api:media_stream_interface",
     "../../api:rtp_packet_info",
     "../../api:rtp_receiver_interface",
     "../../api:scoped_refptr",
+    "../../rtc_base:threading",
     "../api:media_api_client_interface",
     "//third_party/abseil-cpp/absl/base:nullability",
     "//third_party/abseil-cpp/absl/functional:any_invocable",
@@ -421,6 +424,7 @@ rtc_test("media_api_client_test") {
     "../../api:mock_media_stream_interface",
     "../../api:mock_rtp",
     "../../api:mock_video_track",
+    "../../api:peer_connection_interface",
     "../../api:rtc_stats_api",
     "../../api:rtp_headers",
     "../../api:rtp_packet_info",
@@ -669,5 +673,7 @@ rtc_test("conference_media_tracks_test") {
     "//third_party/abseil-cpp/absl/base:nullability",
     "//third_party/abseil-cpp/absl/log:globals",
     "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/abseil-cpp/absl/time",
   ]
 }

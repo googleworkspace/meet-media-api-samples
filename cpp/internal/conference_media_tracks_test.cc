@@ -30,6 +30,8 @@
 #include "absl/base/nullability.h"
 #include "absl/log/globals.h"
 #include "absl/strings/string_view.h"
+#include "absl/synchronization/notification.h"
+#include "absl/time/time.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "api/rtp_packet_info.h"
 #include "api/rtp_packet_infos.h"
@@ -63,36 +65,73 @@ std::unique_ptr<webrtc::Thread> CreateThread(absl::string_view name) {
   return thread;
 }
 
-TEST(ConferenceAudioTrackTest, CallsObserverWithAudioFrameFromLoudestSpeaker) {
+class ConferenceAudioTrackTest : public ::testing::Test {
+ public:
+  ConferenceAudioTrackTest() : client_thread_(CreateThread("test thread")) {}
+
+ protected:
+  std::unique_ptr<webrtc::Thread> client_thread_;
+};
+
+TEST_F(ConferenceAudioTrackTest,
+       CallsObserverWithAudioFrameFromLoudestSpeaker) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   // Expect that only the first CSRC and SSRC are used.
-  webrtc::RtpPacketInfo csrc_packet_info(333, {111, 222, kLoudestSpeakerCsrc},
-                                         /*rtp_timestamp=*/1111111,
-                                         webrtc::Timestamp::Micros(1234567890));
-  csrc_packet_info.set_audio_level(100);
-  webrtc::RtpPacketInfo ssrc_packet_info(444, {}, /*rtp_timestamp=*/2222222,
-                                         webrtc::Timestamp::Micros(1234567890));
-  ssrc_packet_info.set_audio_level(100);
-
+  //
+  // WebRTC returns the sources list ordered from most recent to oldest.
+  webrtc::RtpSource csrc_rtp_source_1(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/111, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource csrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/222, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource loudest_speaker_csrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/kLoudestSpeakerCsrc, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/333, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/444, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>{
+          std::move(csrc_rtp_source_1), std::move(csrc_rtp_source_2),
+          std::move(loudest_speaker_csrc_rtp_source),
+          std::move(ssrc_rtp_source), std::move(ssrc_rtp_source_2)}));
   MockFunction<void(AudioFrame)> mock_function;
   std::optional<AudioFrame> received_frame;
 
+  absl::Notification frame_received;
   EXPECT_CALL(mock_function, Call).WillOnce([&](AudioFrame frame) {
     received_frame = std::move(frame);
+    frame_received.Notify();
   });
   ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   mock_function.AsStdFunction());
+                                   mock_function.AsStdFunction(),
+                                   client_thread_.get());
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(
-      pcm_data,
-      /*bits_per_sample=*/16,
-      /*sample_rate=*/48000,
-      /*number_of_channels=*/2,
-      /*number_of_frames=*/100,
-      /*absolute_capture_timestamp_ms=*/std::nullopt,
-      webrtc::RtpPacketInfos({csrc_packet_info, ssrc_packet_info}));
+  client_thread_->BlockingCall([&]() mutable {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  frame_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   ASSERT_TRUE(received_frame.has_value());
   EXPECT_THAT(received_frame->pcm16, SizeIs(100 * 2));
@@ -106,36 +145,55 @@ TEST(ConferenceAudioTrackTest, CallsObserverWithAudioFrameFromLoudestSpeaker) {
   EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, std::nullopt);
 }
 
-TEST(ConferenceAudioTrackTest,
-     CallsObserverWithAudioFrameFromNonLoudestSpeaker) {
+TEST_F(ConferenceAudioTrackTest,
+       CallsObserverWithAudioFrameFromNonLoudestSpeaker) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
-
-  webrtc::RtpPacketInfo csrc_packet_info(333, {111, 222},
-                                         /*rtp_timestamp=*/1111111,
-                                         webrtc::Timestamp::Micros(1234567890));
-  csrc_packet_info.set_audio_level(100);
-  webrtc::RtpPacketInfo ssrc_packet_info(444, {}, /*rtp_timestamp=*/2222222,
-                                         webrtc::Timestamp::Micros(1234567890));
-  ssrc_packet_info.set_audio_level(100);
-
+  webrtc::RtpSource csrc_rtp_source_1(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/111, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource csrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/222, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/333, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/444, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>{
+          std::move(csrc_rtp_source_1), std::move(csrc_rtp_source_2),
+          std::move(ssrc_rtp_source), std::move(ssrc_rtp_source_2)}));
   MockFunction<void(AudioFrame)> mock_function;
   std::optional<AudioFrame> received_frame;
+  absl::Notification frame_received;
   EXPECT_CALL(mock_function, Call).WillOnce([&](AudioFrame frame) {
     received_frame = std::move(frame);
+    frame_received.Notify();
   });
   ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   mock_function.AsStdFunction());
+                                   mock_function.AsStdFunction(),
+                                   client_thread_.get());
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(
-      pcm_data,
-      /*bits_per_sample=*/16,
-      /*sample_rate=*/48000,
-      /*number_of_channels=*/2,
-      /*number_of_frames=*/100,
-      /*absolute_capture_timestamp_ms=*/std::nullopt,
-      webrtc::RtpPacketInfos({csrc_packet_info, ssrc_packet_info}));
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  frame_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   ASSERT_TRUE(received_frame.has_value());
   EXPECT_THAT(received_frame->pcm16, SizeIs(100 * 2));
@@ -149,34 +207,55 @@ TEST(ConferenceAudioTrackTest,
   EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, std::nullopt);
 }
 
-TEST(ConferenceAudioTrackTest,
-     CallsObserverWithAudioFrameWithAbsoluteCaptureTimestamp) {
+TEST_F(ConferenceAudioTrackTest,
+       CallsObserverWithAudioFrameWithAbsoluteCaptureTimestamp) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
-  webrtc::RtpPacketInfo csrc_packet_info(333, {111, 222},
-                                         /*rtp_timestamp=*/1111111,
-                                         webrtc::Timestamp::Micros(1234567890));
-  csrc_packet_info.set_audio_level(100);
-  webrtc::RtpPacketInfo ssrc_packet_info(444, {}, /*rtp_timestamp=*/2222222,
-                                         webrtc::Timestamp::Micros(1234567890));
-  ssrc_packet_info.set_audio_level(100);
+  webrtc::RtpSource csrc_rtp_source_1(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/111, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource csrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/222, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/333, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source_2(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/444, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>{
+          std::move(csrc_rtp_source_1), std::move(csrc_rtp_source_2),
+          std::move(ssrc_rtp_source), std::move(ssrc_rtp_source_2)}));
   MockFunction<void(AudioFrame)> mock_function;
   std::optional<AudioFrame> received_frame;
+  absl::Notification frame_received;
   EXPECT_CALL(mock_function, Call).WillOnce([&](AudioFrame frame) {
     received_frame = std::move(frame);
+    frame_received.Notify();
   });
   ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   mock_function.AsStdFunction());
+                                   mock_function.AsStdFunction(),
+                                   client_thread_.get());
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(
-      pcm_data,
-      /*bits_per_sample=*/16,
-      /*sample_rate=*/48000,
-      /*number_of_channels=*/2,
-      /*number_of_frames=*/100,
-      /*absolute_capture_timestamp_ms=*/12345,
-      webrtc::RtpPacketInfos({csrc_packet_info, ssrc_packet_info}));
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/12345);
+  });
+  frame_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   ASSERT_TRUE(received_frame.has_value());
   EXPECT_THAT(received_frame->pcm16, SizeIs(100 * 2));
@@ -190,29 +269,34 @@ TEST(ConferenceAudioTrackTest,
   EXPECT_EQ(received_frame->absolute_capture_timestamp_ms, 12345);
 }
 
-TEST(ConferenceAudioTrackTest, LogsErrorWithUnsupportedBitsPerSample) {
-  ConferenceAudioTrack audio_track("mid", nullptr, [](AudioFrame /*frame*/) {});
+TEST_F(ConferenceAudioTrackTest, LogsErrorWithUnsupportedBitsPerSample) {
+  ConferenceAudioTrack audio_track(
+      "mid", nullptr, [](AudioFrame /*frame*/) {}, client_thread_.get());
   ScopedMockLog log(kDoNotCaptureLogsYet);
   std::string message;
+  absl::Notification message_received;
   EXPECT_CALL(log, Log(ERROR, _, _))
       .WillOnce([&](int, const std::string&, const std::string& msg) {
         message = msg;
+        message_received.Notify();
       });
   log.StartCapturingLogs();
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(pcm_data,
-                     /*bits_per_sample=*/8,
-                     /*sample_rate=*/48000,
-                     /*number_of_channels=*/2,
-                     /*number_of_frames=*/100,
-                     /*absolute_capture_timestamp_ms=*/std::nullopt,
-                     webrtc::RtpPacketInfos());
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/8,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  message_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_EQ(message, "Unsupported bits per sample: 8. Expected 16.");
 }
 
-TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrc) {
+TEST_F(ConferenceAudioTrackTest, LogsErrorWithMissingCsrc) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
   webrtc::RtpSource ssrc_rtp_source(
@@ -220,87 +304,149 @@ TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrc) {
       /*source_id=*/333, webrtc::RtpSourceType::SSRC,
       /*rtp_timestamp=*/2222222,
       {.audio_level = 0, .absolute_capture_time = std::nullopt});
-  webrtc::RtpPacketInfo ssrc_packet_info(444, {}, /*rtp_timestamp=*/2222222,
-                                         webrtc::Timestamp::Micros(1234567890));
-  ssrc_packet_info.set_audio_level(100);
-
-  ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   [](AudioFrame /*frame*/) {});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(
+          Return(std::vector<webrtc::RtpSource>{std::move(ssrc_rtp_source)}));
+  ConferenceAudioTrack audio_track(
+      "mid", mock_receiver, [](AudioFrame /*frame*/) {}, client_thread_.get());
   ScopedMockLog log(kDoNotCaptureLogsYet);
   absl::SetVLogLevel("conference_media_tracks", 2);
   std::string message;
+  absl::Notification message_received;
   EXPECT_CALL(log, Log(INFO, _, _))
       .WillOnce([&](int, const std::string&, const std::string& msg) {
         message = msg;
+        message_received.Notify();
       });
   log.StartCapturingLogs();
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(pcm_data,
-                     /*bits_per_sample=*/16,
-                     /*sample_rate=*/48000,
-                     /*number_of_channels=*/2,
-                     /*number_of_frames=*/100,
-                     /*absolute_capture_timestamp_ms=*/std::nullopt,
-                     webrtc::RtpPacketInfos({ssrc_packet_info}));
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  message_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_EQ(message, "AudioFrame is missing CSRC for mid: mid");
 }
 
-TEST(ConferenceAudioTrackTest, LogsErrorWithMissingCsrcAndSsrc) {
+TEST_F(ConferenceAudioTrackTest, LogsErrorWithMissingSsrc) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
-  ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   [](AudioFrame /*frame*/) {});
+  webrtc::RtpSource csrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/111, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(
+          Return(std::vector<webrtc::RtpSource>{std::move(csrc_rtp_source)}));
+  ConferenceAudioTrack audio_track(
+      "mid", mock_receiver, [](AudioFrame /*frame*/) {}, client_thread_.get());
   ScopedMockLog log(kDoNotCaptureLogsYet);
-  std::vector<std::string> messages;
   absl::SetVLogLevel("conference_media_tracks", 2);
+  std::string message;
+  absl::Notification message_received;
   EXPECT_CALL(log, Log(INFO, _, _))
-      .Times(2)
-      .WillRepeatedly([&](int, const std::string&, const std::string& msg) {
-        messages.push_back(msg);
+      .WillOnce([&](int, const std::string&, const std::string& msg) {
+        message = msg;
+        message_received.Notify();
       });
   log.StartCapturingLogs();
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(pcm_data,
-                     /*bits_per_sample=*/16,
-                     /*sample_rate=*/48000,
-                     /*number_of_channels=*/2,
-                     /*number_of_frames=*/100,
-                     /*absolute_capture_timestamp_ms=*/std::nullopt,
-                     webrtc::RtpPacketInfos());
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  message_received.WaitForNotificationWithTimeout(absl::Seconds(1));
+
+  EXPECT_EQ(message, "AudioFrame is missing SSRC for mid: mid");
+}
+TEST_F(ConferenceAudioTrackTest, LogsErrorWithMissingCsrcAndSsrc) {
+  webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
+      new webrtc::MockRtpReceiver());
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>()));
+  ConferenceAudioTrack audio_track(
+      "mid", mock_receiver, [](AudioFrame /*frame*/) {}, client_thread_.get());
+  ScopedMockLog log(kDoNotCaptureLogsYet);
+  std::vector<std::string> messages;
+  absl::SetVLogLevel("conference_media_tracks", 2);
+  absl::Notification messages_received;
+  EXPECT_CALL(log, Log(INFO, _, _))
+      .Times(2)
+      .WillRepeatedly([&](int, const std::string&, const std::string& msg) {
+        messages.push_back(msg);
+        if (messages.size() == 2) {
+          messages_received.Notify();
+        }
+      });
+  log.StartCapturingLogs();
+  int16_t pcm_data[2 * 100];
+
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+
+  messages_received.WaitForNotificationWithTimeout(absl::Seconds(1));
   EXPECT_THAT(messages,
               UnorderedElementsAre("AudioFrame is missing CSRC for mid: mid",
                                    "AudioFrame is missing SSRC for mid: mid"));
 }
 
-TEST(ConferenceAudioTrackTest, LogsErrorWithOnlyLoudestSpeakerCsrc) {
+TEST_F(ConferenceAudioTrackTest, LogsErrorWithOnlyLoudestSpeakerCsrc) {
   webrtc::scoped_refptr<webrtc::MockRtpReceiver> mock_receiver(
       new webrtc::MockRtpReceiver());
-  webrtc::RtpPacketInfo packet_info(333, {kLoudestSpeakerCsrc},
-                                    /*rtp_timestamp=*/1111111,
-                                    webrtc::Timestamp::Micros(1234567890));
-  packet_info.set_audio_level(100);
-  ConferenceAudioTrack audio_track("mid", mock_receiver,
-                                   [](AudioFrame /*frame*/) {});
+  webrtc::RtpSource csrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/kLoudestSpeakerCsrc, webrtc::RtpSourceType::CSRC,
+      /*rtp_timestamp=*/1111111,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  webrtc::RtpSource ssrc_rtp_source(
+      webrtc::Timestamp::Micros(1234567890),
+      /*source_id=*/333, webrtc::RtpSourceType::SSRC,
+      /*rtp_timestamp=*/2222222,
+      {.audio_level = 100, .absolute_capture_time = std::nullopt});
+  EXPECT_CALL(*mock_receiver, GetSources)
+      .WillOnce(Return(std::vector<webrtc::RtpSource>{
+          std::move(csrc_rtp_source), std::move(ssrc_rtp_source)}));
+  ConferenceAudioTrack audio_track(
+      "mid", mock_receiver, [](AudioFrame /*frame*/) {}, client_thread_.get());
   ScopedMockLog log(kDoNotCaptureLogsYet);
   absl::SetVLogLevel("conference_media_tracks", 2);
   std::string message;
+  absl::Notification message_received;
   EXPECT_CALL(log, Log(INFO, _, _))
       .WillOnce([&](int, const std::string&, const std::string& msg) {
         message = msg;
+        message_received.Notify();
       });
   log.StartCapturingLogs();
   int16_t pcm_data[2 * 100];
 
-  audio_track.OnData(pcm_data,
-                     /*bits_per_sample=*/16,
-                     /*sample_rate=*/48000,
-                     /*number_of_channels=*/2,
-                     /*number_of_frames=*/100,
-                     /*absolute_capture_timestamp_ms=*/std::nullopt,
-                     webrtc::RtpPacketInfos({packet_info}));
+  client_thread_->BlockingCall([&]() {
+    audio_track.OnData(pcm_data,
+                       /*bits_per_sample=*/16,
+                       /*sample_rate=*/48000,
+                       /*number_of_channels=*/2,
+                       /*number_of_frames=*/100,
+                       /*absolute_capture_timestamp_ms=*/std::nullopt);
+  });
+  message_received.WaitForNotificationWithTimeout(absl::Seconds(1));
 
   EXPECT_EQ(message, "AudioFrame is missing CSRC for mid: mid");
 }
