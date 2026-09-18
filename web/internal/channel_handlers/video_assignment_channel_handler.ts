@@ -120,7 +120,14 @@ export class VideoAssignmentChannelHandler {
       'Video assignment channel: recieved response',
       response,
     );
-    this.pendingRequestResolveMap.get(response.requestId)?.(response.status);
+    const resolve = this.pendingRequestResolveMap.get(response.requestId);
+    if (resolve){
+      try {
+        resolve(response.status);
+      } finally {
+        this.pendingRequestResolveMap.delete(response.requestId);
+      }
+    }
   }
 
   private onVideoAssignmentResources(resources: VideoAssignmentResource[]) {
@@ -227,10 +234,12 @@ export class VideoAssignmentChannelHandler {
           }
         }
         // tslint:enable:no-unnecessary-type-assertion
-        this.channelLogger?.log(
-          LogLevel.ERRORS,
-          'Video assignment channel: server sent a canvas that was not created by the client',
-        );
+        else {
+          this.channelLogger?.log(
+            LogLevel.ERRORS,
+            'Video assignment channel: server sent a canvas that was not created by the client',
+          );
+        }
       },
     );
   }
