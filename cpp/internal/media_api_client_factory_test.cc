@@ -111,8 +111,7 @@ TEST(MediaApiClientFactoryTest,
           static_cast<webrtc::scoped_refptr<webrtc::DataChannelInterface>>(
               webrtc::MockDataChannelInterface::Create())));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -157,8 +156,7 @@ TEST(MediaApiClientFactoryTest, FailsIfPeerConnectionFactoryFailsToCreate) {
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -198,8 +196,7 @@ TEST(MediaApiClientFactoryTest, FailsIfAudioTransceiverFailsToBeCreated) {
                                 "test error");
       });
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -252,8 +249,7 @@ TEST(MediaApiClientFactoryTest, FailsIfVideoTransceiverFailsToBeCreated) {
             webrtc::MockDataChannelInterface::Create());
       });
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -307,8 +303,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -366,8 +361,7 @@ TEST(MediaApiClientFactoryTest, FailsIfMediaStatsDataChannelFailsToBeCreated) {
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -431,8 +425,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -499,8 +492,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
@@ -571,8 +563,7 @@ TEST(MediaApiClientFactoryTest,
       .WillOnce(Return(webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR,
                                         "test error")));
   MediaApiClientFactory::PeerConnectionFactoryProvider
-      peer_connection_factory_provider =
-          [&](webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)
+      peer_connection_factory_provider = [&](webrtc::Thread* signaling_thread)
       -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
     return peer_connection_factory;
   };
