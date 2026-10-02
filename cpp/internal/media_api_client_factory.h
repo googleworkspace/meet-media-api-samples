@@ -38,7 +38,7 @@ class MediaApiClientFactory : public MediaApiClientFactoryInterface {
  public:
   using PeerConnectionFactoryProvider = absl::AnyInvocable<
       webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>(
-          webrtc::Thread* signaling_thread, webrtc::Thread* worker_thread)>;
+          webrtc::Thread* signaling_thread)>;
   using HttpConnectorProvider =
       absl::AnyInvocable<std::unique_ptr<HttpConnectorInterface>()>;
 
