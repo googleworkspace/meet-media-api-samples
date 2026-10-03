@@ -202,27 +202,27 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
 
 }  // namespace
 
-MediaApiClientFactory::MediaApiClientFactory() {
-  peer_connection_factory_provider_ = [](webrtc::Thread* signaling_thread,
-                                         webrtc::Thread* worker_thread)
-      -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
-    return webrtc::CreatePeerConnectionFactory(
-        /*network_thread=*/nullptr, worker_thread, signaling_thread,
-        webrtc::make_ref_counted<MediaApiAudioDeviceModule>(*worker_thread),
-        webrtc::CreateBuiltinAudioEncoderFactory(),
-        webrtc::CreateOpusAudioDecoderFactory(),
-        std::make_unique<webrtc::VideoEncoderFactoryTemplate<
-            webrtc::LibvpxVp9EncoderTemplateAdapter>>(),
-        std::make_unique<webrtc::VideoDecoderFactoryTemplate<
-            webrtc::LibvpxVp8DecoderTemplateAdapter,
-            webrtc::LibvpxVp9DecoderTemplateAdapter,
-            webrtc::Dav1dDecoderTemplateAdapter>>(),
-        /*audio_mixer=*/nullptr, /*audio_processing=*/nullptr);
-  };
-  http_connector_provider_ = []() {
-    return std::make_unique<CurlConnector>(std::make_unique<CurlApiWrapper>());
-  };
-}
+MediaApiClientFactory::MediaApiClientFactory()
+    : peer_connection_factory_provider_(
+          [](webrtc::Thread* signaling_thread)
+              -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
+            return webrtc::CreatePeerConnectionFactory(
+                /*network_thread=*/nullptr, signaling_thread,
+                webrtc::make_ref_counted<MediaApiAudioDeviceModule>(),
+                webrtc::CreateBuiltinAudioEncoderFactory(),
+                webrtc::CreateOpusAudioDecoderFactory(),
+                std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+                    webrtc::LibvpxVp9EncoderTemplateAdapter>>(),
+                std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+                    webrtc::LibvpxVp8DecoderTemplateAdapter,
+                    webrtc::LibvpxVp9DecoderTemplateAdapter,
+                    webrtc::Dav1dDecoderTemplateAdapter>>(),
+                /*audio_mixer=*/nullptr, /*audio_processing=*/nullptr);
+          }),
+      http_connector_provider_([]() {
+        return std::make_unique<CurlConnector>(
+            std::make_unique<CurlApiWrapper>());
+      }) {}
 
 absl::StatusOr<std::unique_ptr<MediaApiClientInterface>>
 MediaApiClientFactory::CreateMediaApiClient(
@@ -244,15 +244,10 @@ MediaApiClientFactory::CreateMediaApiClient(
   if (!signaling_thread->Start()) {
     return absl::InternalError("Failed to start signaling thread");
   }
-  std::unique_ptr<webrtc::Thread> worker_thread = webrtc::Thread::Create();
-  worker_thread->SetName("media_api_client_worker_thread", nullptr);
-  if (!worker_thread->Start()) {
-    return absl::InternalError("Failed to start worker thread");
-  }
 
   webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
-      peer_connection_factory = peer_connection_factory_provider_(
-          signaling_thread.get(), worker_thread.get());
+      peer_connection_factory =
+          peer_connection_factory_provider_(signaling_thread.get());
 
   std::unique_ptr<HttpConnectorInterface> curl_connector =
       http_connector_provider_();
@@ -287,7 +282,7 @@ MediaApiClientFactory::CreateMediaApiClient(
   conference_peer_connection->SetPeerConnection(std::move(peer_connection));
 
   return std::make_unique<MediaApiClient>(
-      std::move(client_thread), std::move(worker_thread), std::move(observer),
+      std::move(client_thread), std::move(observer),
       std::move(conference_peer_connection),
       std::move(conference_data_channels).value());
 }
