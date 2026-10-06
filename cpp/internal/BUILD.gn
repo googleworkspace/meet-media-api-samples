@@ -71,6 +71,7 @@ rtc_library("media_api_client_factory") {
     "../../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
     "../../api:create_peerconnection_factory",
     "../../api:data_channel_interface",
+    "../../api:field_trials_view",
     "../../api:make_ref_counted",
     "../../api:peer_connection_interface",
     "../../api:rtc_error",
@@ -677,5 +678,70 @@ rtc_test("conference_media_tracks_test") {
     "//third_party/abseil-cpp/absl/strings:string_view",
     "//third_party/abseil-cpp/absl/synchronization",
     "//third_party/abseil-cpp/absl/time",
+  ]
+}
+
+rtc_library("fake_meet_server") {
+  testonly = true
+  sources = [
+    "testing/fake_meet_server.cc",
+    "testing/fake_meet_server.h",
+  ]
+  deps = [
+    "../../api/audio:audio_device",
+    "../../api/audio_codecs:builtin_audio_decoder_factory",
+    "../../api/audio_codecs:builtin_audio_encoder_factory",
+    "../../api/environment:environment_factory",
+    "../../api:audio_options_api",
+    "../../api:create_peerconnection_factory",
+    "../../api:data_channel_interface",
+    "../../api:field_trials_view",
+    "../../api:jsep",
+    "../../api:make_ref_counted",
+    "../../api:media_stream_interface",
+    "../../api:peer_connection_interface",
+    "../../api:rtc_error",
+    "../../api:rtp_parameters",
+    "../../api:rtp_transceiver_direction",
+    "../../api:rtp_transceiver_interface",
+    "../../api:scoped_refptr",
+    "../../api:set_local_description_observer_interface",
+    "../../api:set_remote_description_observer_interface",
+    "../../modules/audio_device:test_audio_device_module",
+    "../../rtc_base:buffer",
+    "../../rtc_base:network_constants",
+    "../../rtc_base:threading",
+    ":http_connector_interface",
+    ":media_api_client_factory",
+    "//third_party/abseil-cpp/absl/base:nullability",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/log:check",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/strings:string_view",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/abseil-cpp/absl/time",
+    "//third_party/jsoncpp",
+  ]
+}
+
+rtc_test("media_api_client_e2e_test") {
+  sources = [ "media_api_client_e2e_test.cc" ]
+  deps = [
+    "../../api:make_ref_counted",
+    "../../api:scoped_refptr",
+    "../../test:test_support",
+    "../api:media_api_client_interface",
+    ":fake_meet_server",
+    ":media_api_client_factory",
+    "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/base:nullability",
+    "//third_party/abseil-cpp/absl/log",
+    "//third_party/abseil-cpp/absl/status",
+    "//third_party/abseil-cpp/absl/status:statusor",
+    "//third_party/abseil-cpp/absl/synchronization",
+    "//third_party/abseil-cpp/absl/time",
+    "//third_party/abseil-cpp/absl/types:span",
   ]
 }

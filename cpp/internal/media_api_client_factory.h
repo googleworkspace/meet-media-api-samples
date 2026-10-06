@@ -26,6 +26,7 @@
 #include "meet_clients/api/media_api_client_factory_interface.h"
 #include "meet_clients/api/media_api_client_interface.h"
 #include "meet_clients/internal/http_connector_interface.h"
+#include "api/field_trials_view.h"
 #include "api/peer_connection_interface.h"
 #include "api/scoped_refptr.h"
 #include "rtc_base/thread.h"
@@ -41,6 +42,13 @@ class MediaApiClientFactory : public MediaApiClientFactoryInterface {
           webrtc::Thread* signaling_thread)>;
   using HttpConnectorProvider =
       absl::AnyInvocable<std::unique_ptr<HttpConnectorInterface>()>;
+
+  // Creates the default WebRTC PeerConnectionFactory used by MediaApiClient.
+  static webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+  CreateDefaultPeerConnectionFactory(
+      webrtc::Thread* signaling_thread,
+      absl_nullable std::unique_ptr<webrtc::FieldTrialsView> field_trials =
+          nullptr);
 
   // Default constructor that builds clients with real dependencies.
   MediaApiClientFactory();
