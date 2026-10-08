@@ -20,16 +20,19 @@
 #include <stdbool.h>
 
 #include <cstdint>
-#include <utility>
+#include <memory>
+#include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/nullability.h"
+#include "absl/base/thread_annotations.h"
 #include "api/audio/audio_device.h"
 #include "api/audio/audio_device_defines.h"
-#include "api/scoped_refptr.h"
-#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/sequence_checker.h"
+#include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "modules/audio_device/include/audio_device_default.h"
-#include "rtc_base/thread.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
 
@@ -64,21 +67,14 @@ class MediaApiAudioDeviceModule
   // Default constructor for production use.
   //
   // In production, audio should be sampled at 48000 Hz every 10ms.
-  explicit MediaApiAudioDeviceModule(webrtc::Thread& worker_thread)
-      : MediaApiAudioDeviceModule(worker_thread,
-                                  webrtc::TimeDelta::Millis(10)) {}
+  MediaApiAudioDeviceModule();
 
   // Constructor for testing with configurable sampling interval; the default
   // sampling interval of 10ms is too small to write non-flaky tests with.
-  MediaApiAudioDeviceModule(webrtc::Thread& worker_thread,
-                            webrtc::TimeDelta sampling_interval)
-      : worker_thread_(worker_thread),
-        sampling_interval_(std::move(sampling_interval)) {
-    safety_flag_ = webrtc::PendingTaskSafetyFlag::CreateAttachedToTaskQueue(
-        /*alive=*/true, &worker_thread_);
-  }
+  explicit MediaApiAudioDeviceModule(webrtc::TimeDelta sampling_interval);
 
-  int32_t RegisterAudioCallback(webrtc::AudioTransport* callback) override;
+  int32_t RegisterAudioCallback(
+      webrtc::AudioTransport* absl_nullable callback) override;
   int32_t StartPlayout() override;
   int32_t StopPlayout() override;
   int32_t Terminate() override;
@@ -90,51 +86,28 @@ class MediaApiAudioDeviceModule
   // sampling rate of 48000 Hz. If this is not done, no audio will be provided
   // to the audio sinks registered with the RTPReceiver of the RTPTransceiver
   // that remote audio is being received on.
-  void ProcessPlayData();
+  void ProcessPlayData() RTC_RUN_ON(playout_sequence_checker_);
 
-  // Note that this MUST be the same worker thread used when creating the peer
-  // connection.
-  //
-  // Not only does this remove the need for synchronization in this class (as
-  // all methods are called on the worker thread by WebRTC), it also prevents
-  // a deadlock when closing the peer connection:
-  //
-  // When audio data is passed to `ConferenceAudioTrack::OnData()`, it is
-  // called on whatever thread `audio_callback_` is called on. When attempting
-  // to read the audio csrcs and ssrcs from
-  // `RtpReceiverInterface::GetSources()`, a blocking call will be made to the
-  // worker thread (via the rtp receiver proxy layer) if the current thread is
-  // NOT the worker thread.
-  //
-  // `ConferenceAudioTrack::OnData()` is called while holding a mutex in
-  // WebRTC's `AudioMixerImpl::Mix()` method (also running on whatever thread
-  // `audio_callback_` is called on).
-  //
-  // At the same time, when closing the peer connection,
-  // `AudioMixerImpl::RemoveSource()` is called on the worker thread and
-  // attempts to acquire the mutex held by `AudioMixerImpl::Mix()`, blocking
-  // the worker thread.
-  //
-  // Therefore, it is possible for the worker thread to be blocked while
-  // waiting for the `AudioMixerImpl` mutex, while
-  // `ConferenceAudioTrack::OnData()` is blocked waiting for the worker thread
-  // to read the audio csrcs and ssrcs.
-  //
-  // By ensuring that this class is always called on the worker thread, this
-  // deadlock is avoided, as:
-  //   1. The worker thread is a task queue, and task queue operatons are
-  //   executed sequentially.
-  //   2. `ConferenceAudioTrack::OnData()` is called on the worker thread and
-  //   therefore does not need to switch to the worker thread to read the
-  //   audio csrcs and ssrcs.
-  webrtc::Thread& worker_thread_;
-  // Used to ensure that tasks are not posted after `Terminate()` is called,
-  // since this class does not own the worker thread.
-  webrtc::scoped_refptr<webrtc::PendingTaskSafetyFlag> safety_flag_;
-  webrtc::TimeDelta sampling_interval_;
+  const webrtc::TimeDelta sampling_interval_;
 
-  webrtc::AudioTransport* audio_callback_ = nullptr;
-  bool is_playing_ = false;
+  ABSL_ATTRIBUTE_NO_UNIQUE_ADDRESS webrtc::SequenceChecker thread_checker_;
+  ABSL_ATTRIBUTE_NO_UNIQUE_ADDRESS webrtc::SequenceChecker
+      playout_sequence_checker_;
+
+  webrtc::AudioTransport* absl_nullable audio_callback_
+      ABSL_GUARDED_BY(playout_sequence_checker_) = nullptr;
+  webrtc::Timestamp next_run_time_ ABSL_GUARDED_BY(playout_sequence_checker_) =
+      webrtc::Timestamp::Zero();
+  std::vector<int16_t> sample_buffer_
+      ABSL_GUARDED_BY(playout_sequence_checker_);
+
+  // Dedicated internal task queue for pulling decoded audio frames via
+  // `NeedMorePlayData()` off the WebRTC network/worker thread.
+  // Created in `StartPlayout()` and destroyed in `StopPlayout()`. Declared last
+  // so that the task queue is stopped and joined before any other members
+  // accessed by posted tasks are destroyed.
+  absl_nullable std::unique_ptr<webrtc::TaskQueueBase, webrtc::TaskQueueDeleter>
+      playout_thread_ ABSL_GUARDED_BY(thread_checker_);
 };
 
 }  // namespace meet

@@ -22,87 +22,114 @@
 #include <vector>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
 #include "api/audio/audio_device_defines.h"
-#include "api/task_queue/pending_task_safety_flag.h"
+#include "api/sequence_checker.h"
+#include "api/task_queue/default_task_queue_factory.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "api/units/time_delta.h"
-#include "rtc_base/thread.h"
+#include "api/units/timestamp.h"
+#include "rtc_base/checks.h"
 #include "rtc_base/time_utils.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace meet {
 
+MediaApiAudioDeviceModule::MediaApiAudioDeviceModule()
+    : MediaApiAudioDeviceModule(webrtc::TimeDelta::Millis(10)) {}
+
+MediaApiAudioDeviceModule::MediaApiAudioDeviceModule(
+    webrtc::TimeDelta sampling_interval)
+    : sampling_interval_(sampling_interval),
+      sample_buffer_(kAudioSampleRatePerMillisecond * sampling_interval_.ms() *
+                     kNumberOfAudioChannels) {}
+
 int32_t MediaApiAudioDeviceModule::RegisterAudioCallback(
-    webrtc::AudioTransport* callback) {
-  DCHECK(worker_thread_.IsCurrent());
+    webrtc::AudioTransport* absl_nullable callback) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  if (playout_thread_ != nullptr) {
+    RTC_DCHECK_NOTREACHED();
+    return -1;
+  }
+  RTC_DCHECK_RUN_ON(&playout_sequence_checker_);
   audio_callback_ = callback;
   return 0;
 }
 
 int32_t MediaApiAudioDeviceModule::StartPlayout() {
-  DCHECK(worker_thread_.IsCurrent());
-  if (is_playing_) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  if (playout_thread_ != nullptr) {
     return 0;
   }
-  is_playing_ = true;
+  playout_sequence_checker_.Detach();
+  playout_thread_ = webrtc::CreateDefaultTaskQueueFactory()->CreateTaskQueue(
+      "media_api_adm", webrtc::TaskQueueFactory::Priority::kAudio);
+  RTC_CHECK(playout_thread_ != nullptr);
 
-  worker_thread_.PostTask(
-      SafeTask(safety_flag_, [this]() { ProcessPlayData(); }));
+  playout_thread_->PostTask([this]() {
+    RTC_DCHECK_RUN_ON(&playout_sequence_checker_);
+    next_run_time_ = webrtc::Timestamp::Micros(webrtc::TimeMicros());
+    ProcessPlayData();
+  });
   return 0;
 }
 
 int32_t MediaApiAudioDeviceModule::StopPlayout() {
-  DCHECK(worker_thread_.IsCurrent());
-  is_playing_ = false;
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  if (playout_thread_ == nullptr) {
+    return 0;
+  }
+  playout_thread_ = nullptr;
+  playout_sequence_checker_.Detach();
   return 0;
 }
 
 bool MediaApiAudioDeviceModule::Playing() const {
-  DCHECK(worker_thread_.IsCurrent());
-  return is_playing_;
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return playout_thread_ != nullptr;
 }
 
 int32_t MediaApiAudioDeviceModule::Terminate() {
-  DCHECK(worker_thread_.IsCurrent());
-  safety_flag_->SetNotAlive();
-  return 0;
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return StopPlayout();
 }
 
 void MediaApiAudioDeviceModule::ProcessPlayData() {
-  DCHECK(worker_thread_.IsCurrent());
-  if (!is_playing_) {
-    return;
-  }
+  RTC_DCHECK_RUN_ON(&playout_sequence_checker_);
 
-  int64_t process_start_time = webrtc::TimeMillis();
-  const size_t number_of_samples = kAudioSampleRatePerMillisecond *
-                                   sampling_interval_.ms() *
-                                   kNumberOfAudioChannels;
-  std::vector<int16_t> sample_buffer(number_of_samples);
   size_t samples_out = 0;
   int64_t elapsed_time_ms = -1;
   int64_t ntp_time_ms = -1;
 
   if (audio_callback_ != nullptr) {
     audio_callback_->NeedMorePlayData(
-        number_of_samples, kBytesPerSample, kNumberOfAudioChannels,
+        sample_buffer_.size() / kNumberOfAudioChannels,
+        kBytesPerSample * kNumberOfAudioChannels, kNumberOfAudioChannels,
         // Sampling rate in samples per second (i.e. Hz).
-        kAudioSampleRatePerMillisecond * 1000, sample_buffer.data(),
+        kAudioSampleRatePerMillisecond * 1000, sample_buffer_.data(),
         samples_out, &elapsed_time_ms, &ntp_time_ms);
   }
-  int64_t process_end_time = webrtc::TimeMillis();
 
   // Delay the next sampling for either:
-  // 1. (sampling interval) - (time to process current sample)
-  // 2. No delay if current processing took longer than the desired 10ms
+  // 1. (sampling interval) - (lost time since target `next_run_time_`, covering
+  //    both callback execution time and task-queue wakeup jitter)
+  // 2. No delay if current processing fell behind the next target tick
   // TODO: Improve testing around this computation.
-  webrtc::TimeDelta delay = std::max(
-      webrtc::TimeDelta::Millis((process_start_time + sampling_interval_.ms()) -
-                                process_end_time),
-      webrtc::TimeDelta::Zero());
-  worker_thread_.PostDelayedHighPrecisionTask(
-      SafeTask(safety_flag_, [this]() { ProcessPlayData(); }), delay);
+  webrtc::Timestamp now = webrtc::Timestamp::Micros(webrtc::TimeMicros());
+  webrtc::TimeDelta lost_time = now - next_run_time_;
+  next_run_time_ = std::max(next_run_time_ + sampling_interval_, now);
+  webrtc::TimeDelta delay =
+      std::max(sampling_interval_ - lost_time, webrtc::TimeDelta::Zero());
+  webrtc::TaskQueueBase* absl_nullable current_queue =
+      webrtc::TaskQueueBase::Current();
+  RTC_DCHECK(current_queue != nullptr);
+  current_queue->PostDelayedHighPrecisionTask(
+      [this]() {
+        RTC_DCHECK_RUN_ON(&playout_sequence_checker_);
+        ProcessPlayData();
+      },
+      delay);
 }
 
 }  // namespace meet
