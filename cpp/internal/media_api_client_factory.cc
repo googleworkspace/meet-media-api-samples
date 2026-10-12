@@ -41,6 +41,7 @@
 #include "api/audio_codecs/opus_audio_decoder_factory.h"
 #include "api/create_peerconnection_factory.h"
 #include "api/data_channel_interface.h"
+#include "api/field_trials_view.h"
 #include "api/make_ref_counted.h"
 #include "api/media_types.h"
 #include "api/peer_connection_interface.h"
@@ -202,22 +203,30 @@ absl::StatusOr<MediaApiClient::ConferenceDataChannels> CreateDataChannels(
 
 }  // namespace
 
+webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface>
+MediaApiClientFactory::CreateDefaultPeerConnectionFactory(
+    webrtc::Thread* signaling_thread,
+    absl_nullable std::unique_ptr<webrtc::FieldTrialsView> field_trials) {
+  return webrtc::CreatePeerConnectionFactory(
+      /*network_thread=*/nullptr, signaling_thread,
+      webrtc::make_ref_counted<MediaApiAudioDeviceModule>(),
+      webrtc::CreateBuiltinAudioEncoderFactory(),
+      webrtc::CreateOpusAudioDecoderFactory(),
+      std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+          webrtc::LibvpxVp9EncoderTemplateAdapter>>(),
+      std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+          webrtc::LibvpxVp8DecoderTemplateAdapter,
+          webrtc::LibvpxVp9DecoderTemplateAdapter,
+          webrtc::Dav1dDecoderTemplateAdapter>>(),
+      /*audio_mixer=*/nullptr, /*audio_processing=*/nullptr,
+      /*audio_frame_processor=*/nullptr, std::move(field_trials));
+}
+
 MediaApiClientFactory::MediaApiClientFactory()
     : peer_connection_factory_provider_(
           [](webrtc::Thread* signaling_thread)
               -> webrtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> {
-            return webrtc::CreatePeerConnectionFactory(
-                /*network_thread=*/nullptr, signaling_thread,
-                webrtc::make_ref_counted<MediaApiAudioDeviceModule>(),
-                webrtc::CreateBuiltinAudioEncoderFactory(),
-                webrtc::CreateOpusAudioDecoderFactory(),
-                std::make_unique<webrtc::VideoEncoderFactoryTemplate<
-                    webrtc::LibvpxVp9EncoderTemplateAdapter>>(),
-                std::make_unique<webrtc::VideoDecoderFactoryTemplate<
-                    webrtc::LibvpxVp8DecoderTemplateAdapter,
-                    webrtc::LibvpxVp9DecoderTemplateAdapter,
-                    webrtc::Dav1dDecoderTemplateAdapter>>(),
-                /*audio_mixer=*/nullptr, /*audio_processing=*/nullptr);
+            return CreateDefaultPeerConnectionFactory(signaling_thread);
           }),
       http_connector_provider_([]() {
         return std::make_unique<CurlConnector>(
