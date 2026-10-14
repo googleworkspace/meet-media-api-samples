@@ -233,7 +233,8 @@ TEST(ConferenceDataChannelTest, ReceivingUpdateFailsWhenReceivingBinaryData) {
       });
   log.StartCapturingLogs();
 
-  observer->OnMessage(webrtc::DataBuffer("test-update", true));
+  observer->OnMessage(
+      webrtc::DataBuffer(webrtc::CopyOnWriteBuffer("test-update"), true));
 
   EXPECT_THAT(message,
               HasSubstr("data channel received unexpected binary update."));
