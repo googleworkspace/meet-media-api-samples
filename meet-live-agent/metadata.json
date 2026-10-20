@@ -1,0 +1,8 @@
+{
+  "name": "Audio Orb",
+  "description": "Speak, and the orb responds. An interactive experience powered by the Live Audio API.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
