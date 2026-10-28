@@ -1,3 +1,7 @@
+## Deprecation Notice:
+
+The Google Meet Media API has been discontinued and will not advance to General Availability (GA).
+
 # Google Meet Media API - Samples
 
 ## Overview
